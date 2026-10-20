@@ -88,6 +88,8 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyA' && state === 'title') { openAchievements(); return; }
   if (e.code === 'KeyS' && state === 'title') { openStats(); return; }
   if (e.code === 'KeyW' && state === 'title') { cycleStartWeapon(); return; }
+  if (e.code === 'KeyC' && state === 'title' && savedRun) { resumeRun(); return; }
+  if (e.code === 'KeyN' && state === 'title' && savedRun) { startGame(); return; }
   if (state === 'stats' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { statsTab(e.code === 'ArrowLeft' ? -1 : 1); return; }
   if (state === 'achievements') {
     if (e.code === 'ArrowLeft') { achPage(-1); return; }
@@ -153,7 +155,7 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
   if (e.button !== 0) return;
-  if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overWeaponButton()) cycleStartWeapon(); else startGame(); return; }
+  if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overWeaponButton()) cycleStartWeapon(); else if (savedRun) { if (overContinue()) resumeRun(); else if (overNewRun()) startGame(); } else startGame(); return; }
   if (state === 'pause') {
     const option = overPauseOption();
     if (option >= 0) { setOption(pauseOptions()[option].key, !OPTIONS[pauseOptions()[option].key]); sfx('uiClick'); }
@@ -181,7 +183,7 @@ window.addEventListener('resize', () => { if (touch.on && innerHeight > innerWid
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && state === 'playing') state = 'pause';
   audioSuspend(document.hidden);
-  if (document.hidden) saveGame();
+  if (document.hidden) { saveGame(); saveRun(); }
 });
 
 // ---------- Update ----------
@@ -206,6 +208,7 @@ function update(dt) {
     updateTutorial(dt);
     updateAchievements(dt);
     updateViewers(dt);
+    updateRunSave();
     if (world.player.pending > 0 && !world.levelUp) openLevelUp();
   } else if (state === 'dead' || state === 'won') {
     updateBullets(dt);

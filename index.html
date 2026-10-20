@@ -2,6 +2,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <title>Pixel Crawler</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#181425">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pixel Crawler">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root { --background: #181425; color-scheme: dark; }
   html { height: 100%; box-sizing: border-box; overflow: hidden; }
@@ -25,6 +33,7 @@
 <script src="js/stats.js"></script>
 <script src="js/viewers.js"></script>
 <script src="js/progress.js"></script>
+<script src="js/resume.js"></script>
 <script src="js/perks.js"></script>
 <script src="js/shop.js"></script>
 <script src="js/level.js"></script>
@@ -39,3 +48,7 @@
 <script src="js/audio.js"></script>
 <script src="js/dev.js"></script>
 <script src="js/main.js"></script>
+<script>
+  // works offline and can be installed (only over http/https, not when the file is opened directly)
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>

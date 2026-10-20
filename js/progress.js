@@ -47,6 +47,7 @@ function saveGame() {
 
 // Called when a run ends, by dying or by winning.
 function endRun(won = false) {
+  clearRun();
   saved.tutorialDone = true;
   saved.runs++;
   saved.bestFloor = Math.max(saved.bestFloor, world.levelIndex + 1);

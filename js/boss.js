@@ -80,6 +80,7 @@ function goToLevel(index) {
   camera.shake = 0;
   systemMessage('Floor ' + (index + 1) + ': ' + world.level.name + '. You recover two hearts.');
   systemMessage(world.level.briefing || 'Complete the objectives to open the boss gate.', 6);
+  saveRun();
 }
 
 // ---------- Boss attacks ----------

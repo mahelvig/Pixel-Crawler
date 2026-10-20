@@ -269,7 +269,8 @@ function drawTitle() {
   drawText('Pixel Crawler', BASE_W / 2, 34, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
   drawText('The apartment block has sunk into a dungeon.', BASE_W / 2, 64, COLOR.S, { align: 'center' });
   drawText('Get as deep as you can.', BASE_W / 2, 72, COLOR.S, { align: 'center' });
-  if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), BASE_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
+  if (savedRun) drawRunButtons();
+  else if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), BASE_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
   if (!touch.on) {
     drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', BASE_W / 2, 158, COLOR.g, { align: 'center' });
     drawText('1-4 or wheel switch weapon    Tab bag', BASE_W / 2, 166, COLOR.g, { align: 'center' });
