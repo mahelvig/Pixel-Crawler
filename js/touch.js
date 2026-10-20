@@ -8,7 +8,8 @@ const TOUCH = {
   assistPull: 0.8,   // aim assist: 0 = none, 1 = snap fully to the enemy
 };
 
-const touch = { on: false, move: null, aim: null };
+// touch is on from the start on a phone or tablet (the main pointer is a finger), so the title screen already shows the right texts
+const touch = { on: typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches, move: null, aim: null };
 
 // the text for keyboard and mouse, or for touch
 const T = (pc, phone) => touch.on ? phone : pc;

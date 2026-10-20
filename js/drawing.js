@@ -257,8 +257,10 @@ function drawTitle() {
   drawText('The apartment block has sunk into a dungeon.', SCREEN_W / 2, 64, COLOR.S, { align: 'center' });
   drawText('Get as deep as you can.', SCREEN_W / 2, 72, COLOR.S, { align: 'center' });
   if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), SCREEN_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
-  drawText(T((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', 'Left thumb: move    Right thumb: aim and shoot'), SCREEN_W / 2, 146, COLOR.g, { align: 'center' });
-  drawText(T('1-4 or wheel switch weapon    Tab bag', 'Tap the hotbar to switch weapon    B: bag'), SCREEN_W / 2, 154, COLOR.g, { align: 'center' });
+  if (!touch.on) {
+    drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', SCREEN_W / 2, 146, COLOR.g, { align: 'center' });
+    drawText('1-4 or wheel switch weapon    Tab bag', SCREEN_W / 2, 154, COLOR.g, { align: 'center' });
+  }
   drawText('Milestone 10', SCREEN_W - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
   drawShopButton(TITLE_SHOP_Y);
   drawText('Best floor ' + saved.bestFloor + '   ' + saved.gold + ' gold', SCREEN_W / 2, 136, COLOR.g, { align: 'center' });
@@ -292,7 +294,7 @@ function drawPause() {
   drawText(T('Esc or click to resume', 'Tap outside the options to resume'), SCREEN_W / 2, 72, COLOR.S, { align: 'center' });
 
   // the options: each is a box that can be ticked
-  PAUSE_OPTIONS.forEach((option, i) => {
+  pauseOptions().forEach((option, i) => {
     const r = pauseOptionRect(i), on = OPTIONS[option.key], hover = overPauseOption() === i;
     ctx.fillStyle = 'rgba(24,20,37,0.85)';
     ctx.fillRect(r.x, r.y, r.w, r.h);
@@ -303,30 +305,33 @@ function drawPause() {
   });
   const hovered = overPauseOption();
   if (hovered >= 0) {
-    const option = PAUSE_OPTIONS[hovered];
+    const option = pauseOptions()[hovered];
     drawText(OPTIONS[option.key] ? option.on : option.off, SCREEN_W / 2, SCREEN_H - 12, COLOR.g, { align: 'center' });
   }
 }
 
 // The options in the pause menu. on and off explain what the option does in each state.
 const PAUSE_OPTIONS = [
-  { key: 'rightClickMove', label: 'Move with right-click', on: 'Hold the right button to walk towards the cursor. WASD is off.', off: 'Turns off WASD and walks towards the cursor instead.' },
+  { only: 'pc', key: 'rightClickMove', label: 'Move with right-click', on: 'Hold the right button to walk towards the cursor. WASD is off.', off: 'Turns off WASD and walks towards the cursor instead.' },
   { key: 'sfx', label: 'Sound effects', on: 'Sound effects are on.', off: 'Sound effects are off.' },
-  { key: 'aimAssist', label: 'Aim assist (touch)', on: 'On touch screens the aim stick nudges your shots towards nearby enemies.', off: 'Aim assist is off: you aim exactly where the stick points.' },
-  { key: 'autoFire', label: 'Auto-fire (touch)', on: 'On touch screens you shoot at the nearest enemy by yourself. Use the aim stick to aim yourself.', off: 'Auto-fire is off: you only shoot while the aim stick is held.' },
+  { only: 'touch', key: 'aimAssist', label: 'Aim assist', on: 'On touch screens the aim stick nudges your shots towards nearby enemies.', off: 'Aim assist is off: you aim exactly where the stick points.' },
+  { only: 'touch', key: 'autoFire', label: 'Auto-fire', on: 'On touch screens you shoot at the nearest enemy by yourself. Use the aim stick to aim yourself.', off: 'Auto-fire is off: you only shoot while the aim stick is held.' },
   { key: 'music', label: 'Music (M)', on: 'Music is on. Press M to switch it on or off at any time.', off: 'Music is off. Press M to switch it on or off at any time.' },
 ];
 
+// the options that make sense for the way the game is played: some are only for a mouse and keyboard, some only for a touch screen
+const pauseOptions = () => PAUSE_OPTIONS.filter(o => !o.only || o.only === (touch.on ? 'touch' : 'pc'));
+
 // the clickable area of an option in the pause menu
 function pauseOptionRect(i) {
-  const w = Math.max(...PAUSE_OPTIONS.map(o => textWidth(o.label))) + 28, h = 14;
+  const w = Math.max(...pauseOptions().map(o => textWidth(o.label))) + 28, h = 14;
   return { x: Math.round(SCREEN_W / 2 - w / 2), y: 84 + i * 15, w, h };
 }
 
 // the index of the option under the mouse, or -1
 function overPauseOption() {
   if (!mouse.inside) return -1;
-  return PAUSE_OPTIONS.findIndex((o, i) => {
+  return pauseOptions().findIndex((o, i) => {
     const r = pauseOptionRect(i);
     return mouse.x >= r.x && mouse.x < r.x + r.w && mouse.y >= r.y && mouse.y < r.y + r.h;
   });

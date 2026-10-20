@@ -138,7 +138,7 @@ canvas.addEventListener('pointerdown', e => {
   if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else startGame(); return; }
   if (state === 'pause') {
     const option = overPauseOption();
-    if (option >= 0) { setOption(PAUSE_OPTIONS[option].key, !OPTIONS[PAUSE_OPTIONS[option].key]); sfx('uiClick'); }
+    if (option >= 0) { setOption(pauseOptions()[option].key, !OPTIONS[pauseOptions()[option].key]); sfx('uiClick'); }
     else { state = 'playing'; sfx('pause'); }
     return;
   }
