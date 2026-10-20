@@ -384,6 +384,30 @@ for (const direction in PLAYER_TOP) {
   PLAYER_IMAGES[direction] = ['stand', 'walk1', 'stand', 'walk2']
     .map(legs => createSprite([...PLAYER_TOP[direction], ...PLAYER_LEGS[legs]]));
 }
+
+// The player in the clothes they wear. The body rows (8-10) take the colours of the coat, the shoes of the legs take the colour of
+// the footwear. Each combination is made once and kept (a is the main colour of the item, b the trim, g the gem).
+const BODY_PATTERNS = { shirt: 'aaaaaa', coat: 'aabbaa', vest: 'baaaab' };
+const dressedFrames = {};
+function dressedPlayer(direction, step, body, feet) {
+  const key = direction + step + '|' + (body || '') + '|' + (feet || '');
+  if (dressedFrames[key]) return dressedFrames[key];
+  const top = PLAYER_TOP[direction].slice(), legs = PLAYER_LEGS[['stand', 'walk1', 'stand', 'walk2'][step]].slice();
+  if (body) {
+    const look = GEAR[body].look, pattern = BODY_PATTERNS[look.shape] || 'aaaaaa';
+    for (let r = 8; r <= 10; r++) {
+      const cells = pattern.split('');
+      if (r === 9 && look.g && direction !== 'back') cells[2] = 'g';
+      top[r] = '....K' + cells.map(c => look[c] || look.a).join('') + 'K....';
+    }
+  }
+  if (feet) {
+    const look = GEAR[feet].look;
+    for (let r = 0; r < legs.length; r++) legs[r] = legs[r].replace(/S/g, look.a);
+  }
+  return dressedFrames[key] = createSprite([...top, ...legs]);
+}
+
 const TARGET_IMAGE = createSprite(TARGET_ROWS);
 const TARGET_WHITE = createSilhouette(TARGET_IMAGE, COLOR.W);
 // The Landlord is a recoloured goblin: pale skin, a dark suit and a red tie.

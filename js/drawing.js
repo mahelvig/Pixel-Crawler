@@ -72,7 +72,7 @@ function drawPlayer(pl) {
   if (pl.invulnerable > 0 && Math.floor(pl.invulnerable * 16) % 2 === 0) return;   // flashes after a hit
   const c = Math.cos(pl.aim), s = Math.sin(pl.aim);
   const direction = s < -0.65 ? 'back' : s > 0.65 ? 'front' : 'side';
-  const frame = PLAYER_IMAGES[direction][Math.floor(pl.animTime) % 4];
+  const frame = dressedPlayer(direction, Math.floor(pl.animTime) % 4, pl.slots[BAG.equipStart + 1], pl.slots[BAG.equipStart + 2]);
   const x = Math.round(pl.x), y = Math.round(pl.y);
   shadow(x, y + 1, 10);
   if (direction === 'back') drawWeapon(pl);
@@ -82,8 +82,14 @@ function drawPlayer(pl) {
   ctx.drawImage(frame, -8, y - 12);
   ctx.restore();
   if (direction !== 'back') drawWeapon(pl);
-  const hat = pl.slots[BAG.equipStart];   // the hat sits on the head
-  if (hat) ctx.drawImage(GEAR_ICONS[hat], x - 6, y - 20);
+  const hat = pl.slots[BAG.equipStart];   // the hat sits on the head, turned the way the player looks (a little forward when seen from the side)
+  if (hat) {
+    ctx.save();
+    ctx.translate(x + (direction === 'side' ? (c < 0 ? -1 : 1) : 0), 0);
+    if (c < 0) ctx.scale(-1, 1);
+    ctx.drawImage(GEAR_ICONS[hat], -6, y - 19);
+    ctx.restore();
+  }
 }
 
 function drawWeapon(pl) {
