@@ -197,7 +197,7 @@ function drawHud() {
     ctx.fillRect(px, py, pb, ph);
     border(px, py, pb, ph, COLOR.D);
     drawText('Empty hands', px + 6, py + 4, COLOR.g);
-    drawText('Tab: bag', px + 6, py + 11, COLOR.s);
+    drawText(T('Tab: bag', 'B: bag'), px + 6, py + 11, COLOR.s);
   }
   drawHotbar(pl);
 
@@ -256,9 +256,9 @@ function drawTitle() {
   drawText('Pixel Crawler', SCREEN_W / 2, 34, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
   drawText('The apartment block has sunk into a dungeon.', SCREEN_W / 2, 64, COLOR.S, { align: 'center' });
   drawText('Get as deep as you can.', SCREEN_W / 2, 72, COLOR.S, { align: 'center' });
-  if (Math.floor(time * 2.5) % 2 === 0) drawText('Click to start', SCREEN_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
-  drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', SCREEN_W / 2, 146, COLOR.g, { align: 'center' });
-  drawText('1-4 or wheel switch weapon    Tab bag', SCREEN_W / 2, 154, COLOR.g, { align: 'center' });
+  if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), SCREEN_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
+  drawText(T((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', 'Left thumb: move    Right thumb: aim and shoot'), SCREEN_W / 2, 146, COLOR.g, { align: 'center' });
+  drawText(T('1-4 or wheel switch weapon    Tab bag', 'Tap the hotbar to switch weapon    B: bag'), SCREEN_W / 2, 154, COLOR.g, { align: 'center' });
   drawText('Milestone 10', SCREEN_W - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
   drawShopButton(TITLE_SHOP_Y);
   drawText('Best floor ' + saved.bestFloor + '   ' + saved.gold + ' gold', SCREEN_W / 2, 136, COLOR.g, { align: 'center' });
@@ -270,7 +270,7 @@ function drawDead() {
   drawText('You died', SCREEN_W / 2, 52, COLOR.r, { scale: 3, align: 'center', shadow: COLOR.p });
   drawText(`Killed ${world.killed} of ${world.enemyTotal} enemies.`, SCREEN_W / 2, 84, COLOR.S, { align: 'center' });
   drawText('The viewers have seen better.', SCREEN_W / 2, 92, COLOR.g, { align: 'center' });
-  if (elapsed > 1 && Math.floor(time * 2.5) % 2 === 0) drawText('Click to try again', SCREEN_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
+  if (elapsed > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to try again', 'Tap to try again'), SCREEN_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
   drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, SCREEN_W / 2, 102, COLOR.y, { align: 'center' });
   drawShopButton(END_SHOP_Y);
 }
@@ -281,7 +281,7 @@ function drawWon() {
   drawText('To be continued', SCREEN_W / 2, 52, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
   drawText('You cleared ' + LEVEL_ORDER.length + ' floors.', SCREEN_W / 2, 84, COLOR.S, { align: 'center' });
   drawText('The viewers want more.', SCREEN_W / 2, 92, COLOR.g, { align: 'center' });
-  if (since > 1 && Math.floor(time * 2.5) % 2 === 0) drawText('Click to play again', SCREEN_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
+  if (since > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to play again', 'Tap to play again'), SCREEN_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
   drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, SCREEN_W / 2, 102, COLOR.y, { align: 'center' });
   drawShopButton(END_SHOP_Y);
 }
@@ -289,7 +289,7 @@ function drawWon() {
 function drawPause() {
   dim(0.65);
   drawText('Pause', SCREEN_W / 2, 44, COLOR.W, { scale: 3, align: 'center' });
-  drawText(touch.on ? 'Tap outside the options to resume' : 'Esc or click to resume', SCREEN_W / 2, 72, COLOR.S, { align: 'center' });
+  drawText(T('Esc or click to resume', 'Tap outside the options to resume'), SCREEN_W / 2, 72, COLOR.S, { align: 'center' });
 
   // the options: each is a box that can be ticked
   PAUSE_OPTIONS.forEach((option, i) => {

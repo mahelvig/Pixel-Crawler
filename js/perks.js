@@ -98,5 +98,5 @@ function drawLevelUp() {
     const have = pl.perks[id] || 0;
     drawText(perk.effect ? 'One-off' : 'Level ' + (have + 1) + ' / ' + perk.max, c.x + 6, c.y + c.h - 12, COLOR.l);
   });
-  drawText('Click a card or press 1, 2 or 3', SCREEN_W / 2, 160, COLOR.g, { align: 'center' });
+  drawText(T('Click a card or press 1, 2 or 3', 'Tap a card'), SCREEN_W / 2, 160, COLOR.g, { align: 'center' });
 }

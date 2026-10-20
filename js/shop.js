@@ -41,7 +41,9 @@ function closeShop() {
 }
 
 const UPGRADE_IDS = Object.keys(UPGRADES);
-const shopRow = i => ({ x: 10, y: 34 + i * 11, w: 300, h: 10 });
+// on touch screens the upgrades sit in two columns of bigger rows
+const shopRow = i => touch.on ? { x: 10 + Math.floor(i / 6) * 154, y: 34 + (i % 6) * 22, w: 146, h: 20 } : { x: 10, y: 34 + i * 11, w: 300, h: 10 };
+const shopBackButton = () => ({ x: BASE_W - 56, y: 3, w: 46, h: 17 });
 
 function shopRowUnderMouse() {
   if (!mouse.inside) return -1;
@@ -49,6 +51,7 @@ function shopRowUnderMouse() {
 }
 
 function clickShop() {
+  if (touch.on) { const b = shopBackButton(); if (mouse.x >= b.x && mouse.x < b.x + b.w && mouse.y >= b.y && mouse.y < b.y + b.h) { closeShop(); return; } }
   const i = shopRowUnderMouse();
   if (i < 0) return;
   const id = UPGRADE_IDS[i], u = UPGRADES[id], cost = upgradeCost(id);
@@ -60,7 +63,7 @@ function clickShop() {
 const TITLE_SHOP_Y = 118, END_SHOP_Y = 134;
 
 function shopButton(y) {
-  const w = textWidth('Upgrades (U)') + 16;
+  const w = textWidth(T('Upgrades (U)', 'Upgrades')) + 16;
   return { x: Math.round(SCREEN_W / 2 - w / 2), y, w, h: 13 };
 }
 
@@ -74,23 +77,31 @@ function drawShopButton(y) {
   ctx.fillStyle = 'rgba(24,20,37,0.85)';
   ctx.fillRect(b.x, b.y, b.w, b.h);
   border(b.x, b.y, b.w, b.h, hover ? COLOR.W : COLOR.O);
-  drawText('Upgrades (U)', SCREEN_W / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
+  drawText(T('Upgrades (U)', 'Upgrades'), SCREEN_W / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
 }
 
 function drawShop() {
   const over = shopRowUnderMouse();
   dim(0.9);
   drawText('Upgrades', 10, 8, COLOR.O, { scale: 2, shadow: COLOR.x });
-  drawText(saved.gold + ' gold', SCREEN_W - 10, 12, COLOR.O, { align: 'right' });
+  drawText(saved.gold + ' gold', touch.on ? BASE_W - 64 : BASE_W - 10, 12, COLOR.O, { align: 'right' });
+  if (touch.on) {
+    const b = shopBackButton();
+    ctx.fillStyle = 'rgba(24,20,37,0.85)'; ctx.fillRect(b.x, b.y, b.w, b.h);
+    border(b.x, b.y, b.w, b.h, COLOR.O);
+    drawText('Back', b.x + b.w / 2, b.y + 6, COLOR.W, { align: 'center' });
+  }
   drawText('They last for ever, and every level costs more than the one before.', 10, 24, COLOR.g);
   UPGRADE_IDS.forEach((id, i) => {
     const r = shopRow(i), u = UPGRADES[id], level = upgradeLevel(id), cost = upgradeCost(id);
     if (i === over) { ctx.fillStyle = 'rgba(58,68,102,0.9)'; ctx.fillRect(r.x, r.y, r.w, r.h); }
-    drawText(u.name, r.x + 4, r.y + 2, level >= u.max ? COLOR.O : COLOR.W);
-    drawText('Lv ' + level + '/' + u.max, r.x + 90, r.y + 2, COLOR.g);
-    drawText(formatStat(u.stat, u.step) + ' ' + STAT_INFO[u.stat].label, r.x + 130, r.y + 2, COLOR.l);
-    if (cost === null) drawText('MAX', r.x + r.w - 4, r.y + 2, COLOR.O, { align: 'right' });
-    else drawText(cost + ' gold', r.x + r.w - 4, r.y + 2, saved.gold >= cost ? COLOR.y : COLOR.r, { align: 'right' });
+    const rowY = touch.on ? r.y + 3 : r.y + 2, statX = touch.on ? r.x + 4 : r.x + 130, statY = touch.on ? r.y + 11 : r.y + 2;
+    if (touch.on) border(r.x, r.y, r.w, r.h, i === over ? COLOR.W : COLOR.D);
+    drawText(u.name, r.x + 4, rowY, level >= u.max ? COLOR.O : COLOR.W);
+    drawText('Lv ' + level + '/' + u.max, touch.on ? r.x + 70 : r.x + 90, rowY, COLOR.g);
+    drawText(formatStat(u.stat, u.step) + ' ' + STAT_INFO[u.stat].label, statX, statY, COLOR.l);
+    if (cost === null) drawText('MAX', r.x + r.w - 4, touch.on ? r.y + 11 : rowY, COLOR.O, { align: 'right' });
+    else drawText(cost + ' gold', r.x + r.w - 4, touch.on ? r.y + 11 : rowY, saved.gold >= cost ? COLOR.y : COLOR.r, { align: 'right' });
   });
-  drawText(time < shopNote.until ? shopNote.text : 'Click an upgrade to buy it.   Esc: back', SCREEN_W / 2, 170, time < shopNote.until ? COLOR.y : COLOR.g, { align: 'center' });
+  drawText(time < shopNote.until ? shopNote.text : T('Click an upgrade to buy it.   Esc: back', 'Tap an upgrade to buy it.'), SCREEN_W / 2, 170, time < shopNote.until ? COLOR.y : COLOR.g, { align: 'center' });
 }

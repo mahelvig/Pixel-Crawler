@@ -10,6 +10,9 @@ const TOUCH = {
 
 const touch = { on: false, move: null, aim: null };
 
+// the text for keyboard and mouse, or for touch
+const T = (pc, phone) => touch.on ? phone : pc;
+
 // the on-screen buttons while playing
 const TOUCH_BUTTONS = [
   { id: 'pause', x: SCREEN_W / 2 - 21, y: 3, w: 18, h: 18, label: 'II' },

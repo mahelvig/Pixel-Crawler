@@ -84,14 +84,14 @@ function pickUp(pl, g) {
     text = `+${pl.ammo[g.type] - before} ammo`;
   } else {
     const free = freeSlot(pl, g.type);
-    if (free < 0) { bagMessage('Your bag is full. Right-click an item in the bag to drop it.'); return false; }
+    if (free < 0) { bagMessage(T('Your bag is full. Right-click an item in the bag to drop it.', 'Your bag is full. Tap an item in the bag, then Drop.')); return false; }
     pl.slots[free] = g.type;
     pl.ammo[g.type] = gave || 0;
     updateActive(pl);
     text = v.name;
     if (!world.hasFound) {
       world.hasFound = true;
-      systemMessage('New weapon! Press 1-4 to switch, or Tab to open your bag.');
+      systemMessage(T('New weapon! Press 1-4 to switch, or Tab to open your bag.', 'New weapon! Tap the hotbar to switch, or B to open your bag.'));
     }
   }
   sfx(text.startsWith('+') ? 'pickupAmmo' : 'pickupWeapon');
@@ -110,13 +110,13 @@ function pickUpGear(pl, g) {
     sfx('equip');
   } else {
     const free = freeSlot(pl, g.type);
-    if (free < 0) { bagMessage('Your bag is full. Right-click an item in the bag to drop it.'); return false; }
+    if (free < 0) { bagMessage(T('Your bag is full. Right-click an item in the bag to drop it.', 'Your bag is full. Tap an item in the bag, then Drop.')); return false; }
     pl.slots[free] = g.type;
     text = item.name;
   }
   if (!world.hasFoundGear) {
     world.hasFoundGear = true;
-    systemMessage('Something to wear! Open your bag (Tab) to see what it does. E puts things on and takes them off.', 5);
+    systemMessage(T('Something to wear! Open your bag (Tab) to see what it does. E puts things on and takes them off.', 'Something to wear! Open your bag (B), tap it, then tap Wear.'), 5);
   }
   sfx('pickupWeapon');
   world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text, life: 1.4, color });
@@ -143,6 +143,29 @@ function swapSlots(a, b) {
   [p[a], p[b]] = [p[b], p[a]];
   updateActive(world.player);
   if (a >= BAG.equipStart || b >= BAG.equipStart) sfx('equip');
+}
+
+// The buttons of the bag on touch screens: there is no Tab, E or right button there.
+function bagButtons() {
+  const s = BAG_SCREEN, x = s.x + 178, y = s.y + 128;
+  return [
+    { id: 'close', x: s.x + s.b - 22, y: s.y + 4, w: 18, h: 18, label: 'X' },
+    { id: 'wear', x, y, w: 61, h: 20, label: 'Wear' },
+    { id: 'drop', x: x + 65, y, w: 61, h: 20, label: 'Drop' },
+  ];
+}
+
+function clickBagButton() {
+  const b = bagButtons().find(r => mouse.x >= r.x - 2 && mouse.x < r.x + r.w + 2 && mouse.y >= r.y - 2 && mouse.y < r.y + r.h + 2);
+  const s = BAG_SCREEN, inside = mouse.x >= s.x && mouse.x < s.x + s.b && mouse.y >= s.y && mouse.y < s.y + s.h;
+  if (!b) {
+    if (!inside) { toggleBag(); return true; }   // a tap outside the bag closes it
+    return false;
+  }
+  if (b.id === 'close') toggleBag();
+  else if (b.id === 'wear') equipAtMouse();
+  else if (world.holding >= 0 && world.player.slots[world.holding]) { const i = world.holding; dropItem(i); sfx('drop'); world.holding = -1; }
+  return true;
 }
 
 function toggleBag() {
@@ -180,6 +203,7 @@ function slotUnderMouse() {
 // Right-click drops the item on the floor.
 function clickInBag(button) {
   const i = slotUnderMouse(), slots = world.player.slots;
+  if (touch.on && button === 0 && clickBagButton()) return;
   if (button === 2) {
     if (i >= 0 && slots[i]) {
       dropItem(i);
@@ -302,7 +326,14 @@ function drawBag() {
 
   drawInfo(over >= 0 ? pl.slots[over] : world.holding >= 0 ? pl.slots[world.holding] : null, over >= 0);
 
-  drawText('Click: move   1-4: hotbar   E: wear   Right-click: drop   Tab: close',
+  if (touch.on) {
+    for (const r of bagButtons()) {
+      ctx.fillStyle = 'rgba(24,20,37,0.85)'; ctx.fillRect(r.x, r.y, r.w, r.h);
+      border(r.x, r.y, r.w, r.h, r.id === 'close' ? COLOR.r : COLOR.O);
+      drawText(r.label, r.x + r.w / 2, r.y + r.h / 2 - 3, COLOR.W, { align: 'center' });
+    }
+  }
+  drawText(T('Click: move   1-4: hotbar   E: wear   Right-click: drop   Tab: close', 'Tap an item, then a slot to move it. Wear and Drop use the item you hold.'),
     s.x + s.b / 2, s.y + s.h - 11, COLOR.g, { align: 'center' });
 
   // the item being held follows the mouse
