@@ -9,7 +9,14 @@
 
 // ---------- Settings ----------
 
-const SCREEN_W = 320;   // internal width in pixels
+// internal width in pixels: 320 (16:9), but a wider phone screen gets up to 400 so no space is left unused
+const BASE_W = 320;
+const SCREEN_W = (() => {
+  if (typeof window === 'undefined' || !window.matchMedia || !window.matchMedia('(pointer: coarse)').matches) return BASE_W;
+  const a = Math.max(window.innerWidth, window.innerHeight) / Math.max(1, Math.min(window.innerWidth, window.innerHeight));
+  return Math.max(BASE_W, Math.min(400, Math.round(180 * a / 2) * 2));
+})();
+const UI_X = (SCREEN_W - BASE_W) / 2;   // the menus are laid out for 320 px and sit in the middle
 const SCREEN_H = 180;   // internal height in pixels
 const TILE = 16;        // size of one map tile
 const TIMESTEP = 1 / 60;  // fixed time step for the game logic

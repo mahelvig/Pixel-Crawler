@@ -112,7 +112,9 @@ window.addEventListener('keyup', e => keys.delete(e.code));
 
 function updateMouse(e) {
   const rect = canvas.getBoundingClientRect();
-  mouse.x = clamp((e.clientX - rect.left) * SCREEN_W / rect.width, 0, SCREEN_W - 1);
+  // menus are drawn shifted by UI_X, so their hit areas are too
+  const shift = state === 'playing' ? 0 : UI_X;
+  mouse.x = clamp((e.clientX - rect.left) * SCREEN_W / rect.width - shift, -shift, SCREEN_W - 1 - shift);
   mouse.y = clamp((e.clientY - rect.top) * SCREEN_H / rect.height, 0, SCREEN_H - 1);
   mouse.inside = true;
 }

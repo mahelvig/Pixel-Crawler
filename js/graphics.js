@@ -44,6 +44,7 @@ function createSilhouette(source, color) {
 // ---------- Screen ----------
 
 const canvas = document.getElementById('screen');
+canvas.width = SCREEN_W;
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 

@@ -38,19 +38,24 @@ function draw() {
   drawDarkness(kx, ky);
 
   if (world.hurtFlash > 0) drawHurtOverlay();
+  ctx.save();
+  ctx.translate(UI_X, 0);
   if (state === 'shop') drawShop();
   else if (state === 'title') drawTitle();
   else {
+    ctx.translate(-UI_X, 0);
     drawHud();
+    ctx.translate(UI_X, 0);
     if (state === 'pause') drawPause();
     if (state === 'dead') drawDead();
     if (state === 'won') drawWon();
     if (state === 'bag') drawBag();
     if (state === 'levelup') drawLevelUp();
   }
+  ctx.restore();
   drawTouch();
   if (mouse.inside && !touch.on) {
-    if (state === 'bag' || state === 'shop' || state === 'levelup') ctx.drawImage(POINTER, Math.floor(mouse.x), Math.floor(mouse.y));
+    if (state === 'bag' || state === 'shop' || state === 'levelup') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
     else drawCrosshair();
   }
 }
@@ -243,7 +248,7 @@ function drawHud() {
 
 function dim(alpha) {
   ctx.fillStyle = `rgba(24,20,37,${alpha})`;
-  ctx.fillRect(0, 0, SCREEN_W, SCREEN_H);
+  ctx.fillRect(-UI_X, 0, SCREEN_W, SCREEN_H);
 }
 
 function drawTitle() {
@@ -327,7 +332,7 @@ function overPauseOption() {
 }
 
 function drawCrosshair() {
-  const x = Math.floor(mouse.x), y = Math.floor(mouse.y);
+  const x = Math.floor(mouse.x + (state === 'playing' ? 0 : UI_X)), y = Math.floor(mouse.y);
   ctx.fillStyle = COLOR.K;
   ctx.fillRect(x - 5, y - 1, 4, 3); ctx.fillRect(x + 2, y - 1, 4, 3);
   ctx.fillRect(x - 1, y - 5, 3, 4); ctx.fillRect(x - 1, y + 2, 3, 4);
