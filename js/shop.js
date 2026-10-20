@@ -64,7 +64,7 @@ const TITLE_SHOP_Y = 118, END_SHOP_Y = 134;
 
 function shopButton(y) {
   const w = textWidth(T('Upgrades (U)', 'Upgrades')) + 16;
-  return { x: Math.round(SCREEN_W / 2 - w / 2), y, w, h: 13 };
+  return { x: Math.round(BASE_W / 2 - w / 2), y, w, h: 13 };
 }
 
 function overShopButton(y) {
@@ -77,7 +77,7 @@ function drawShopButton(y) {
   ctx.fillStyle = 'rgba(24,20,37,0.85)';
   ctx.fillRect(b.x, b.y, b.w, b.h);
   border(b.x, b.y, b.w, b.h, hover ? COLOR.W : COLOR.O);
-  drawText(T('Upgrades (U)', 'Upgrades'), SCREEN_W / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
+  drawText(T('Upgrades (U)', 'Upgrades'), BASE_W / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
 }
 
 function drawShop() {
@@ -103,5 +103,5 @@ function drawShop() {
     if (cost === null) drawText('MAX', r.x + r.w - 4, touch.on ? r.y + 11 : rowY, COLOR.O, { align: 'right' });
     else drawText(cost + ' gold', r.x + r.w - 4, touch.on ? r.y + 11 : rowY, saved.gold >= cost ? COLOR.y : COLOR.r, { align: 'right' });
   });
-  drawText(time < shopNote.until ? shopNote.text : T('Click an upgrade to buy it.   Esc: back', 'Tap an upgrade to buy it.'), SCREEN_W / 2, 170, time < shopNote.until ? COLOR.y : COLOR.g, { align: 'center' });
+  drawText(time < shopNote.until ? shopNote.text : T('Click an upgrade to buy it.   Esc: back', 'Tap an upgrade to buy it.'), BASE_W / 2, 170, time < shopNote.until ? COLOR.y : COLOR.g, { align: 'center' });
 }

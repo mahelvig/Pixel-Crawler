@@ -82,8 +82,8 @@ function clickPerk() {
 function drawLevelUp() {
   const pl = world.player, over = perkUnderMouse();
   dim(0.72);
-  drawText('LEVEL UP!', SCREEN_W / 2, 8, COLOR.O, { scale: 2, align: 'center', shadow: COLOR.x });
-  drawText('You are level ' + pl.level + '. Pick a perk.' + (pl.pending > 1 ? '   (' + (pl.pending - 1) + ' more to come)' : ''), SCREEN_W / 2, 26, COLOR.S, { align: 'center' });
+  drawText('LEVEL UP!', BASE_W / 2, 8, COLOR.O, { scale: 2, align: 'center', shadow: COLOR.x });
+  drawText('You are level ' + pl.level + '. Pick a perk.' + (pl.pending > 1 ? '   (' + (pl.pending - 1) + ' more to come)' : ''), BASE_W / 2, 26, COLOR.S, { align: 'center' });
   world.levelUp.choices.forEach((id, i) => {
     const c = perkCard(i), perk = PERKS[id], rarityInfo = RARITY[perk.rarity], hover = i === over;
     ctx.fillStyle = hover ? 'rgba(58,68,102,0.95)' : 'rgba(24,20,37,0.95)';
@@ -98,5 +98,5 @@ function drawLevelUp() {
     const have = pl.perks[id] || 0;
     drawText(perk.effect ? 'One-off' : 'Level ' + (have + 1) + ' / ' + perk.max, c.x + 6, c.y + c.h - 12, COLOR.l);
   });
-  drawText(T('Click a card or press 1, 2 or 3', 'Tap a card'), SCREEN_W / 2, 160, COLOR.g, { align: 'center' });
+  drawText(T('Click a card or press 1, 2 or 3', 'Tap a card'), BASE_W / 2, 160, COLOR.g, { align: 'center' });
 }

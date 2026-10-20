@@ -235,16 +235,20 @@ function drawHud() {
   // system message at the top centre
   const m = world.messages[0];
   if (m) {
+    // long messages are wrapped, so the box never gets wider than MESSAGE_WIDTH
     const slideIn = Math.min(1, (m.duration - m.time) * 6, m.time * 3);
-    const mb = textWidth(m.text) + 12, mx = Math.round(SCREEN_W / 2 - mb / 2), my = Math.round(-14 + slideIn * 36);
+    const lines = wrapLines(m.text, MESSAGE_WIDTH - 12);
+    const mb = Math.max(...lines.map(textWidth)) + 12, mh = 5 + lines.length * 8, mx = Math.round(SCREEN_W / 2 - mb / 2), my = Math.round(-mh - 1 + slideIn * (mh + 23));
     ctx.fillStyle = 'rgba(24,20,37,0.9)';
-    ctx.fillRect(mx, my, mb, 13);
+    ctx.fillRect(mx, my, mb, mh);
     ctx.fillStyle = COLOR.O;
-    ctx.fillRect(mx, my, 2, 13);
-    border(mx, my, mb, 13, COLOR.D);
-    drawText(m.text, mx + 7, my + 4, COLOR.y);
+    ctx.fillRect(mx, my, 2, mh);
+    border(mx, my, mb, mh, COLOR.D);
+    lines.forEach((l, i) => drawText(l, mx + 7, my + 4 + i * 8, COLOR.y));
   }
 }
+
+const MESSAGE_WIDTH = 190;   // the widest a message at the top of the screen may be
 
 function dim(alpha) {
   ctx.fillStyle = `rgba(24,20,37,${alpha})`;
@@ -253,45 +257,45 @@ function dim(alpha) {
 
 function drawTitle() {
   dim(0.7);
-  drawText('Pixel Crawler', SCREEN_W / 2, 34, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
-  drawText('The apartment block has sunk into a dungeon.', SCREEN_W / 2, 64, COLOR.S, { align: 'center' });
-  drawText('Get as deep as you can.', SCREEN_W / 2, 72, COLOR.S, { align: 'center' });
-  if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), SCREEN_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
+  drawText('Pixel Crawler', BASE_W / 2, 34, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
+  drawText('The apartment block has sunk into a dungeon.', BASE_W / 2, 64, COLOR.S, { align: 'center' });
+  drawText('Get as deep as you can.', BASE_W / 2, 72, COLOR.S, { align: 'center' });
+  if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), BASE_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
   if (!touch.on) {
-    drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', SCREEN_W / 2, 146, COLOR.g, { align: 'center' });
-    drawText('1-4 or wheel switch weapon    Tab bag', SCREEN_W / 2, 154, COLOR.g, { align: 'center' });
+    drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', BASE_W / 2, 146, COLOR.g, { align: 'center' });
+    drawText('1-4 or wheel switch weapon    Tab bag', BASE_W / 2, 154, COLOR.g, { align: 'center' });
   }
-  drawText('Milestone 10', SCREEN_W - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
+  drawText('Milestone 10', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
   drawShopButton(TITLE_SHOP_Y);
-  drawText('Best floor ' + saved.bestFloor + '   ' + saved.gold + ' gold', SCREEN_W / 2, 136, COLOR.g, { align: 'center' });
+  drawText('Best floor ' + saved.bestFloor + '   ' + saved.gold + ' gold', BASE_W / 2, 136, COLOR.g, { align: 'center' });
 }
 
 function drawDead() {
   const elapsed = time - world.deathTime;
   dim(Math.min(0.7, elapsed * 1.2));
-  drawText('You died', SCREEN_W / 2, 52, COLOR.r, { scale: 3, align: 'center', shadow: COLOR.p });
-  drawText(`Killed ${world.killed} of ${world.enemyTotal} enemies.`, SCREEN_W / 2, 84, COLOR.S, { align: 'center' });
-  drawText('The viewers have seen better.', SCREEN_W / 2, 92, COLOR.g, { align: 'center' });
-  if (elapsed > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to try again', 'Tap to try again'), SCREEN_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
-  drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, SCREEN_W / 2, 102, COLOR.y, { align: 'center' });
+  drawText('You died', BASE_W / 2, 52, COLOR.r, { scale: 3, align: 'center', shadow: COLOR.p });
+  drawText(`Killed ${world.killed} of ${world.enemyTotal} enemies.`, BASE_W / 2, 84, COLOR.S, { align: 'center' });
+  drawText('The viewers have seen better.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
+  if (elapsed > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to try again', 'Tap to try again'), BASE_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
+  drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, BASE_W / 2, 102, COLOR.y, { align: 'center' });
   drawShopButton(END_SHOP_Y);
 }
 
 function drawWon() {
   const since = time - world.wonTime;
   dim(Math.min(0.8, since * 1.2));
-  drawText('To be continued', SCREEN_W / 2, 52, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
-  drawText('You cleared ' + LEVEL_ORDER.length + ' floors.', SCREEN_W / 2, 84, COLOR.S, { align: 'center' });
-  drawText('The viewers want more.', SCREEN_W / 2, 92, COLOR.g, { align: 'center' });
-  if (since > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to play again', 'Tap to play again'), SCREEN_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
-  drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, SCREEN_W / 2, 102, COLOR.y, { align: 'center' });
+  drawText('To be continued', BASE_W / 2, 52, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
+  drawText('You cleared ' + LEVEL_ORDER.length + ' floors.', BASE_W / 2, 84, COLOR.S, { align: 'center' });
+  drawText('The viewers want more.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
+  if (since > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to play again', 'Tap to play again'), BASE_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
+  drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, BASE_W / 2, 102, COLOR.y, { align: 'center' });
   drawShopButton(END_SHOP_Y);
 }
 
 function drawPause() {
   dim(0.65);
-  drawText('Pause', SCREEN_W / 2, 44, COLOR.W, { scale: 3, align: 'center' });
-  drawText(T('Esc or click to resume', 'Tap outside the options to resume'), SCREEN_W / 2, 72, COLOR.S, { align: 'center' });
+  drawText('Pause', BASE_W / 2, 44, COLOR.W, { scale: 3, align: 'center' });
+  drawText(T('Esc or click to resume', 'Tap outside the options to resume'), BASE_W / 2, 72, COLOR.S, { align: 'center' });
 
   // the options: each is a box that can be ticked
   pauseOptions().forEach((option, i) => {
@@ -306,7 +310,7 @@ function drawPause() {
   const hovered = overPauseOption();
   if (hovered >= 0) {
     const option = pauseOptions()[hovered];
-    drawText(OPTIONS[option.key] ? option.on : option.off, SCREEN_W / 2, SCREEN_H - 12, COLOR.g, { align: 'center' });
+    drawText(OPTIONS[option.key] ? option.on : option.off, BASE_W / 2, SCREEN_H - 12, COLOR.g, { align: 'center' });
   }
 }
 
@@ -325,7 +329,7 @@ const pauseOptions = () => PAUSE_OPTIONS.filter(o => !o.only || o.only === (touc
 // the clickable area of an option in the pause menu
 function pauseOptionRect(i) {
   const w = Math.max(...pauseOptions().map(o => textWidth(o.label))) + 28, h = 14;
-  return { x: Math.round(SCREEN_W / 2 - w / 2), y: 84 + i * 15, w, h };
+  return { x: Math.round(BASE_W / 2 - w / 2), y: 84 + i * 15, w, h };
 }
 
 // the index of the option under the mouse, or -1

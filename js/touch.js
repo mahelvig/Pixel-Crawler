@@ -47,21 +47,33 @@ function stickVector(s) {
   return { x: dx / d, y: dy / d, mag: Math.min(1, d / TOUCH.stickRadius), angle: Math.atan2(dy, dx) };
 }
 
-// Auto-fire: the nearest living enemy within the weapon's range that is not behind a wall, or null.
+// Everything that can be shot at: living enemies, then shooting targets not yet hit and breakable things (nests, coffins,
+// cameras). solid is the tile the thing stands in, which does not count as a wall between it and the player.
+function shootables(pl) {
+  const list = [];
+  for (const en of world.enemies) if (!en.dead) list.push({ x: en.x, y: en.y, enemy: true });
+  for (const t of world.targets) if (!t.hit) list.push({ x: t.x, y: t.y, solid: null });
+  for (const b of world.breakables) list.push({ x: b.x, y: b.y + 8 - BREAKABLES[b.kind].h / 2, solid: [Math.floor(b.x / TILE), Math.floor(b.y / TILE)] });
+  return list;
+}
+
+// Auto-fire: the nearest enemy within the weapon's range that is not behind a wall; if there is none, the nearest target or
+// breakable. Returns null if there is nothing.
 function autoTarget(pl) {
   if (!touch.on || !OPTIONS.autoFire || !world.enemies || !pl.weapon) return null;
   const range = WEAPONS[pl.weapon].range;
-  let best = null, bestDist = range;
-  for (const en of world.enemies) {
-    if (en.dead) continue;
-    const d = Math.hypot(en.x - pl.x, en.y - (pl.y - 4));
-    if (d >= bestDist) continue;
+  let best = null, bestDist = Infinity;
+  for (const o of shootables(pl)) {
+    const d = Math.hypot(o.x - pl.x, o.y - (pl.y - 4));
+    const better = !best || (o.enemy && !best.enemy) || (!!o.enemy === !!best.enemy && d < bestDist);
+    if (d >= range || !better) continue;
     let clear = true;
     for (let i = 1; i < 8 && clear; i++) {
-      const px = pl.x + (en.x - pl.x) * i / 8, py = pl.y + (en.y - pl.y) * i / 8;
-      if (blocksBullets(world.level, Math.floor(px / TILE), Math.floor(py / TILE))) clear = false;
+      const tx = Math.floor((pl.x + (o.x - pl.x) * i / 8) / TILE), ty = Math.floor((pl.y + (o.y - pl.y) * i / 8) / TILE);
+      if (o.solid && tx === o.solid[0] && ty === o.solid[1]) continue;
+      if (blocksBullets(world.level, tx, ty)) clear = false;
     }
-    if (clear) { best = en; bestDist = d; }
+    if (clear) { best = o; bestDist = d; }
   }
   return best;
 }
@@ -119,8 +131,7 @@ function aimAngle(pl) {
   }
   if (!OPTIONS.aimAssist || !world.enemies) return v.angle;
   let best = null, bestDist = TOUCH.assistRange;
-  for (const en of world.enemies) {
-    if (en.dead) continue;
+  for (const en of shootables(pl)) {
     const dx = en.x - pl.x, dy = en.y - (pl.y - 4), d = Math.hypot(dx, dy);
     if (d >= bestDist) continue;
     const diff = Math.atan2(Math.sin(Math.atan2(dy, dx) - v.angle), Math.cos(Math.atan2(dy, dx) - v.angle));
