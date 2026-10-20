@@ -11,6 +11,68 @@ const starterPower = (pl, type) => pl.starter === type && !WEAPONS[type].infinit
 const hasAmmo = (pl, type) => !!type && (isInfinite(pl, type) || (pl.ammo[type] || 0) > 0);
 const ammoText = (pl, type) => isInfinite(pl, type) ? '∞' : String(pl.ammo[type] || 0);
 
+// ---------- What is better ----------
+// A score for comparing things: rarity first, then upgrade level (clothes) or damage per second (weapons).
+const RARITY_RANK = { common: 0, rare: 1, epic: 2, legendary: 3 };
+function itemScore(pl, type, level = pl.gearLevel[type] || 0) {
+  if (isGear(type)) return RARITY_RANK[GEAR[type].rarity] * 100 + level * 10;
+  const v = WEAPONS[type];
+  return RARITY_RANK[v.rarity] * 1000 + v.damage * v.bulletsPerShot * v.shotsPerSec;
+}
+
+// The places a piece of clothing can be worn, and the one holding the weakest piece (an empty place is the weakest).
+const wornPlaces = type => GEAR_SLOTS.map((s, i) => s === GEAR[type].slot ? BAG.equipStart + i : -1).filter(i => i >= 0);
+function weakestWorn(pl, type) {
+  let best = -1, low = Infinity;
+  for (const i of wornPlaces(type)) {
+    const score = pl.slots[i] ? itemScore(pl, pl.slots[i]) : -1;
+    if (score < low) { low = score; best = i; }
+  }
+  return { index: best, score: low };
+}
+
+// How much a thing in storage is worth keeping. Clothes that are no better than what is worn already are junk (-1).
+function storedScore(pl, i) {
+  const type = pl.slots[i], score = itemScore(pl, type);
+  if (isGear(type) && wornPlaces(type).every(p => pl.slots[p] && itemScore(pl, pl.slots[p]) >= score)) return -1;
+  return score;
+}
+
+// The weakest thing in storage if the newcomer is better than it, otherwise -1.
+function worstStored(pl, type, level) {
+  let worst = -1, low = Infinity;
+  for (let i = BAG.hotbarSlots; i < BAG.equipStart; i++) {
+    if (!pl.slots[i]) continue;
+    const score = storedScore(pl, i);
+    if (score < low) { low = score; worst = i; }
+  }
+  return worst >= 0 && low < itemScore(pl, type, level) ? worst : -1;
+}
+
+// Sells what is in a slot (to make room for something better).
+function sellSlot(pl, i) {
+  const type = pl.slots[i];
+  pl.slots[i] = null;
+  if (isWeapon(type)) pl.ammo[type] = 0; else delete pl.gearLevel[type];
+  updateActive(pl);
+  sellItem(pl, { type, x: pl.x, y: pl.y }, 'Sold ' + (isGear(type) ? GEAR[type].name : WEAPONS[type].name));
+}
+
+// +1 if picking this up would make you stronger, -1 if it would just be sold, otherwise 0 (an arrow is drawn above it).
+function pickupVerdict(pl, g) {
+  const level = g.level || 0;
+  if (isGear(g.type)) {
+    if (pl.slots.some((t, i) => t === g.type && i >= BAG.hotbarSlots)) return (pl.gearLevel[g.type] || 0) < GEAR_UPGRADE.maxLevel ? 1 : -1;
+    if (weakestWorn(pl, g.type).score < itemScore(pl, g.type, level)) return 1;
+    return freeSlot(pl, g.type) >= 0 || worstStored(pl, g.type, level) >= 0 ? 0 : -1;
+  }
+  if (pl.slots.includes(g.type)) return 0;
+  let best = -1;
+  for (const t of pl.slots) if (isWeapon(t)) best = Math.max(best, itemScore(pl, t));
+  if (itemScore(pl, g.type) > best) return 1;
+  return freeSlot(pl, g.type) >= 0 || worstStored(pl, g.type, 0) >= 0 ? 0 : -1;
+}
+
 // Picks a rarity (see pickLootRarity), then a random weapon of that rarity.
 // Weapons with infinite ammo never drop, since you can only ever need one of them.
 function randomWeapon(quality = 1) {
@@ -86,8 +148,12 @@ function pickUp(pl, g) {
     pl.ammo[g.type] = Math.min(v.ammoMax, before + gave);
     text = `+${pl.ammo[g.type] - before} ammo`;
   } else {
-    const free = freeSlot(pl, g.type);
-    if (free < 0) return sellItem(pl, g, 'Bag full');
+    let free = freeSlot(pl, g.type);
+    if (free < 0) {
+      free = worstStored(pl, g.type, 0);
+      if (free < 0) return sellItem(pl, g, 'Bag full');
+      sellSlot(pl, free);
+    }
     pl.slots[free] = g.type;
     pl.ammo[g.type] = gave || 0;
     updateActive(pl);
@@ -129,9 +195,22 @@ function pickUpGear(pl, g) {
     pl.slots[place] = g.type;
     text = 'Wearing ' + item.name;
     sfx('equip');
+  } else if (weakestWorn(pl, g.type).score < itemScore(pl, g.type, g.level || 0)) {
+    // better than what is worn: put it on, and the old piece goes into storage (or is sold if there is no room)
+    const worn = weakestWorn(pl, g.type).index, old = pl.slots[worn];
+    pl.slots[worn] = g.type;
+    if (g.level) pl.gearLevel[g.type] = g.level;
+    const free = freeSlot(pl, old);
+    if (free >= 0) pl.slots[free] = old; else { delete pl.gearLevel[old]; sellItem(pl, { type: old, x: pl.x, y: pl.y }, 'Sold ' + GEAR[old].name); }
+    text = 'Wearing ' + item.name;
+    sfx('equip');
   } else {
-    const free = freeSlot(pl, g.type);
-    if (free < 0) return sellItem(pl, g, 'Bag full');
+    let free = freeSlot(pl, g.type);
+    if (free < 0) {
+      free = worstStored(pl, g.type, g.level || 0);
+      if (free < 0) return sellItem(pl, g, 'Bag full');
+      sellSlot(pl, free);
+    }
     pl.slots[free] = g.type;
     text = item.name;
   }
@@ -289,6 +368,12 @@ function drawItem(g) {
   shadow(x, Math.round(g.y), 8);
   for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) ctx.drawImage(art.glow, bx + dx, by + dy);
   ctx.drawImage(image, bx, by);
+  const verdict = pickupVerdict(world.player, g);
+  if (verdict) {
+    const ay = by - 5 - (Math.sin(g.time * 5) > 0 ? 1 : 0), ax = x, up = verdict > 0;
+    ctx.fillStyle = up ? COLOR.l : COLOR.r;
+    for (let k = 0; k < 3; k++) ctx.fillRect(ax - k, up ? ay + k : ay + 2 - k, 1 + 2 * k, 1);
+  }
   // a little sparkle now and then
   const flash = (g.time * 1.5) % 2;
   if (flash < 0.2) {
