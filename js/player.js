@@ -9,7 +9,7 @@ function createPlayer(x, y) {
   const start = chosenStartWeapon();
   slots[0] = start;
   return {
-    starter: start,
+    starter: start, fame: 0, fameIdle: 0, boxes: 0,
     x, y, vx: 0, vy: 0, aim: 0, animTime: 0,
     slots, ammo: {}, gearLevel: {}, active: 0, weapon: slots[0], cooldown: 0, recoil: 0, muzzleFlash: 0,
     life: PLAYER.life, lastMax: PLAYER.life, invulnerable: 0,
@@ -225,5 +225,6 @@ function hitTarget(dummy, k) {
     if (gauge) world.floatingTexts.push({ x: dummy.x, y: dummy.y - 16, text: 'FIXED', life: 1.2, color: COLOR.l });
     dummy.hit = true;
     world.targetsHit++;
+    track('target');
   }
 }

@@ -93,7 +93,7 @@ function statsLines(tab) {
   if (tab === 0) {
     return [
       [['Runs', formatCount(saved.runs)], ['Deaths', formatCount(s.deaths)], ['Victories', formatCount(s.wins)], ['Best floor', saved.bestFloor + ' / ' + LEVEL_ORDER.length],
-        ['Play time', formatTime(s.playTime)], ['Levels gained', formatCount(s.levels)], ['Gold earned', formatCount(s.goldEarned)], ['Items sold', formatCount(s.sold)]],
+        ['Play time', formatTime(s.playTime)], ['Levels gained', formatCount(s.levels)], ['Gold earned', formatCount(s.goldEarned)], ['Items sold', formatCount(s.sold)], ['Sponsor boxes', formatCount(s.boxes)]],
       [['Monsters killed', formatCount(s.kills)], ['Bosses defeated', formatCount(sum(s.bossTypes))], ['Shots fired', formatCount(s.shots)], ['Critical hits', formatCount(s.crits)],
         ['Damage taken', formatCount(s.damageTaken)], ['Distance walked', formatCount(s.walked / TILE) + ' m'], ['Things smashed', formatCount(s.destroyed)], ['Upgrades bought', formatCount(s.bought)]],
     ];

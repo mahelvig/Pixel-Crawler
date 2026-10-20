@@ -202,6 +202,7 @@ function update(dt) {
     updateEffects(dt);
     updateTutorial(dt);
     updateAchievements(dt);
+    updateViewers(dt);
     if (world.player.pending > 0 && !world.levelUp) openLevelUp();
   } else if (state === 'dead' || state === 'won') {
     updateBullets(dt);

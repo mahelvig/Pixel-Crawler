@@ -220,6 +220,7 @@ function drawHud() {
   drawBossBar();
   drawDevPanel();
   drawProgressHud();
+  drawViewers();
   drawText('Floor ' + (world.levelIndex + 1), SCREEN_W - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
 
   // the controls, top left, until they have been tried

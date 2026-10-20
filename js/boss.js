@@ -66,7 +66,7 @@ function goToLevel(index) {
   sfx('descend');
   world = newWorld(index);
   const pl = world.player;
-  pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.starter = old.starter; pl.active = old.active; pl.weapon = old.weapon;
+  pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.starter = old.starter; pl.fame = old.fame; pl.fameIdle = old.fameIdle; pl.boxes = old.boxes; pl.active = old.active; pl.weapon = old.weapon;
   pl.xp = old.xp; pl.level = old.level; pl.pending = old.pending; pl.perks = old.perks; pl.runGold = old.runGold;
   pl.lastMax = old.lastMax;
   floorStarted();

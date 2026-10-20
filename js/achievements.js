@@ -122,6 +122,16 @@ const ACHIEVEMENTS = [
     popup: 'You cleared the dungeon. The viewers want more.',
     story: 'You walked out. A real, actual victory. The dungeon has applauded, once, with exactly one hand. A new season has been ordered. You have been informed that you are in it.' },
 
+  { id: 'firstSponsor', name: 'Fan Favourite', hint: 'Get a box from your sponsors.', reward: { gold: 20 }, test: A => A.s.boxes >= 1,
+    popup: 'Your first sponsor box. Somebody out there likes you.',
+    story: 'The viewers loved something you did, and a sponsor sent a box to prove it. The sponsor is a company that sells soap made of regret. Please send them a thank-you note. Please do not open the note.' },
+  { id: 'crowdPleaser', name: 'Crowd Pleaser', hint: 'Get 15 boxes from your sponsors.', reward: { box: 'silver' }, test: A => A.s.boxes >= 15,
+    popup: '15 sponsor boxes. The ratings are through the roof.',
+    story: 'Fifteen boxes, from fifteen separate delighted sponsors, and three who were not delighted but sent one anyway. The viewers have made T-shirts. Your face is on the T-shirts. It is the wrong face, but it is on them.' },
+  { id: 'trending', name: 'Trending', hint: 'Get 3 boxes from your sponsors in one run.', reward: { box: 'gold' }, test: A => A.r.boxes >= 3,
+    popup: 'Three boxes in one run. You are trending.',
+    story: 'Three sponsor boxes in a single run. The dungeon has refreshed the ratings six times, because it assumed it was a mistake. It was not a mistake. You are very good at being watched.' },
+
   // ---- dying ----
   { id: 'firstDeath', name: 'Rookie Mistake', hint: 'Die for the first time.', reward: { gold: 15 }, test: A => A.s.deaths >= 1,
     popup: 'You died. The viewers are delighted.',
@@ -238,15 +248,15 @@ const unlockedStarters = () => Object.keys(WEAPONS).filter(starterUnlocked).sort
 // ---------- Counting what happens ----------
 // Totals that last for ever live in saved.stats (see progress.js), what happens during one run in run.
 
-const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels'];
-const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0,
+const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels', 'boxes'];
+const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0, boxes: 0,
   killsBy: {}, bossTypes: {}, killsByWeapon: {}, deathsBy: {} });
 
 let run = null;
 
 function resetRun() {
   run = { time: 0, floorTime: 0, floorHits: 0, kills: [], bestCombo: 0, bestCombo10: 0, still: 0, walked: 0, lastWalked: 0, lastWorld: null, check: 0,
-    flawlessBoss: false, clutchBoss: false, fastBoss: false, empty: false, quickDeath: false };
+    flawlessBoss: false, clutchBoss: false, fastBoss: false, empty: false, quickDeath: false, boxes: 0, viewersHint: false };
 }
 resetRun();
 
@@ -259,6 +269,7 @@ function floorStarted() {
 // something happened: add it to the totals and see if that finishes an achievement
 function track(event, data) {
   const s = saved.stats;
+  viewerReaction(event);
   switch (event) {
     case 'kill': {
       s.kills++;
@@ -271,6 +282,8 @@ function track(event, data) {
       run.kills = run.kills.filter(t => time - t <= 5);
       run.bestCombo = Math.max(run.bestCombo, run.kills.filter(t => time - t <= 3).length);
       run.bestCombo10 = Math.max(run.bestCombo10, run.kills.length);
+      const combo = run.kills.filter(t => time - t <= 3).length;
+      addViewers(VIEWERS.kill + Math.min(combo - 1, VIEWERS.comboCap) * VIEWERS.comboBonus);
       return;
     }
     case 'weaponKill': s.killsByWeapon[data.lastWeapon] = (s.killsByWeapon[data.lastWeapon] || 0) + 1; break;
@@ -280,12 +293,15 @@ function track(event, data) {
       if (run.floorHits === 0) run.flawlessBoss = true;
       if (world.player.life <= 1) run.clutchBoss = true;
       if (run.floorTime <= 120) run.fastBoss = true;
+      addViewers(VIEWERS.boss + (run.floorHits === 0 ? VIEWERS.flawless : 0));
       break;
     }
     case 'hurt': run.floorHits++; run.still = 0; s.damageTaken += data; return;
     case 'crit': s.crits++; break;
     case 'bought': s.bought++; break;
     case 'sold': s.sold++; break;
+    case 'box': s.boxes++; break;
+    case 'objective': case 'target': return;
     case 'destroyed': s.destroyed++; break;
     case 'empty': run.empty = true; break;
     case 'dead': s.deaths++; { const by = world.lastHitBy || 'hazard'; s.deathsBy[by] = (s.deathsBy[by] || 0) + 1; } if (run.time < 30) run.quickDeath = true; break;
@@ -335,6 +351,12 @@ function weaponOfRarity(rarity) {
   return list.length ? list[Math.floor(Math.random() * list.length)] : randomWeapon();
 }
 
+// A box is a weapon or a piece of clothing of the right rarity; it lands at the player's feet.
+function dropBox(tier) {
+  const pl = world.player, rarity = BOX_TIERS[tier].rarity, type = Math.random() < 0.5 ? randomGear(rarity) : weaponOfRarity(rarity);
+  world.items.push(createItem(type, pl.x, pl.y + 6, true));
+}
+
 function unlockAchievement(a) {
   const pl = world.player, r = a.reward;
   saved.ach[a.id] = 1;
@@ -342,9 +364,7 @@ function unlockAchievement(a) {
   if (r.gold) awardGold(r.gold, true);
   else if (r.box) {
     if (state === 'playing') {
-      // a box is a weapon or a piece of clothing of the right rarity; it lands at the player's feet
-      const rarity = BOX_TIERS[r.box].rarity, type = Math.random() < 0.5 ? randomGear(rarity) : weaponOfRarity(rarity);
-      world.items.push(createItem(type, pl.x, pl.y + 6, true));
+      dropBox(r.box);
     } else {
       awardGold(60, true);   // the run is over, so a box would be lost
     }

@@ -402,6 +402,15 @@ const SPAWN = { nearChance: 0.6, nearRadius: 7, minStartDistance: 8, minSpacing:
 // A weapon you start the run with, unlocked by mastering it (see the achievements), has endless ammo but only this share of its
 // damage and fire rate. The same weapon found in the dungeon works as normal.
 const STARTER_POWER = 0.6;
+// The viewers meter (see viewers.js). It takes base + perBox x (boxes this run) to fill, at most maxNeed. The amounts are what
+// the meter gains from each thing: a kill (plus comboBonus for every kill made within 3 seconds of another, up to comboCap),
+// a boss (plus flawless if you were not hit on that floor), a finished objective and so on. After idle seconds without anything
+// exciting the meter drains decay per second. tiers are the weights for the box that comes (tierPerFloor is added per floor).
+const VIEWERS = {
+  base: 100, perBox: 25, maxNeed: 300, idle: 5, decay: 2.5,
+  kill: 3, comboBonus: 1.5, comboCap: 6, boss: 30, flawless: 20, objective: 12, destroy: 3, target: 2, crit: 0.5,
+  tiers: { bronze: 58, silver: 30, gold: 9, platinum: 3 }, tierPerFloor: { bronze: 0, silver: 1, gold: 1, platinum: 0.5 },
+};
 const GEAR_UPGRADE = { perLevel: 0.25, maxLevel: 4 };   // finding a piece of clothing you already have makes it stronger: +25% of its stats per level, up to level 4
 const SELL_VALUE = { common: 8, rare: 20, epic: 32, legendary: 50 };   // gold for an item that is sold automatically (bag full, ammo full, clothes at the top level)
 const GEAR_DROP = 0.35;   // the share of drops (from enemies) that is clothes instead of a weapon

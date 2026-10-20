@@ -45,6 +45,7 @@ function updateObjectives(dt) {
       world.objectiveDone[i] = true;
       sfx('objective');
       gainExp(EXP.objective);
+      track('objective');
       awardGold(EXP.objectiveGold, true);
       if (o.done) systemMessage(o.done);
     }
