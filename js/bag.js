@@ -8,10 +8,10 @@
 const hasAmmo = (pl, type) => !!type && (!!WEAPONS[type].infinite || (pl.ammo[type] || 0) > 0);
 const ammoText = (pl, type) => WEAPONS[type].infinite ? '∞' : String(pl.ammo[type] || 0);
 
-// Picks a rarity (see pickRarity), then a random weapon of that rarity.
+// Picks a rarity (see pickLootRarity), then a random weapon of that rarity.
 // Weapons with infinite ammo never drop, since you can only ever need one of them.
-function randomWeapon() {
-  const picked = pickRarity();
+function randomWeapon(quality = 1) {
+  const picked = pickLootRarity(quality);
   const all = Object.keys(WEAPONS).filter(v => !WEAPONS[v].infinite);
   const candidates = all.filter(v => WEAPONS[v].rarity === picked);
   const list = candidates.length ? candidates : all;
@@ -20,8 +20,8 @@ function randomWeapon() {
 
 // delayed means the item is not picked up until the player has walked a bit away (used when dropping something).
 // ammo is how much ammo the item carries; undefined means the weapon's normal pickup amount. type is a weapon or a piece of clothing.
-function createItem(type, x, y, delayed = false, ammo = undefined) {
-  return { type, x, y, time: Math.random() * 6, delayed, ammo };
+function createItem(type, x, y, delayed = false, ammo = undefined, level = 0) {
+  return { type, x, y, time: Math.random() * 6, delayed, ammo, level };
 }
 
 function updateActive(pl) {
@@ -79,12 +79,12 @@ function pickUp(pl, g) {
     // already owned: the pickup only adds ammo
     if (v.infinite) return false;
     const before = pl.ammo[g.type] || 0;
-    if (before >= v.ammoMax) { bagMessage(`You cannot carry any more ${v.name} ammo.`); return false; }
+    if (before >= v.ammoMax) return sellItem(pl, g, 'Ammo full');
     pl.ammo[g.type] = Math.min(v.ammoMax, before + gave);
     text = `+${pl.ammo[g.type] - before} ammo`;
   } else {
     const free = freeSlot(pl, g.type);
-    if (free < 0) { bagMessage(T('Your bag is full. Right-click an item in the bag to drop it.', 'Your bag is full. Tap an item in the bag, then Drop.')); return false; }
+    if (free < 0) return sellItem(pl, g, 'Bag full');
     pl.slots[free] = g.type;
     pl.ammo[g.type] = gave || 0;
     updateActive(pl);
@@ -100,20 +100,38 @@ function pickUp(pl, g) {
   return true;
 }
 
+// Something that cannot be kept (bag full, ammo full, clothes already at the top level) is sold on the spot.
+function sellItem(pl, g, why) {
+  const rarity = isGear(g.type) ? GEAR[g.type].rarity : WEAPONS[g.type].rarity;
+  const value = awardGold(SELL_VALUE[rarity], false);
+  sfx('pickupAmmo');
+  world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: `${why}: +${value} gold`, life: 1.4, color: COLOR.O });
+  for (let p = 0; p < 6; p++) particle(g.x, g.y - 6, randRange(-35, 35), randRange(-45, 10), p % 2 ? COLOR.O : COLOR.W, 0.4);
+  return true;
+}
+
 // Clothes are put on at once if the place for them is empty, otherwise they go into storage.
 function pickUpGear(pl, g) {
   const item = GEAR[g.type], color = RARITY[item.rarity].color, place = equipSlotFor(pl, g.type);
   let text;
-  if (!pl.slots[place]) {
+  if (pl.slots.some((t, i) => t === g.type && i >= BAG.hotbarSlots)) {
+    // already owned: it gets stronger, until it is at the top level and the spare is sold
+    const level = pl.gearLevel[g.type] || 0;
+    if (level >= GEAR_UPGRADE.maxLevel) return sellItem(pl, g, 'Maxed out');
+    pl.gearLevel[g.type] = level + 1;
+    text = `${item.name} +${level + 1}`;
+    sfx('equip');
+  } else if (!pl.slots[place]) {
     pl.slots[place] = g.type;
     text = 'Wearing ' + item.name;
     sfx('equip');
   } else {
     const free = freeSlot(pl, g.type);
-    if (free < 0) { bagMessage(T('Your bag is full. Right-click an item in the bag to drop it.', 'Your bag is full. Tap an item in the bag, then Drop.')); return false; }
+    if (free < 0) return sellItem(pl, g, 'Bag full');
     pl.slots[free] = g.type;
     text = item.name;
   }
+  if (g.level && !pl.gearLevel[g.type]) pl.gearLevel[g.type] = g.level;
   if (!world.hasFoundGear) {
     world.hasFoundGear = true;
     systemMessage(T('Something to wear! Open your bag (Tab) to see what it does. E puts things on and takes them off.', 'Something to wear! Open your bag (B), tap it, then tap Wear.'), 5);
@@ -129,10 +147,12 @@ function dropItem(i) {
   const pl = world.player, type = pl.slots[i];
   if (!type) return;
   const ammo = isWeapon(type) && !WEAPONS[type].infinite ? (pl.ammo[type] || 0) : undefined;
+  const level = pl.gearLevel[type] || 0;
   if (isWeapon(type)) pl.ammo[type] = 0;
+  delete pl.gearLevel[type];
   pl.slots[i] = null;
   updateActive(pl);
-  world.items.push(createItem(type, pl.x, pl.y + 2, true, ammo));
+  world.items.push(createItem(type, pl.x, pl.y + 2, true, ammo, level));
 }
 
 // Can the two things trade places? Weapons cannot be worn and clothes cannot go on the hotbar.
@@ -321,7 +341,7 @@ function drawBag() {
     const type = pl.slots[i];
     const edge = i === world.holding ? COLOR.W : i === over ? COLOR.g : i === pl.active ? COLOR.y : COLOR.D;
     drawSlot(p.x, p.y, r, type, edge, i < BAG.hotbarSlots ? String(i + 1) : '',
-      { alpha: i === world.holding ? 0.3 : 1, ammo: type && isWeapon(type) ? ammoText(pl, type) : '', label: p.label });
+      { alpha: i === world.holding ? 0.3 : 1, ammo: type ? (isWeapon(type) ? ammoText(pl, type) : pl.gearLevel[type] ? '+' + pl.gearLevel[type] : '') : '', label: p.label });
   });
 
   drawInfo(over >= 0 ? pl.slots[over] : world.holding >= 0 ? pl.slots[world.holding] : null, over >= 0);
@@ -377,8 +397,9 @@ function drawGearInfo(type, f) {
   border(f.x, f.y, f.b, f.h, rarityInfo.color);
   ctx.drawImage(GEAR_ICONS[type], f.x + f.b - 30, f.y + 6, 24, 24);
   wrapLines(item.name, f.b - 42).forEach((l, i) => drawText(l, f.x + 6, f.y + 6 + i * 8, COLOR.W));
-  drawText(rarityInfo.name + ' ' + item.slot, f.x + 6, f.y + 24, rarityInfo.color);
-  statLines(type).forEach(([value, label], i) => {
+  const level = world.player.gearLevel[type] || 0;
+  drawText(rarityInfo.name + ' ' + item.slot + (level ? '  Lv ' + (level + 1) : ''), f.x + 6, f.y + 24, rarityInfo.color);
+  statLines(type, level).forEach(([value, label], i) => {
     drawText(label, f.x + 6, f.y + 38 + i * 8, COLOR.g);
     drawText(value, f.x + f.b - 6, f.y + 38 + i * 8, COLOR.l, { align: 'right' });
   });

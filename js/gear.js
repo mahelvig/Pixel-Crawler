@@ -13,11 +13,17 @@ function stat(name) {
   if (!pl) return 0;
   let total = 0;
   for (let i = 0; i < GEAR_SLOTS.length; i++) {
-    const item = GEAR[pl.slots[BAG.equipStart + i]];
-    if (item && item.stats[name]) total += item.stats[name];
+    const type = pl.slots[BAG.equipStart + i], item = GEAR[type];
+    if (item && item.stats[name]) total += scaledStat(name, item.stats[name], pl.gearLevel[type]);
   }
   total += progressStat(name);
   return Math.min(total, STAT_INFO[name].cap ?? Infinity);
+}
+
+// A stat of a piece of clothing at its upgrade level (0 = as found).
+function scaledStat(name, value, level = 0) {
+  const v = value * (1 + GEAR_UPGRADE.perLevel * level);
+  return STAT_INFO[name].format === 'pct' ? Math.round(v * 1000) / 1000 : Math.round(v);
 }
 
 const maxLife = () => PLAYER.life + stat('maxLife');
@@ -33,14 +39,27 @@ function pickRarity() {
   return names[0];
 }
 
-function randomGear(rarity) {
-  const wanted = rarity || pickRarity();
-  const list = Object.keys(GEAR).filter(id => GEAR[id].rarity === wanted);
-  return list[Math.floor(Math.random() * list.length)];
+// Like pickRarity, but for loot: quality (see LOOT_RARITY) and luck make the better rarities more likely.
+function pickLootRarity(quality = 1) {
+  const luck = 1 + stat('luck') * 2, names = Object.keys(LOOT_RARITY);
+  const w = names.map(n => LOOT_RARITY[n] * (n === 'common' ? 1 : Math.pow(quality, QUALITY_POWER[n]) * luck));
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < names.length; i++) if ((r -= w[i]) < 0) return names[i];
+  return names[0];
+}
+
+function randomGear(rarity, quality = 1) {
+  const wanted = rarity || pickLootRarity(quality);
+  const order = Object.keys(RARITY);
+  // if there is nothing of that rarity, take the next lower one
+  for (let i = order.indexOf(wanted); i >= 0; i--) {
+    const list = Object.keys(GEAR).filter(id => GEAR[id].rarity === order[i]);
+    if (list.length) return list[Math.floor(Math.random() * list.length)];
+  }
 }
 
 // What an enemy drops: mostly a weapon, sometimes something to wear.
-const randomDrop = () => Math.random() < GEAR_DROP ? randomGear() : randomWeapon();
+const randomDrop = quality => Math.random() < GEAR_DROP ? randomGear(null, quality) : randomWeapon(quality);
 
 // ---------- Where things may go ----------
 
@@ -75,7 +94,7 @@ function formatStat(name, value) {
 }
 
 // [value, label] for each stat on an item, like ['+10%', 'Damage'].
-const statLines = id => Object.entries(GEAR[id].stats).map(([name, value]) => [formatStat(name, value), STAT_INFO[name].label]);
+const statLines = (id, level = 0) => Object.entries(GEAR[id].stats).map(([name, value]) => [formatStat(name, scaledStat(name, value, level)), STAT_INFO[name].label]);
 
 // ---------- Icons ----------
 // Each icon is a list of rectangles [x, y, w, h, colour] on a 12x12 grid. The colour is a (main), b (trim) or g (gem).

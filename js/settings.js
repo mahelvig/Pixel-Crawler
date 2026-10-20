@@ -41,7 +41,8 @@ const CAMERA = {
 const RARITY = {
   common:    { name: 'Common',    color: '#c0cbdc', weight: 70 },
   rare:      { name: 'Rare',      color: '#0099db', weight: 25 },
-  legendary: { name: 'Legendary', color: '#feae34', weight: 5 },
+  epic:      { name: 'Epic',      color: '#b55dd8', weight: 8 },
+  legendary: { name: 'Legendary', color: '#feae34', weight: 4 },
 };
 
 // damage is damage per bullet, shotsPerSec is shots per second, bulletSpeed and range are in pixels,
@@ -102,7 +103,7 @@ const WEAPONS = {
     description: 'Heavy bolts that pierce through enemies.',
   },
   flamethrower: {
-    name: 'Flamethrower', rarity: 'rare',
+    name: 'Flamethrower', rarity: 'epic',
     damage: 1, shotsPerSec: 14, bulletSpeed: 110, range: 55, spread: 22, bulletsPerShot: 1,
     recoil: 0, shake: 0, knockbackMult: 0.1, pierce: true, image: 'flamethrower', bullet: 'flame', flash: '#f77622',
     ammoPickup: 70, ammoMax: 280,
@@ -137,7 +138,7 @@ const WEAPONS = {
     description: 'Six bullets, six chances. Reliable.',
   },
   sniperRifle: {
-    name: 'Sniper Rifle', rarity: 'rare',
+    name: 'Sniper Rifle', rarity: 'epic',
     damage: 8, shotsPerSec: 0.7, bulletSpeed: 450, range: 280, spread: 0, bulletsPerShot: 1,
     recoil: 4, shake: 2.5, knockbackMult: 3, pierce: true, armorPierce: true, image: 'sniperRifle', bullet: 'beam', flash: '#ffffff',
     ammoPickup: 6, ammoMax: 24,
@@ -158,7 +159,7 @@ const WEAPONS = {
     description: 'Slows everything it touches to a crawl.',
   },
   ricochetPistol: {
-    name: 'Ricochet Pistol', rarity: 'legendary',
+    name: 'Ricochet Pistol', rarity: 'epic',
     damage: 3, shotsPerSec: 3, bulletSpeed: 260, range: 420, spread: 2, bulletsPerShot: 1,
     recoil: 1, shake: 0.5, knockbackMult: 1, pierce: true, bounce: 5, image: 'ricochetPistol', bullet: 'spark', flash: '#fee761',
     ammoPickup: 30, ammoMax: 120,
@@ -180,7 +181,7 @@ const BAG = {
 // range is how close they must be to strike, windup is the time from starting a strike until it lands
 // (so you can step away), knockback is how far bullets push them.
 // hitbox is used against walls, body is where bullets hit (dy is how high above the feet the centre is).
-// dropChance is the chance that they drop a weapon when they die.
+// dropChance is the chance that they drop a weapon when they die, quality how good the drop is (see LOOT_RARITY, default 1).
 // Bosses: boss marks a boss, scale is how much bigger the sprite is, shadowWidth is the width of its shadow,
 // reward is the weapon it drops. Every moveInterval seconds it uses a move from moves (in order, or at random
 // with randomMoves). Each move has its own settings, and say is what the boss shouts when it uses it:
@@ -199,12 +200,12 @@ const BAG = {
 // dies, hurting the player within radius. splits: leaves this many of another enemy behind when it dies.
 const ENEMIES = {
   rat: {
-    name: 'Rat', life: 2, speed: 58, damage: 1, sight: 96, forget: 220, dropChance: 0.1,
+    name: 'Rat', life: 2, speed: 58, damage: 1, sight: 96, forget: 220, dropChance: 0.1, quality: 0.5,
     range: 11, windup: 0.25, cooldown: 0.9, knockback: 90,
     hitbox: { b: 8, h: 5 }, body: { b: 12, h: 7, dy: -1 }, colors: ['g', 's', 'm'], shadowWidth: 12,
   },
   goblin: {
-    name: 'Goblin', life: 5, speed: 40, damage: 2, sight: 110, forget: 240, dropChance: 0.4,
+    name: 'Goblin', life: 5, speed: 40, damage: 2, sight: 110, forget: 240, dropChance: 0.4, quality: 0.8,
     range: 13, windup: 0.4, cooldown: 1.3, knockback: 50,
     hitbox: { b: 8, h: 6 }, body: { b: 10, h: 15, dy: -4 }, colors: ['l', 'G', 'U'],
   },
@@ -225,18 +226,18 @@ const ENEMIES = {
     summon: { type: 'rat', count: 3, max: 8, say: 'FEAST, MY CHILDREN!' },
   },
   bat: {
-    name: 'Bat', life: 1, speed: 85, damage: 1, sight: 110, forget: 240, dropChance: 0.05,
+    name: 'Bat', life: 1, speed: 85, damage: 1, sight: 110, forget: 240, dropChance: 0.05, quality: 0.4,
     range: 9, windup: 0.12, cooldown: 0.8, knockback: 120,
     hitbox: { b: 6, h: 4 }, body: { b: 10, h: 7, dy: -5 }, colors: ['P', 'i', 'p'], shadowWidth: 8, hover: 6, flutter: 1.1,
   },
   spitter: {
-    name: 'Spitter', life: 4, speed: 30, damage: 1, sight: 130, forget: 260, dropChance: 0.3,
+    name: 'Spitter', life: 4, speed: 30, damage: 1, sight: 130, forget: 260, dropChance: 0.3, quality: 0.9,
     range: 0, windup: 0, cooldown: 1, knockback: 60, keepAway: 90,
     hitbox: { b: 8, h: 6 }, body: { b: 10, h: 15, dy: -4 }, colors: ['i', 'P', 'y'],
     shootInterval: 1.9, shots: 1, shotSpeed: 80, shotDamage: 1,
   },
   ogre: {
-    name: 'Ogre', life: 16, speed: 26, damage: 3, sight: 100, forget: 240, dropChance: 0.7,
+    name: 'Ogre', life: 16, speed: 26, damage: 3, sight: 100, forget: 240, dropChance: 0.7, quality: 1.6,
     range: 16, windup: 0.7, cooldown: 1.8, knockback: 15,
     hitbox: { b: 12, h: 8 }, body: { b: 18, h: 26, dy: -10 }, colors: ['q', 'x', 'U'], shadowWidth: 18, scale: 2,
   },
@@ -269,7 +270,7 @@ const ENEMIES = {
     dash: { windup: 0.5, time: 0.4, speed: 250, damage: 3, hit: 16, say: 'SPRINT ROUND!' },
   },
   slime: {
-    name: 'Slime', life: 6, speed: 26, damage: 1, sight: 90, forget: 200, dropChance: 0.2,
+    name: 'Slime', life: 6, speed: 26, damage: 1, sight: 90, forget: 200, dropChance: 0.2, quality: 0.7,
     range: 11, windup: 0.3, cooldown: 1.1, knockback: 80,
     hitbox: { b: 9, h: 6 }, body: { b: 12, h: 9, dy: -1 }, colors: ['l', 'G', 'f'], shadowWidth: 12,
     splits: { type: 'slimeling', count: 2 },
@@ -280,18 +281,18 @@ const ENEMIES = {
     hitbox: { b: 6, h: 4 }, body: { b: 8, h: 6, dy: -1 }, colors: ['l', 'G'], shadowWidth: 8,
   },
   ghost: {
-    name: 'Ghost', life: 5, speed: 36, damage: 2, sight: 140, forget: 260, dropChance: 0.3,
+    name: 'Ghost', life: 5, speed: 36, damage: 2, sight: 140, forget: 260, dropChance: 0.3, quality: 1.1,
     range: 12, windup: 0.5, cooldown: 1.5, knockback: 30,
     hitbox: { b: 6, h: 6 }, body: { b: 10, h: 14, dy: -9 }, colors: ['S', 'b', 'c'], shadowWidth: 0, hover: 4, flutter: 0.4, ghost: true,
   },
   bomber: {
-    name: 'Bomber', life: 3, speed: 62, damage: 0, sight: 130, forget: 240, dropChance: 0.15,
+    name: 'Bomber', life: 3, speed: 62, damage: 0, sight: 130, forget: 240, dropChance: 0.15, quality: 0.7,
     range: 0, windup: 0, cooldown: 99, knockback: 100,
     hitbox: { b: 7, h: 6 }, body: { b: 10, h: 10, dy: -4 }, colors: ['r', 'o', 'y'], shadowWidth: 9,
     bomber: { radius: 30, damage: 3, fuse: 0.7 },
   },
   knight: {
-    name: 'Knight', life: 12, speed: 30, damage: 2, sight: 110, forget: 240, dropChance: 0.5,
+    name: 'Knight', life: 12, speed: 30, damage: 2, sight: 110, forget: 240, dropChance: 0.5, quality: 1.4,
     range: 14, windup: 0.55, cooldown: 1.6, knockback: 20,
     hitbox: { b: 8, h: 6 }, body: { b: 12, h: 16, dy: -5 }, colors: ['g', 'S', 'D'], shadowWidth: 11, armor: 0.2,
   },
@@ -301,6 +302,14 @@ const ENEMIES = {
 // common things have one stat, rare ones two and legendary ones three. stats are listed in STAT_INFO. look is the shape
 // of the icon (see GEAR_SHAPES in gear.js) and the colours it is drawn in: a is the main colour, b the trim, g the gem.
 const GEAR_SLOTS = ['head', 'body', 'feet', 'ring', 'ring', 'neck'];   // the six places on the character, in the order of the bag screen
+// What loot is made of: the chance of each rarity before quality and luck. Every dropper has a quality (1 = normal):
+// rare things get more likely with quality, epic things with its power of 1.5 and legendary things with its square, so weak enemies almost never drop
+// good things and bosses a lot more often (but never for sure). Perks have their own weights in RARITY.
+const LOOT_RARITY = { common: 80, rare: 14, epic: 4.5, legendary: 1.5 };
+const QUALITY_POWER = { common: 0, rare: 1, epic: 1.5, legendary: 2 };   // quality is raised to this power for each rarity
+const BOSS_QUALITY = 4;
+const GEAR_UPGRADE = { perLevel: 0.25, maxLevel: 4 };   // finding a piece of clothing you already have makes it stronger: +25% of its stats per level, up to level 4
+const SELL_VALUE = { common: 8, rare: 20, epic: 32, legendary: 50 };   // gold for an item that is sold automatically (bag full, ammo full, clothes at the top level)
 const GEAR_DROP = 0.35;   // the share of drops (from enemies) that is clothes instead of a weapon
 
 const STAT_INFO = {
@@ -366,6 +375,14 @@ const GEAR = {
   magnetPendant: { name: 'Magnet Pendant', slot: 'neck', rarity: 'rare', stats: { pickupRange: 28, luck: 0.15 }, look: { shape: 'magnet', a: 'r', b: 'S' }, description: 'Attracts loot.' },
   emberAmulet: { name: 'Ember Amulet', slot: 'neck', rarity: 'rare', stats: { damage: 0.1, lightRadius: 20 }, look: { shape: 'pendant', a: 'O', b: 'o', g: 'r' }, description: 'Warm to the touch, and it glows.' },
   endlessPockets: { name: 'Endless Pockets', slot: 'neck', rarity: 'legendary', stats: { ammoSave: 0.25, pickupRange: 30, luck: 0.25 }, look: { shape: 'pendant', a: 'O', b: 'y', g: 'c' }, description: 'Bigger on the inside.' },
+
+  // ---- epic: between rare and legendary ----
+  vikingHelmet: { name: 'Viking Helmet', slot: 'head', rarity: 'epic', stats: { maxLife: 1, damage: 0.08, armor: 1 }, look: { shape: 'helmet', a: 's', b: 'O', g: 'r' }, description: 'Horns are optional.' },
+  chainmailVest: { name: 'Chainmail Vest', slot: 'body', rarity: 'epic', stats: { armor: 1, maxLife: 1, dodge: 0.05 }, look: { shape: 'vest', a: 'S', b: 'g', g: 'b' }, description: 'Heavy, but it jingles nicely.' },
+  wingedSandals: { name: 'Winged Sandals', slot: 'feet', rarity: 'epic', stats: { speed: 0.18, dodge: 0.05, invuln: 0.15 }, look: { shape: 'shoe', a: 'W', b: 'O', g: 'c' }, description: 'Hermes called. He wants them back.' },
+  ringOfHaste: { name: 'Ring of Haste', slot: 'ring', rarity: 'epic', stats: { fireRate: 0.12, speed: 0.08, crit: 0.05 }, look: { shape: 'band', a: 'c', g: 'b' }, description: 'Everything feels slower now.' },
+  bloodstoneRing: { name: 'Bloodstone Ring', slot: 'ring', rarity: 'epic', stats: { damage: 0.14, killHeal: 0.08, crit: 0.04 }, look: { shape: 'band', a: 'R', g: 'r' }, description: 'It is warm. It is always warm.' },
+  fortuneAmulet: { name: 'Amulet of Fortune', slot: 'neck', rarity: 'epic', stats: { luck: 0.2, goldGain: 0.15, xpGain: 0.15 }, look: { shape: 'pendant', a: 'O', b: 'y', g: 'l' }, description: 'The viewers adore a winner.' },
 };
 
 // Exp: the exp for the next level is round(first x growth ^ (level - 1)). An enemy gives perLife exp for every point of life it
@@ -399,6 +416,9 @@ const PERKS = {
   ricochet: { name: 'Ricochet', rarity: 'rare', max: 3, stats: { bounce: 1 }, description: 'Every bullet bounces off one more wall.' },
   piercing: { name: 'Piercing Rounds', rarity: 'rare', max: 1, stats: { pierce: 1 }, description: 'Your bullets go through enemies.' },
   volatile: { name: 'Volatile', rarity: 'rare', max: 4, stats: { volatile: 0.08 }, description: '8% of enemies explode when they die.' },
+  marksman: { name: 'Marksman', rarity: 'epic', max: 3, stats: { crit: 0.08, damage: 0.08 }, description: '+8% crit chance and +8% damage.' },
+  adrenaline: { name: 'Adrenaline', rarity: 'epic', max: 3, stats: { speed: 0.08, fireRate: 0.08 }, description: 'Run 8% faster and shoot 8% faster.' },
+  ironWill: { name: 'Iron Will', rarity: 'epic', max: 2, stats: { maxLife: 2, armor: 1 }, description: 'Two more hearts and one armor.' },
   doubleBarrel: { name: 'Double Barrel', rarity: 'legendary', max: 2, stats: { multishot: 1 }, description: 'One more bullet with every shot.' },
   berserker: { name: 'Berserker', rarity: 'legendary', max: 2, stats: { damage: 0.2, fireRate: 0.1 }, description: '+20% damage and +10% fire rate.' },
   feast: { name: 'Feast', rarity: 'common', effect: 'heal', stats: {}, description: 'Restore all your hearts.' },

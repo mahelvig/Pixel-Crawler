@@ -85,7 +85,7 @@ function devGiveWeapons() {
 
 // Puts on the best clothes there are: the legendary things first, then the best of the rest.
 function devDress() {
-  const pl = world.player, rank = id => ['common', 'rare', 'legendary'].indexOf(GEAR[id].rarity);
+  const pl = world.player, rank = id => Object.keys(RARITY).indexOf(GEAR[id].rarity);
   const best = Object.keys(GEAR).sort((a, b) => rank(b) - rank(a));
   GEAR_SLOTS.forEach((slot, i) => {
     const used = pl.slots.slice(BAG.equipStart, BAG.equipStart + i);

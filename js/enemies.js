@@ -298,7 +298,7 @@ function killEnemy(f) {
     systemMessage('New achievement! First blood. Reward: a weapon.');
     world.items.push(createItem(randomWeapon(), f.x, f.y));
   } else if (Math.random() < t.dropChance * (1 + DIFFICULTY.dropStep * f.tier + stat('luck')) * (f.minion ? 0.5 : 1)) {
-    world.items.push(createItem(randomDrop(), f.x, f.y));
+    world.items.push(createItem(randomDrop(t.quality), f.x, f.y));
   }
 }
 

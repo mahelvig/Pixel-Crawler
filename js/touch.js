@@ -46,7 +46,26 @@ function stickVector(s) {
   return { x: dx / d, y: dy / d, mag: Math.min(1, d / TOUCH.stickRadius), angle: Math.atan2(dy, dx) };
 }
 
-function touchFiring() { return touch.on && stickVector(touch.aim).mag > 0; }
+// Auto-fire: the nearest living enemy within the weapon's range that is not behind a wall, or null.
+function autoTarget(pl) {
+  if (!touch.on || !OPTIONS.autoFire || !world.enemies || !pl.weapon) return null;
+  const range = WEAPONS[pl.weapon].range;
+  let best = null, bestDist = range;
+  for (const en of world.enemies) {
+    if (en.dead) continue;
+    const d = Math.hypot(en.x - pl.x, en.y - (pl.y - 4));
+    if (d >= bestDist) continue;
+    let clear = true;
+    for (let i = 1; i < 8 && clear; i++) {
+      const px = pl.x + (en.x - pl.x) * i / 8, py = pl.y + (en.y - pl.y) * i / 8;
+      if (blocksBullets(world.level, Math.floor(px / TILE), Math.floor(py / TILE))) clear = false;
+    }
+    if (clear) { best = en; bestDist = d; }
+  }
+  return best;
+}
+
+function touchFiring() { return touch.on && (stickVector(touch.aim).mag > 0 || !!autoTarget(world.player)); }
 
 // returns true when the touch was used for playing; other states use the ordinary click handling
 function touchDown(e) {
@@ -93,7 +112,10 @@ function touchRelease() { touch.move = null; touch.aim = null; }
 // the aim angle from the aim stick, pulled towards the nearest enemy that is roughly in that direction
 function aimAngle(pl) {
   const v = stickVector(touch.aim);
-  if (v.mag === 0) return pl.aim;
+  if (v.mag === 0) {
+    const target = autoTarget(pl);
+    return target ? Math.atan2(target.y - (pl.y - 4), target.x - pl.x) : pl.aim;
+  }
   if (!OPTIONS.aimAssist || !world.enemies) return v.angle;
   let best = null, bestDist = TOUCH.assistRange;
   for (const en of world.enemies) {
@@ -115,6 +137,12 @@ function drawTouch() {
     ctx.fillRect(b.x, b.y, b.w, b.h);
     border(b.x, b.y, b.w, b.h, COLOR.D);
     drawText(b.label, b.x + b.w / 2, b.y + 6, COLOR.S, { align: 'center' });
+  }
+  const target = autoTarget(world.player);
+  if (target && !touch.aim) {
+    const x = Math.round(target.x - camera.x), y = Math.round(target.y - camera.y);
+    ctx.fillStyle = COLOR.r;
+    for (const [dx, dy] of [[-6, -6], [4, -6], [-6, 4], [4, 4]]) ctx.fillRect(x + dx, y + dy, 3, 3);
   }
   for (const [which, hintX, hint] of [['move', SCREEN_W * 0.18, 'MOVE'], ['aim', SCREEN_W * 0.82, 'AIM']]) {
     const s = touch[which];

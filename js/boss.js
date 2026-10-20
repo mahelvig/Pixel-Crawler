@@ -27,7 +27,7 @@ function bossDefeated(f) {
   if (world.stairs) { world.stairs.active = true; world.stairs.time = 0; }
   systemMessage(t.name + ' is dead. A staircase leads further down.', 5);
   world.items.push(createItem(t.reward, f.x, f.y + 4));
-  world.items.push(createItem(randomGear('legendary'), f.x + 10, f.y + 4));   // and something legendary to wear
+  world.items.push(createItem(randomGear(null, BOSS_QUALITY), f.x + 10, f.y + 4));   // and something to wear, with a good chance of it being rare, epic or legendary
   // the boss's minions, shots and danger zones disappear with it
   for (const e of [...world.enemies]) if (e.minion) { puff(e.x, e.y); world.enemies.splice(world.enemies.indexOf(e), 1); }
   world.enemyBullets.length = 0;
@@ -65,7 +65,7 @@ function goToLevel(index) {
   sfx('descend');
   world = newWorld(index);
   const pl = world.player;
-  pl.slots = old.slots; pl.ammo = old.ammo; pl.active = old.active; pl.weapon = old.weapon;
+  pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.active = old.active; pl.weapon = old.weapon;
   pl.xp = old.xp; pl.level = old.level; pl.pending = old.pending; pl.perks = old.perks; pl.runGold = old.runGold;
   pl.lastMax = old.lastMax;
   pl.life = Math.min(maxLife(), old.life + 2);

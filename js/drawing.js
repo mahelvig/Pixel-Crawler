@@ -313,13 +313,14 @@ const PAUSE_OPTIONS = [
   { key: 'rightClickMove', label: 'Move with right-click', on: 'Hold the right button to walk towards the cursor. WASD is off.', off: 'Turns off WASD and walks towards the cursor instead.' },
   { key: 'sfx', label: 'Sound effects', on: 'Sound effects are on.', off: 'Sound effects are off.' },
   { key: 'aimAssist', label: 'Aim assist (touch)', on: 'On touch screens the aim stick nudges your shots towards nearby enemies.', off: 'Aim assist is off: you aim exactly where the stick points.' },
+  { key: 'autoFire', label: 'Auto-fire (touch)', on: 'On touch screens you shoot at the nearest enemy by yourself. Use the aim stick to aim yourself.', off: 'Auto-fire is off: you only shoot while the aim stick is held.' },
   { key: 'music', label: 'Music (M)', on: 'Music is on. Press M to switch it on or off at any time.', off: 'Music is off. Press M to switch it on or off at any time.' },
 ];
 
 // the clickable area of an option in the pause menu
 function pauseOptionRect(i) {
-  const w = Math.max(...PAUSE_OPTIONS.map(o => textWidth(o.label))) + 28, h = 16;
-  return { x: Math.round(SCREEN_W / 2 - w / 2), y: 86 + i * 18, w, h };
+  const w = Math.max(...PAUSE_OPTIONS.map(o => textWidth(o.label))) + 28, h = 14;
+  return { x: Math.round(SCREEN_W / 2 - w / 2), y: 84 + i * 15, w, h };
 }
 
 // the index of the option under the mouse, or -1

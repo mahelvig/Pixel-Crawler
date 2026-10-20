@@ -47,7 +47,7 @@ const keys = new Set();
 const mouse = { x: SCREEN_W / 2, y: SCREEN_H / 2, down: false, inside: false, moving: false };
 
 // options the player can change in the pause menu, remembered between visits
-const OPTIONS = { rightClickMove: false, sfx: true, music: true, aimAssist: true };
+const OPTIONS = { rightClickMove: false, sfx: true, music: true, aimAssist: true, autoFire: true };
 for (const key of Object.keys(OPTIONS)) {
   try {
     const saved = localStorage.getItem('pixelCrawler.' + key);
