@@ -48,13 +48,18 @@ const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
 function fitScreen() {
-  const b = document.body.clientWidth, h = document.body.clientHeight;
-  let scale = Math.min(b / SCREEN_W, h / SCREEN_H);
-  if (scale >= 2) scale = Math.floor(scale * 2) / 2;
+  // the real visible size: on phones the body can be taller than what is on screen (address bar)
+  const vv = window.visualViewport, w = vv ? vv.width : (window.innerWidth || document.body.clientWidth), h = vv ? vv.height : (window.innerHeight || document.body.clientHeight);
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  let scale = Math.min(w / SCREEN_W, h / SCREEN_H);
+  if (scale >= 2 && !coarse) scale = Math.floor(scale * 2) / 2; // phones use every pixel they have
+  if (document.body.style) document.body.style.height = h + 'px';
   canvas.style.width = Math.floor(SCREEN_W * scale) + 'px';
   canvas.style.height = Math.floor(SCREEN_H * scale) + 'px';
 }
 window.addEventListener('resize', fitScreen);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fitScreen);
+window.addEventListener('orientationchange', fitScreen);
 fitScreen();
 
 function textWidth(text, scale = 1) {
