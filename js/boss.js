@@ -20,6 +20,7 @@ function openGate() {
 function bossDefeated(f) {
   const t = ENEMIES[f.type];
   world.bossDefeated = true;
+  track('boss', f);
   camera.shake = 7;
   spawnDrops('gem', f.x, f.y, EXP.boss * (world.levelIndex + 1));
   spawnDrops('coin', f.x, f.y, EXP.bossGold * (world.levelIndex + 1));
@@ -50,7 +51,7 @@ function nextLevel() {
   const index = world.levelIndex + 1;
   if (index >= LEVEL_ORDER.length) {
     state = 'won';
-    endRun();
+    endRun(true);
     world.wonTime = time;
     mouse.down = false;
     mouse.moving = false;
@@ -65,9 +66,10 @@ function goToLevel(index) {
   sfx('descend');
   world = newWorld(index);
   const pl = world.player;
-  pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.active = old.active; pl.weapon = old.weapon;
+  pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.starter = old.starter; pl.active = old.active; pl.weapon = old.weapon;
   pl.xp = old.xp; pl.level = old.level; pl.pending = old.pending; pl.perks = old.perks; pl.runGold = old.runGold;
   pl.lastMax = old.lastMax;
+  floorStarted();
   pl.life = Math.min(maxLife(), old.life + 2);
   // the tutorial is only for the first floor
   world.hasWalked = world.hasShot = world.hasFound = world.hasFoundGear = world.goalShown = true;
@@ -99,7 +101,7 @@ function aimAt(f, t) {
 }
 
 function fireAt(f, t, angle, speed, damage) {
-  world.enemyBullets.push({ x: f.x, y: f.y + t.body.dy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 3, damage, drop: -t.body.dy });
+  world.enemyBullets.push({ x: f.x, y: f.y + t.body.dy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 3, damage, drop: -t.body.dy, by: f.type });
 }
 
 function fireFan(f, t, n, speed, damage) {
@@ -114,7 +116,7 @@ function fireRing(f, t, n, speed, damage) {
 
 // Spitters spit a single shot at the player.
 function enemyShoot(f, t) {
-  sfx('spit', f.x, f.y);
+  sfx(t.shootSound || 'spit', f.x, f.y);
   fireFan(f, t, t.shots, t.shotSpeed, t.shotDamage + f.bonusDamage);
 }
 
@@ -171,7 +173,7 @@ const BOSS_MOVES = {
           x = pl.x + Math.cos(a) * d; y = pl.y + Math.sin(a) * d;
         }
       }
-      world.hazards.push({ x, y, radius: p.radius, age: 0, warn: p.warn, active: p.active, damage: p.damage, color: COLOR[p.color], hitTime: 0 });
+      world.hazards.push({ x, y, radius: p.radius, age: 0, warn: p.warn, active: p.active, damage: p.damage, color: COLOR[p.color], hitTime: 0, by: f.type });
     }
   },
 };

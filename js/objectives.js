@@ -110,6 +110,7 @@ function destroyBreakable(b) {
   sfx('smash', b.x, b.y);
   lv.solid[Math.floor(b.y / TILE) * lv.b + Math.floor(b.x / TILE)] = 0;
   world.destroyed[b.kind] = (world.destroyed[b.kind] || 0) + 1;
+  track('destroyed');
   camera.shake = Math.max(camera.shake, 2.5);
   for (let p = 0; p < 20; p++) {
     const a = randRange(0, Math.PI * 2), s = randRange(20, 90);

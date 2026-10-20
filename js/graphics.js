@@ -185,6 +185,62 @@ function drawLevel(lv) {
       }
       if (hash(tx, ty, 19) < 0.12) { r(x0 + 3, y0 + 9, 1, 1, F.W); r(x0 + 4, y0 + 10, 2, 1, F.S); r(x0 + 6, y0 + 9, 1, 1, F.W); }
     },
+    planks(tx, ty, x0, y0) {
+      // dark saloon boards
+      r(x0, y0, 16, 16, F.u);
+      for (let row = 0; row < 4; row++) {
+        const wy = y0 + row * 4, offset = ((ty * 4 + row) * 7) % 16;
+        if (hash(tx, ty * 4 + row, 31) < 0.4) r(x0, wy, 16, 3, F.U);
+        r(x0, wy + 3, 16, 1, F.p);
+        for (let px = 0; px < 16; px++) {
+          if ((x0 + px + offset) % 16 === 0) r(x0 + px, wy, 1, 3, F.p);
+          else if (hash(x0 + px, wy, 5) < 0.05) r(x0 + px, wy + 1, 1, 1, F.H);
+        }
+      }
+    },
+    felt(tx, ty, x0, y0) {
+      // green card-table felt
+      r(x0, y0, 16, 16, F.G);
+      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const n = hash(x0 + px, y0 + py, 41);
+        if (n < 0.1) r(x0 + px, y0 + py, 1, 1, F.f);
+        else if (n < 0.14) r(x0 + px, y0 + py, 1, 1, F.l);
+      }
+      if ((tx + ty) % 4 === 0) { r(x0 + 7, y0 + 7, 2, 2, F.f); r(x0 + 7, y0 + 7, 1, 1, F.O); }
+    },
+    grass(tx, ty, x0, y0) {
+      r(x0, y0, 16, 16, F.G);
+      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const n = hash(x0 + px, y0 + py, 43);
+        if (n < 0.1) r(x0 + px, y0 + py, 1, 2, F.l);
+        else if (n < 0.2) r(x0 + px, y0 + py, 1, 1, F.f);
+        else if (n < 0.205) r(x0 + px, y0 + py, 1, 1, hash(px, py, tx) < 0.5 ? F.y : F.W);
+      }
+    },
+    dirt(tx, ty, x0, y0) {
+      r(x0, y0, 16, 16, F.H);
+      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const n = hash(x0 + px, y0 + py, 47);
+        if (n < 0.1) r(x0 + px, y0 + py, 1, 1, F.u);
+        else if (n < 0.16) r(x0 + px, y0 + py, 1, 1, F.t);
+        else if (n < 0.18) r(x0 + px, y0 + py, 2, 1, F.U);
+        else if (n < 0.185) r(x0 + px, y0 + py, 1, 1, F.s);
+      }
+    },
+    sand(tx, ty, x0, y0) {
+      r(x0, y0, 16, 16, F.a);
+      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const n = hash(x0 + px, y0 + py, 53);
+        if (n < 0.08) r(x0 + px, y0 + py, 1, 1, F.t);
+        else if (n < 0.1) r(x0 + px, y0 + py, 1, 1, F.W);
+      }
+      // wind ripples
+      for (let i = 0; i < 2; i++) {
+        const ry = 3 + i * 7 + Math.floor(hash(tx, ty, 55 + i) * 3), rx = Math.floor(hash(ty, tx, 57 + i) * 6);
+        r(x0 + rx, y0 + ry, 8, 1, F.t);
+        r(x0 + rx + 2, y0 + ry + 1, 5, 1, F.q);
+      }
+    },
     marble(tx, ty, x0, y0) {
       // a glossy checkerboard
       for (let by = 0; by < 2; by++) {
@@ -199,8 +255,11 @@ function drawLevel(lv) {
 
   // --- walls ---
   function wallTop(tx, ty, x0, y0) {
-    r(x0, y0, 16, 16, F.k);
-    for (let i = 0; i < 6; i++) r(x0 + Math.floor(hash(tx, ty, i) * 16), y0 + Math.floor(hash(ty, tx, i) * 16), 1, 1, F.K);
+    // seen from above, a wall takes its colour from the floor next to it: hedges, adobe and so on
+    const around = [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => (v(tx + dx, ty + dy) ? null : floorUnder(lv, tx + dx, ty + dy))).find(Boolean);
+    const top = around === 'grass' || around === 'dirt' ? F.f : around === 'sand' ? F.q : around === 'planks' || around === 'felt' ? F.p : F.k;
+    r(x0, y0, 16, 16, top);
+    for (let i = 0; i < 6; i++) r(x0 + Math.floor(hash(tx, ty, i) * 16), y0 + Math.floor(hash(ty, tx, i) * 16), 1, 1, top === F.f ? F.G : F.K);
     if (!v(tx - 1, ty)) r(x0, y0, 1, 16, F.D);
     if (!v(tx + 1, ty)) r(x0 + 15, y0, 1, 16, F.D);
     if (!v(tx, ty - 1)) r(x0, y0, 16, 1, F.D);
@@ -219,6 +278,32 @@ function drawLevel(lv) {
       for (let px = 0; px < 16; px++) if ((x0 + px) % 4 === 0) r(x0 + px, y0 + 4, 1, 10, F.g);
       r(x0, y0 + 8, 16, 1, F.g); r(x0, y0 + 12, 16, 1, F.g);
       r(x0, y0 + 14, 16, 2, F.g); r(x0, y0 + 15, 16, 1, F.s);
+    } else if (room === 'planks' || room === 'felt') {
+      // dark wood panelling with a gold rail
+      r(x0, y0 + 4, 16, 12, F.U);
+      for (let px = 0; px < 16; px++) if ((x0 + px) % 4 === 0) r(x0 + px, y0 + 4, 1, 12, F.p);
+      r(x0, y0 + 9, 16, 1, F.O); r(x0, y0 + 10, 16, 1, F.p);
+      r(x0, y0 + 14, 16, 1, F.u); r(x0, y0 + 15, 16, 1, F.p);
+      for (let px = 1; px < 16; px += 4) r(x0 + px, y0 + 5, 1, 3, F.u);
+    } else if (room === 'grass' || room === 'dirt') {
+      // a thick hedge
+      r(x0, y0 + 4, 16, 12, F.f);
+      for (let py = 4; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const n = hash(x0 + px, y0 + py, 61);
+        if (n < 0.3) r(x0 + px, y0 + py, 1, 1, F.G);
+        else if (n < 0.42) r(x0 + px, y0 + py, 1, 1, F.l);
+        else if (n < 0.5) r(x0 + px, y0 + py, 1, 1, F.e);
+      }
+      r(x0, y0 + 14, 16, 2, F.e);
+    } else if (room === 'sand') {
+      // adobe bricks
+      r(x0, y0 + 4, 16, 12, F.q);
+      for (let row = 0; row < 3; row++) {
+        const yy = y0 + 4 + row * 4;
+        r(x0, yy + 3, 16, 1, F.x);
+        for (let px = 0; px < 16; px++) if ((x0 + px + row * 5) % 10 === 0) r(x0 + px, yy, 1, 3, F.x);
+        r(x0, yy, 16, 1, F.t);
+      }
     } else if (room === 'concrete' || room === 'metal' || room === 'stone') {
       // brick blocks
       r(x0, y0 + 4, 16, 12, F.s);
@@ -374,6 +459,52 @@ function drawLevel(lv) {
       r(x0 + 4, y0 + 8, 2, 2, F.r); r(x0 + 6, y0 + 9, 3, 2, F.y);
       r(x0 + 2, y0 + 14, 12, 1, F.S);
       r(x0 + 1, y0 + 15, 14, 1, F.K);
+    },
+    barrel(tx, ty, x0, y0) {
+      r(x0 + 3, y0 + 1, 10, 14, F.K);
+      r(x0 + 4, y0 + 2, 8, 12, F.u);
+      r(x0 + 4, y0 + 1, 8, 2, F.t);
+      r(x0 + 4, y0 + 5, 8, 1, F.D); r(x0 + 4, y0 + 10, 8, 1, F.D);
+      for (let px = 6; px < 12; px += 3) r(x0 + px, y0 + 3, 1, 11, F.U);
+      r(x0 + 5, y0 + 3, 1, 10, F.q);
+      r(x0 + 3, y0 + 15, 10, 1, F.K);
+    },
+    tree(tx, ty, x0, y0) {
+      r(x0 + 6, y0 + 9, 4, 7, F.K);
+      r(x0 + 7, y0 + 9, 2, 6, F.U);
+      fillEllipse(g, x0 + 8, y0 + 6, 7, 6, F.K);
+      fillEllipse(g, x0 + 8, y0 + 6, 6, 5, F.f);
+      fillEllipse(g, x0 + 8, y0 + 5, 5, 4, F.G);
+      fillEllipse(g, x0 + 6, y0 + 3, 3, 2, F.l);
+      for (let i = 0; i < 5; i++) r(x0 + 3 + Math.floor(hash(tx, ty, 70 + i) * 10), y0 + 2 + Math.floor(hash(ty, tx, 80 + i) * 8), 1, 1, F.f);
+    },
+    cactus(tx, ty, x0, y0) {
+      r(x0 + 5, y0 + 2, 6, 14, F.K);
+      r(x0 + 6, y0 + 3, 4, 12, F.G);
+      r(x0 + 7, y0 + 3, 1, 12, F.l);
+      r(x0 + 2, y0 + 5, 4, 5, F.K); r(x0 + 3, y0 + 6, 2, 3, F.G); r(x0 + 3, y0 + 3, 3, 4, F.K); r(x0 + 3, y0 + 3, 2, 4, F.G);
+      r(x0 + 10, y0 + 7, 4, 5, F.K); r(x0 + 11, y0 + 8, 2, 3, F.G); r(x0 + 11, y0 + 5, 3, 5, F.K); r(x0 + 12, y0 + 5, 2, 5, F.G);
+      for (const [px, py] of [[6, 5], [9, 8], [7, 11], [3, 5], [12, 6]]) r(x0 + px, y0 + py, 1, 1, F.W);
+      r(x0 + 5, y0 + 15, 6, 1, F.K);
+    },
+    rock(tx, ty, x0, y0) {
+      fillEllipse(g, x0 + 8, y0 + 10, 7, 5, F.K);
+      fillEllipse(g, x0 + 8, y0 + 10, 6, 4, F.s);
+      fillEllipse(g, x0 + 7, y0 + 9, 4, 2, F.g);
+      r(x0 + 9, y0 + 12, 4, 1, F.D);
+      r(x0 + 3, y0 + 12, 8, 1, F.D);
+    },
+    pokertable(tx, ty, x0, y0) {
+      const er = (x, y) => tileChar(x, y) === 'W';
+      const left = !er(tx - 1, ty), right = !er(tx + 1, ty), top = !er(tx, ty - 1), bottom = !er(tx, ty + 1);
+      const xa = x0 + (left ? 1 : 0), xb = x0 + (right ? 15 : 16), ya = y0 + (top ? 1 : 0), yb = y0 + (bottom ? 12 : 16);
+      r(xa, ya, xb - xa, yb - ya, F.U);
+      r(xa + (left ? 1 : 0), ya + (top ? 1 : 0), xb - xa - (left ? 1 : 0) - (right ? 1 : 0), yb - ya - (top ? 1 : 0) - (bottom ? 1 : 0), F.G);
+      if (bottom) { r(xa, y0 + 12, xb - xa, 3, F.p); r(xa, y0 + 15, xb - xa, 1, F.K); if (left) r(x0 + 2, y0 + 14, 2, 2, F.p); if (right) r(x0 + 12, y0 + 14, 2, 2, F.p); }
+      const clutter = hash(tx, ty, 91);
+      if (clutter < 0.3) { r(x0 + 4, y0 + 5, 3, 3, F.r); r(x0 + 4, y0 + 5, 3, 1, F.m); r(x0 + 9, y0 + 6, 3, 3, F.W); }
+      else if (clutter < 0.55) { r(x0 + 6, y0 + 4, 4, 5, F.W); r(x0 + 7, y0 + 5, 2, 3, F.r); }
+      else if (clutter < 0.7) { r(x0 + 3, y0 + 6, 2, 2, F.b); r(x0 + 5, y0 + 5, 2, 2, F.O); r(x0 + 11, y0 + 7, 2, 2, F.r); }
     },
     crate(tx, ty, x0, y0) {
       r(x0 + 1, y0 + 1, 14, 14, F.U);

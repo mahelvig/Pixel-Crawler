@@ -198,6 +198,8 @@ const BAG = {
 // ghost: floats through walls. armor: a shield that cuts the damage of shots from the side it faces to this fraction
 // (not for armorPierce weapons and explosions). bomber: runs at the player and blows up after fuse seconds, or when it
 // dies, hurting the player within radius. splits: leaves this many of another enemy behind when it dies.
+// Chargers: an enemy with dash (see the boss moves) charges at the player from up to dashRange away, and can do it again after dashCooldown seconds.
+// shootSound is the sound effect a ranged enemy makes when it shoots (the default is a spit).
 const ENEMIES = {
   rat: {
     name: 'Rat', life: 2, speed: 58, damage: 1, sight: 96, forget: 220, dropChance: 0.1, quality: 0.5,
@@ -296,6 +298,91 @@ const ENEMIES = {
     range: 14, windup: 0.55, cooldown: 1.6, knockback: 20,
     hitbox: { b: 8, h: 6 }, body: { b: 12, h: 16, dy: -5 }, colors: ['g', 'S', 'D'], shadowWidth: 11, armor: 0.2,
   },
+
+  // ---- floor 6: the Desperado Club ----
+  bandit: {
+    name: 'Bandit', life: 6, speed: 44, damage: 1, sight: 140, forget: 260, dropChance: 0.3, quality: 1,
+    range: 0, windup: 0, cooldown: 1, knockback: 50, keepAway: 85,
+    hitbox: { b: 8, h: 6 }, body: { b: 10, h: 15, dy: -4 }, colors: ['x', 'u', 'h'],
+    shootInterval: 1.5, shots: 1, shotSpeed: 120, shotDamage: 1, shootSound: 'fire:revolver',
+  },
+  cardShark: {
+    name: 'Card Shark', life: 5, speed: 38, damage: 1, sight: 140, forget: 260, dropChance: 0.3, quality: 1.1,
+    range: 0, windup: 0, cooldown: 1, knockback: 60, keepAway: 75,
+    hitbox: { b: 8, h: 6 }, body: { b: 10, h: 15, dy: -4 }, colors: ['t', 'K', 'r'],
+    shootInterval: 2.4, shots: 3, shotSpeed: 80, shotDamage: 1,
+  },
+  bouncer: {
+    name: 'Bouncer', life: 18, speed: 30, damage: 3, sight: 110, forget: 240, dropChance: 0.5, quality: 1.5,
+    range: 15, windup: 0.5, cooldown: 1.5, knockback: 15,
+    hitbox: { b: 10, h: 7 }, body: { b: 14, h: 18, dy: -5 }, colors: ['k', 'K', 'W'], shadowWidth: 13, armor: 0.4,
+  },
+  dealer: {
+    name: 'The Dealer', boss: true, life: 190, speed: 42, damage: 3, sight: 170, forget: 99999, dropChance: 0,
+    range: 22, windup: 0.5, cooldown: 1.3, knockback: 6,
+    hitbox: { b: 14, h: 8 }, body: { b: 20, h: 28, dy: -12 }, colors: ['t', 'K', 'r'], shadowWidth: 22, scale: 2,
+    reward: 'sniperRifle', moveInterval: 2.3, randomMoves: true, moves: ['fan', 'ring', 'teleport', 'summon', 'fan'],
+    fan: { shots: 7, speed: 90, damage: 1, say: 'PICK A CARD!' },
+    ring: { shots: 12, speed: 65, damage: 1, say: 'ALL IN!' },
+    teleport: { say: 'NOW YOU SEE ME...' },
+    summon: { type: 'bandit', count: 2, max: 4, say: 'DEAL ME SOME BACKUP!' },
+  },
+
+  // ---- floor 7: the Hunting Grounds ----
+  boar: {
+    name: 'Boar', life: 9, speed: 36, damage: 2, sight: 120, forget: 250, dropChance: 0.35, quality: 1,
+    range: 14, windup: 0.35, cooldown: 1.2, knockback: 30, dashRange: 110, dashCooldown: 3.2,
+    dash: { windup: 0.55, time: 0.45, speed: 175, damage: 2, hit: 14 },
+    hitbox: { b: 14, h: 7 }, body: { b: 22, h: 12, dy: -5 }, colors: ['u', 'U', 'W'], shadowWidth: 22,
+  },
+  hunter: {
+    name: 'Hunter', life: 7, speed: 36, damage: 1, sight: 190, forget: 280, dropChance: 0.4, quality: 1.3,
+    range: 0, windup: 0, cooldown: 1, knockback: 50, keepAway: 130,
+    hitbox: { b: 8, h: 6 }, body: { b: 10, h: 15, dy: -4 }, colors: ['G', 'f', 'h'],
+    shootInterval: 2.3, shots: 1, shotSpeed: 160, shotDamage: 2, shootSound: 'fire:crossbow',
+  },
+  wolf: {
+    name: 'Wolf', life: 4, speed: 74, damage: 2, sight: 150, forget: 280, dropChance: 0.15, quality: 0.8,
+    range: 12, windup: 0.2, cooldown: 0.8, knockback: 70,
+    hitbox: { b: 9, h: 5 }, body: { b: 14, h: 8, dy: -2 }, colors: ['s', 'S', 'D'], shadowWidth: 14,
+  },
+  beastmaster: {
+    name: 'The Beastmaster', boss: true, life: 230, speed: 44, damage: 3, sight: 170, forget: 99999, dropChance: 0,
+    range: 22, windup: 0.5, cooldown: 1.2, knockback: 6,
+    hitbox: { b: 14, h: 8 }, body: { b: 20, h: 28, dy: -12 }, colors: ['G', 'u', 'a'], shadowWidth: 22, scale: 2,
+    reward: 'grenadeLauncher', moveInterval: 2.2, moves: ['summon', 'dash', 'fan', 'dash'],
+    fan: { shots: 5, speed: 130, damage: 2, say: 'FEEL THE ARROWS!' },
+    dash: { windup: 0.5, time: 0.45, speed: 260, damage: 3, hit: 16, say: 'CHARGE!' },
+    summon: { type: 'wolf', count: 3, max: 6, say: 'HUNT THEM DOWN!' },
+  },
+
+  // ---- floor 8: the Scorched Hive ----
+  ant: {
+    name: 'Ant', life: 2, speed: 66, damage: 1, sight: 120, forget: 240, dropChance: 0.05, quality: 0.4,
+    range: 9, windup: 0.15, cooldown: 0.7, knockback: 100,
+    hitbox: { b: 6, h: 4 }, body: { b: 10, h: 6, dy: -2 }, colors: ['U', 'x', 'r'], shadowWidth: 9,
+  },
+  antSoldier: {
+    name: 'Ant Soldier', life: 12, speed: 38, damage: 2, sight: 120, forget: 240, dropChance: 0.5, quality: 1.4,
+    range: 13, windup: 0.45, cooldown: 1.4, knockback: 20,
+    hitbox: { b: 10, h: 6 }, body: { b: 15, h: 10, dy: -3 }, colors: ['x', 'U', 'O'], shadowWidth: 15, armor: 0.45,
+  },
+  scorpion: {
+    name: 'Scorpion', life: 7, speed: 34, damage: 1, sight: 140, forget: 260, dropChance: 0.3, quality: 1,
+    range: 0, windup: 0, cooldown: 1, knockback: 50, keepAway: 55,
+    hitbox: { b: 10, h: 6 }, body: { b: 14, h: 10, dy: -3 }, colors: ['o', 'x', 'y'], shadowWidth: 14,
+    shootInterval: 2, shots: 2, shotSpeed: 90, shotDamage: 1,
+  },
+  antQueen: {
+    name: 'The Ant Queen', boss: true, life: 280, speed: 40, damage: 3, sight: 170, forget: 99999, dropChance: 0,
+    range: 24, windup: 0.55, cooldown: 1.2, knockback: 4,
+    hitbox: { b: 18, h: 9 }, body: { b: 30, h: 20, dy: -8 }, colors: ['x', 'U', 'O'], shadowWidth: 30, scale: 2,
+    reward: 'ricochetPistol', moveInterval: 2.2, moves: ['summon', 'ring', 'hazards', 'summon', 'dash'],
+    ring: { shots: 14, speed: 60, damage: 1, say: 'ACID RAIN!' },
+    hazards: { count: 4, radius: 20, warn: 0.8, active: 2.5, damage: 1, color: 'l', say: 'ACID POOLS!' },
+    dash: { windup: 0.6, time: 0.4, speed: 250, damage: 3, hit: 18, say: 'KNEEL!' },
+    summon: { type: 'ant', count: 4, max: 10, say: 'MY CHILDREN!' },
+  },
 };
 
 // Clothes, hats, shoes, rings and amulets. slot is where it is worn (see GEAR_SLOTS), rarity says how strong it is:
@@ -308,6 +395,13 @@ const GEAR_SLOTS = ['head', 'body', 'feet', 'ring', 'ring', 'neck'];   // the si
 const LOOT_RARITY = { common: 80, rare: 14, epic: 4.5, legendary: 1.5 };
 const QUALITY_POWER = { common: 0, rare: 1, epic: 1.5, legendary: 2 };   // quality is raised to this power for each rarity
 const BOSS_QUALITY = 4;
+// Where the enemies of a floor start: the map says how many of which kind, but every run they are put somewhere new.
+// Most of them stay in the same part of the floor (within nearRadius tiles of where the map has them), the rest can be anywhere
+// the player can reach before the boss gate. Nobody starts closer than minStartDistance tiles to the player or minSpacing tiles to each other.
+const SPAWN = { nearChance: 0.6, nearRadius: 7, minStartDistance: 8, minSpacing: 3 };
+// A weapon you start the run with, unlocked by mastering it (see the achievements), has endless ammo but only this share of its
+// damage and fire rate. The same weapon found in the dungeon works as normal.
+const STARTER_POWER = 0.6;
 const GEAR_UPGRADE = { perLevel: 0.25, maxLevel: 4 };   // finding a piece of clothing you already have makes it stronger: +25% of its stats per level, up to level 4
 const SELL_VALUE = { common: 8, rare: 20, epic: 32, legendary: 50 };   // gold for an item that is sold automatically (bag full, ammo full, clothes at the top level)
 const GEAR_DROP = 0.35;   // the share of drops (from enemies) that is clothes instead of a weapon
@@ -457,6 +551,8 @@ const BREAKABLES = {
   nest: { name: 'Rat nest', life: 10, w: 14, h: 12, colors: ['u', 'U', 't'], spawn: { type: 'rat', every: 5, max: 3, range: 150 } },
   coffin: { name: 'Coffin', life: 8, w: 12, h: 18, colors: ['u', 'U', 'S'], release: { type: 'bat', count: 2 } },
   camera: { name: 'TV camera', life: 7, w: 12, h: 14, colors: ['k', 'D', 'r'] },
+  slot: { name: 'Slot machine', life: 8, w: 12, h: 18, colors: ['r', 'O', 'y'], release: { type: 'bandit', count: 1 } },
+  anthill: { name: 'Anthill', life: 12, w: 16, h: 10, colors: ['t', 'q', 'u'], spawn: { type: 'ant', every: 4, max: 4, range: 150 } },
 };
 
 const PICKUPS = { fuse: { name: 'Fuse' } };

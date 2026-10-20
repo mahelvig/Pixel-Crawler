@@ -7,13 +7,13 @@
 
 // ---------- Saved between runs ----------
 
-const saved = { gold: 0, upgrades: {}, bestFloor: 0, runs: 0 };
+const saved = { gold: 0, upgrades: {}, bestFloor: 0, runs: 0, ach: {}, stats: emptyStats(), startWeapon: 'rubberBandGun' };
 let saveDirty = false;
 
 // Reads what was saved last time. Anything that looks wrong is thrown away, and if the browser will not give us storage
 // the game just starts from nothing.
 function loadSaved() {
-  saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0;
+  saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0; saved.ach = {}; saved.stats = emptyStats(); saved.startWeapon = 'rubberBandGun';
   try {
     const raw = localStorage.getItem('pixelCrawler.save');
     const data = raw && JSON.parse(raw);
@@ -23,6 +23,18 @@ function loadSaved() {
         const level = Math.floor(Number(data.upgrades && data.upgrades[id]) || 0);
         if (level > 0) saved.upgrades[id] = Math.min(level, UPGRADES[id].max);
       }
+      for (const a of ACHIEVEMENTS) if (data.ach && data.ach[a.id]) saved.ach[a.id] = 1;
+      const st = data.stats || {};
+      for (const key of STAT_NAMES) saved.stats[key] = Math.max(0, Math.floor(Number(st[key]) || 0));
+      const count = (from, key) => Math.max(0, Math.floor(Number(from && from[key]) || 0));
+      for (const type in ENEMIES) {
+        if (count(st.killsBy, type) > 0) saved.stats.killsBy[type] = count(st.killsBy, type);
+        if (ENEMIES[type].boss && count(st.bossTypes, type) > 0) saved.stats.bossTypes[type] = count(st.bossTypes, type);
+        if (count(st.deathsBy, type) > 0) saved.stats.deathsBy[type] = count(st.deathsBy, type);
+      }
+      if (count(st.deathsBy, 'hazard') > 0) saved.stats.deathsBy.hazard = count(st.deathsBy, 'hazard');
+      for (const id in WEAPONS) if (count(st.killsByWeapon, id) > 0) saved.stats.killsByWeapon[id] = count(st.killsByWeapon, id);
+      if (typeof data.startWeapon === 'string' && WEAPONS[data.startWeapon]) saved.startWeapon = data.startWeapon;
     }
   } catch (e) { /* nothing saved, or storage is blocked */ }
 }
@@ -33,9 +45,10 @@ function saveGame() {
 }
 
 // Called when a run ends, by dying or by winning.
-function endRun() {
+function endRun(won = false) {
   saved.runs++;
   saved.bestFloor = Math.max(saved.bestFloor, world.levelIndex + 1);
+  track(won ? 'won' : 'dead');
   saveGame();
 }
 
@@ -52,6 +65,7 @@ function gainExp(amount) {
   while (pl.xp >= expNeeded(pl.level)) {
     pl.xp -= expNeeded(pl.level);
     pl.level++;
+    saved.stats.levels++;
     pl.pending++;
   }
 }
@@ -60,6 +74,7 @@ function gainExp(amount) {
 function awardGold(amount, show) {
   const pl = world.player, value = Math.round(amount * (1 + stat('goldGain')));
   saved.gold += value;
+  saved.stats.goldEarned += value;
   pl.runGold += value;
   saveDirty = true;
   if (show) world.floatingTexts.push({ x: pl.x, y: pl.y - 26, text: '+' + value + ' gold', life: 1.2, color: COLOR.O });

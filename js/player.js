@@ -6,8 +6,10 @@
 // hotbar slot, and weapon is the weapon in that slot (null means empty hands)
 function createPlayer(x, y) {
   const slots = new Array(BAG.equipStart + GEAR_SLOTS.length).fill(null);
-  slots[0] = PLAYER.startWeapon;
+  const start = chosenStartWeapon();
+  slots[0] = start;
   return {
+    starter: start,
     x, y, vx: 0, vy: 0, aim: 0, animTime: 0,
     slots, ammo: {}, gearLevel: {}, active: 0, weapon: slots[0], cooldown: 0, recoil: 0, muzzleFlash: 0,
     life: PLAYER.life, lastMax: PLAYER.life, invulnerable: 0,
@@ -82,7 +84,7 @@ function updatePlayer(dt) {
   else if (pl.cooldown <= 0) {
     if (hasAmmo(pl, pl.weapon)) {
       fire(pl, v);
-      pl.cooldown += 1 / (v.shotsPerSec * (1 + stat('fireRate')));
+      pl.cooldown += 1 / (v.shotsPerSec * (1 + stat('fireRate')) * starterPower(pl, pl.weapon));
     } else {
       // empty: switch to something that still has ammo, or tell the player
       sfx('empty');
@@ -108,9 +110,10 @@ function fire(pl, v) {
     if (blocksBullets(world.level, Math.floor(px / TILE), Math.floor(py / TILE))) { splash(px, py - h, v.flash, pl.aim); return; }
   }
   // clothes make every shot stronger, and some shots are critical hits that do double
-  const crit = Math.random() < stat('crit'), mult = (1 + stat('damage')) * (crit ? 2 : 1);
+  const crit = Math.random() < stat('crit'), mult = (1 + stat('damage')) * (crit ? 2 : 1) * starterPower(pl, type);
   if (crit) {
     world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: 'CRIT!', life: 0.7, color: COLOR.O });
+    track('crit');
     sfx('crit');
   }
   // perks can add bullets; a weapon that aims straight then gets a little spread so they do not fly on top of each other
@@ -121,14 +124,16 @@ function fire(pl, v) {
       x: m.x, y: m.y, vx: Math.cos(angle) * v.bulletSpeed, vy: Math.sin(angle) * v.bulletSpeed,
       life: v.range / v.bulletSpeed, damage: Math.round(v.damage * mult * 10) / 10, image: v.bullet, color: v.flash,
       knockbackMult: v.knockbackMult, hit: v.pierce || stat('pierce') > 0 ? [] : null, explode: v.explode && { radius: v.explode.radius, damage: Math.round(v.explode.damage * mult * 10) / 10 }, drop: PLAYER.shotHeight,
-      bounces: (v.bounce || 0) + stat('bounce'), slow: v.slow, armorPierce: v.armorPierce,
+      weapon: type, bounces: (v.bounce || 0) + stat('bounce'), slow: v.slow, armorPierce: v.armorPierce,
     });
   }
-  if (!v.infinite && !(dev.on && dev.ammo) && !(Math.random() < stat('ammoSave'))) {
+  track('shot');
+  if (!isInfinite(pl, type) && !(dev.on && dev.ammo) && !(Math.random() < stat('ammoSave'))) {
     pl.ammo[type] -= 1;
     if (pl.ammo[type] <= 0) {
       world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: 'OUT OF AMMO', life: 1, color: COLOR.r });
       sfx('outOfAmmo');
+      track('empty');
       switchToNextWithAmmo(pl);
     }
   }
@@ -198,7 +203,7 @@ function explodeAt(k) {
   for (const f of [...world.enemies]) {
     const e = ENEMIES[f.type], dx = f.x - x, dy = f.y + e.body.dy - y, d = Math.hypot(dx, dy);
     if (d > ex.radius + e.body.b / 2) continue;
-    hitEnemy(f, { x, y, vx: dx / (d || 1) * 50, vy: dy / (d || 1) * 50, damage: ex.damage, knockbackMult: k.knockbackMult, explosion: true });
+    hitEnemy(f, { x, y, vx: dx / (d || 1) * 50, vy: dy / (d || 1) * 50, damage: ex.damage, knockbackMult: k.knockbackMult, explosion: true, weapon: k.weapon });
   }
   for (const t of world.targets) {
     if (Math.hypot(t.x - x, t.y - y) <= ex.radius + 8) hitTarget(t, { x, y, vx: t.x - x, vy: t.y - y, damage: ex.damage });

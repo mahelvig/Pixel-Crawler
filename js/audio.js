@@ -265,6 +265,7 @@ function sfx(name, x, y, delay) {
 const _ = null;
 const MINOR = [0, 2, 3, 5, 7, 8, 10], PHRYGIAN = [0, 1, 3, 5, 7, 8, 10], HARMONIC = [0, 2, 3, 5, 7, 8, 11];
 const MAJOR = [0, 2, 4, 5, 7, 9, 11], MIXOLYDIAN = [0, 2, 4, 5, 7, 9, 10];
+const DORIAN = [0, 2, 3, 5, 7, 9, 10], PHRYGIAN_DOMINANT = [0, 1, 4, 5, 7, 8, 10];
 
 const MUSIC = {
   title: {
@@ -315,6 +316,30 @@ const MUSIC = {
     drums: { kick: 'x...x...x...x..x', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
     waves: { bass: 'square', arp: 'triangle', lead: 'square', pad: 'triangle' },
   },
+  casino: {
+    bpm: 118, root: 50, scale: MIXOLYDIAN, chords: [0, 3, 0, 4],
+    bass: [0, _, 4, _, 0, _, 4, _, 3, _, 5, _, 4, _, 2, _],
+    arp: [0, _, 2, 4, _, 2, 4, _, 7, _, 4, 2, _, 4, 2, _],
+    lead: [9, _, _, 7, 9, _, 11, _, 9, _, 7, _, 4, _, _, _, 7, _, _, 4, 7, _, 9, _, 7, _, 4, _, 2, _, _, _],
+    drums: { kick: 'x.....x.x.....x.', snare: '....x.......x...', hat: 'x.xxx.xxx.xxx.xx' },
+    waves: { bass: 'triangle', arp: 'square', lead: 'triangle', pad: 'triangle' },
+  },
+  hunting: {
+    bpm: 102, root: 52, scale: DORIAN, chords: [0, 3, 4, 0],
+    bass: [0, _, _, 0, 4, _, _, 4, 3, _, _, 3, 4, _, _, 2],
+    arp: [0, 2, 4, 7, 4, 2, 0, 2, 3, 5, 7, 5, 4, 2, 0, 2],
+    lead: [4, _, 5, _, 7, _, _, 5, 4, _, 2, _, 4, _, _, _, 5, _, 7, _, 9, _, _, 7, 5, _, 4, _, 2, _, _, _],
+    drums: { kick: 'x.......x.......', snare: '........x.......', hat: 'x.x.x.x.x.x.x.x.' },
+    waves: { bass: 'triangle', arp: 'triangle', lead: 'square', pad: 'sine' },
+  },
+  hive: {
+    bpm: 108, root: 49, scale: PHRYGIAN_DOMINANT, chords: [0, 1, 0, 4],
+    bass: [0, _, 0, _, _, 0, _, 0, 1, _, 1, _, _, 1, _, 4],
+    arp: [0, 1, 2, 4, 2, 1, 0, 1, 4, 5, 4, 2, 1, 2, 4, 7],
+    lead: [7, _, 8, _, 7, _, 4, _, 5, _, _, _, 4, _, 2, _, 1, _, 2, _, 4, _, 5, _, 4, _, _, _, _, _, _, _],
+    drums: { kick: 'x..x..x.x..x..x.', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.xx' },
+    waves: { bass: 'sawtooth', arp: 'square', lead: 'sawtooth', pad: 'triangle' }, cutoff: { bass: 800 },
+  },
   // short, sad, plays once
   dead: {
     bpm: 60, root: 52, scale: MINOR, chords: [0, 5], bars: 2, loop: false, alwaysCombat: true,
@@ -350,6 +375,9 @@ MUSIC.boss1 = bossTheme(MUSIC.sewers, 50);
 MUSIC.boss2 = bossTheme(MUSIC.boiler, 48);
 MUSIC.boss3 = bossTheme(MUSIC.catacombs, 52);
 MUSIC.boss4 = bossTheme(MUSIC.studio, 53);
+MUSIC.boss5 = bossTheme(MUSIC.casino, 50);
+MUSIC.boss6 = bossTheme(MUSIC.hunting, 52);
+MUSIC.boss7 = bossTheme(MUSIC.hive, 49);
 
 const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
 

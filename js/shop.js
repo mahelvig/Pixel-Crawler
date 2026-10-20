@@ -20,6 +20,7 @@ function buyUpgrade(id) {
   saved.gold -= cost;
   saved.upgrades[id] = upgradeLevel(id) + 1;
   saveGame();
+  track('bought');
   sfx('buy');
   return true;
 }
@@ -60,9 +61,11 @@ function clickShop() {
 }
 
 // The button on the title and end screens that opens the shop.
-const TITLE_SHOP_Y = 118, END_SHOP_Y = 134;
+const TITLE_SHOP_Y = 114, END_SHOP_Y = 134;
 
 function shopButton(y) {
+  // on the title screen the three buttons share a row (see titleButtons in stats.js)
+  if (y === TITLE_SHOP_Y) return titleButtons(y)[0];
   const w = textWidth(T('Upgrades (U)', 'Upgrades')) + 16;
   return { x: Math.round(BASE_W / 2 - w / 2), y, w, h: 13 };
 }
@@ -77,7 +80,7 @@ function drawShopButton(y) {
   ctx.fillStyle = 'rgba(24,20,37,0.85)';
   ctx.fillRect(b.x, b.y, b.w, b.h);
   border(b.x, b.y, b.w, b.h, hover ? COLOR.W : COLOR.O);
-  drawText(T('Upgrades (U)', 'Upgrades'), BASE_W / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
+  drawText(T('Upgrades (U)', 'Upgrades'), b.x + b.w / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
 }
 
 function drawShop() {

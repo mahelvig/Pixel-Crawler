@@ -32,6 +32,7 @@ function newWorld(index = 0) {
 
 function startGame() {
   world = newWorld();
+  resetRun();
   state = 'playing';
   sfx('start');
   systemMessage('Welcome to the dungeon. Try not to die.');
@@ -81,9 +82,21 @@ window.addEventListener('keydown', e => {
   if (devKey(e.code)) return;
   if (e.code === 'Tab' || e.code === 'KeyI') { toggleBag(); return; }
   if (e.code === 'KeyM') { setOption('music', !OPTIONS.music); return; }
+  if (e.code === 'KeyA' && state === 'title') { openAchievements(); return; }
+  if (e.code === 'KeyS' && state === 'title') { openStats(); return; }
+  if (e.code === 'KeyW' && state === 'title') { cycleStartWeapon(); return; }
+  if (state === 'stats' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { statsTab(e.code === 'ArrowLeft' ? -1 : 1); return; }
+  if (state === 'achievements') {
+    if (e.code === 'ArrowLeft') { achPage(-1); return; }
+    if (e.code === 'ArrowRight') { achPage(1); return; }
+    if (e.code === 'ArrowUp') { achMove(-1); return; }
+    if (e.code === 'ArrowDown') { achMove(1); return; }
+  }
   if (e.code === 'KeyU' && (state === 'title' || state === 'dead' || state === 'won')) { openShop(); return; }
   if (e.code === 'Escape' || e.code === 'KeyP') {
     if (state === 'shop') { closeShop(); return; }
+    if (state === 'achievements') { closeAchievements(); return; }
+    if (state === 'stats') { closeStats(); return; }
     if (state === 'levelup') return;
     if (state === 'bag') toggleBag();
     else togglePause();
@@ -128,6 +141,8 @@ canvas.addEventListener('pointerdown', e => {
   if (touch.on && touchDown(e)) return;
   if (state === 'levelup') { if (e.button === 0) clickPerk(); return; }
   if (state === 'shop') { if (e.button === 0) clickShop(); return; }
+  if (state === 'achievements') { if (e.button === 0) clickAchievements(); return; }
+  if (state === 'stats') { if (e.button === 0) clickStats(); return; }
   if (state === 'bag') { clickInBag(e.button); return; }
   if (e.button === 2 && state === 'playing' && OPTIONS.rightClickMove) {
     mouse.moving = true;
@@ -135,7 +150,7 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
   if (e.button !== 0) return;
-  if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else startGame(); return; }
+  if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overWeaponButton()) cycleStartWeapon(); else startGame(); return; }
   if (state === 'pause') {
     const option = overPauseOption();
     if (option >= 0) { setOption(pauseOptions()[option].key, !OPTIONS[pauseOptions()[option].key]); sfx('uiClick'); }
@@ -186,6 +201,7 @@ function update(dt) {
     updateStairs(dt);
     updateEffects(dt);
     updateTutorial(dt);
+    updateAchievements(dt);
     if (world.player.pending > 0 && !world.levelUp) openLevelUp();
   } else if (state === 'dead' || state === 'won') {
     updateBullets(dt);

@@ -57,8 +57,49 @@ function buildLevel(map, tier = 0) {
       if (t.gear) lv.items.push(createItem(randomGear(), x * TILE + 8, y * TILE + 10));
     }
   }
+  scatterEnemies(lv);
   lv.canvas = map.canvas || (map.canvas = drawLevel(lv));   // the map image never changes, so it is only made once
   return lv;
+}
+
+// Gives the enemies new places to start (see SPAWN). Only the part of the floor that the player can walk to from the start is used,
+// so nobody ends up behind the boss gate or inside a wall. An enemy that cannot find a place stays where the map put it.
+function scatterEnemies(lv) {
+  const sx = Math.floor(lv.start.x / TILE), sy = Math.floor(lv.start.y / TILE);
+  const reach = new Uint8Array(lv.b * lv.h), open = [[sx, sy]];
+  reach[sy * lv.b + sx] = 1;
+  while (open.length) {
+    const [x, y] = open.pop();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (isSolid(lv, nx, ny) || reach[ny * lv.b + nx]) continue;
+      reach[ny * lv.b + nx] = 1;
+      open.push([nx, ny]);
+    }
+  }
+  // a tile with room around it, so that even an ogre does not start stuck in a wall
+  const roomy = (x, y) => {
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (isSolid(lv, x + dx, y + dy)) return false;
+    return reach[y * lv.b + x] === 1;
+  };
+  const placed = [];
+  for (const f of lv.enemies) {
+    const ox = Math.floor(f.x / TILE), oy = Math.floor(f.y / TILE);
+    if (!reach[oy * lv.b + ox]) { placed.push({ x: ox, y: oy }); continue; }   // behind a gate or something else special: leave it
+    let near = Math.random() < SPAWN.nearChance;
+    let spot = null;
+    for (let tries = 0; tries < 90 && !spot; tries++) {
+      if (tries === 30) near = false;   // nothing suitable close by: look anywhere
+      const x = near ? ox + Math.round(randRange(-SPAWN.nearRadius, SPAWN.nearRadius)) : Math.floor(Math.random() * lv.b);
+      const y = near ? oy + Math.round(randRange(-SPAWN.nearRadius, SPAWN.nearRadius)) : Math.floor(Math.random() * lv.h);
+      if (x < 1 || y < 1 || x >= lv.b - 1 || y >= lv.h - 1 || !roomy(x, y)) continue;
+      if (Math.hypot(x - sx, y - sy) < SPAWN.minStartDistance) continue;
+      if (placed.some(p => Math.hypot(p.x - x, p.y - y) < SPAWN.minSpacing)) continue;
+      spot = { x, y };
+    }
+    if (spot) { f.x = spot.x * TILE + 8; f.y = spot.y * TILE + 10; placed.push(spot); }
+    else placed.push({ x: ox, y: oy });
+  }
 }
 
 // ---------- Movement and collision ----------

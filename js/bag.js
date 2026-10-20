@@ -5,8 +5,11 @@
 // that order (see BAG.equipStart and GEAR_SLOTS). Weapons go on the hotbar or in storage; clothes go in storage or are worn.
 // Ammo is kept per weapon type in pl.ammo, so picking up a weapon you already own just adds ammo.
 
-const hasAmmo = (pl, type) => !!type && (!!WEAPONS[type].infinite || (pl.ammo[type] || 0) > 0);
-const ammoText = (pl, type) => WEAPONS[type].infinite ? '∞' : String(pl.ammo[type] || 0);
+// Some weapons never run out: the rubber band gun, and the weapon you chose to start with (see STARTER_POWER).
+const isInfinite = (pl, type) => !!type && (!!WEAPONS[type].infinite || pl.starter === type);
+const starterPower = (pl, type) => pl.starter === type && !WEAPONS[type].infinite ? STARTER_POWER : 1;
+const hasAmmo = (pl, type) => !!type && (isInfinite(pl, type) || (pl.ammo[type] || 0) > 0);
+const ammoText = (pl, type) => isInfinite(pl, type) ? '∞' : String(pl.ammo[type] || 0);
 
 // Picks a rarity (see pickLootRarity), then a random weapon of that rarity.
 // Weapons with infinite ammo never drop, since you can only ever need one of them.
@@ -77,7 +80,7 @@ function pickUp(pl, g) {
   let text;
   if (pl.slots.includes(g.type)) {
     // already owned: the pickup only adds ammo
-    if (v.infinite) return false;
+    if (isInfinite(pl, g.type)) return sellItem(pl, g, 'Ammo full');
     const before = pl.ammo[g.type] || 0;
     if (before >= v.ammoMax) return sellItem(pl, g, 'Ammo full');
     pl.ammo[g.type] = Math.min(v.ammoMax, before + gave);
@@ -104,6 +107,7 @@ function pickUp(pl, g) {
 function sellItem(pl, g, why) {
   const rarity = isGear(g.type) ? GEAR[g.type].rarity : WEAPONS[g.type].rarity;
   const value = awardGold(SELL_VALUE[rarity], false);
+  track('sold');
   sfx('pickupAmmo');
   world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: `${why}: +${value} gold`, life: 1.4, color: COLOR.O });
   for (let p = 0; p < 6; p++) particle(g.x, g.y - 6, randRange(-35, 35), randRange(-45, 10), p % 2 ? COLOR.O : COLOR.W, 0.4);
@@ -146,7 +150,7 @@ function pickUpGear(pl, g) {
 function dropItem(i) {
   const pl = world.player, type = pl.slots[i];
   if (!type) return;
-  const ammo = isWeapon(type) && !WEAPONS[type].infinite ? (pl.ammo[type] || 0) : undefined;
+  const ammo = isWeapon(type) && !isInfinite(pl, type) ? (pl.ammo[type] || 0) : undefined;
   const level = pl.gearLevel[type] || 0;
   if (isWeapon(type)) pl.ammo[type] = 0;
   delete pl.gearLevel[type];
@@ -382,13 +386,14 @@ function drawInfo(type, overSlot) {
     ['Damage', v.bulletsPerShot > 1 ? `${v.damage} x ${v.bulletsPerShot}` : String(v.damage), COLOR.S],
     ['Shots / sec', String(v.shotsPerSec), COLOR.S],
     ['Range', String(v.range), COLOR.S],
-    ['Ammo', v.infinite ? '∞' : `${pl.ammo[type] || 0} / ${v.ammoMax}`, hasAmmo(pl, type) ? COLOR.y : COLOR.r],
+    ['Ammo', isInfinite(pl, type) ? '∞' : `${pl.ammo[type] || 0} / ${v.ammoMax}`, hasAmmo(pl, type) ? COLOR.y : COLOR.r],
   ];
   lines.forEach(([name, value, color], i) => {
     drawText(name, f.x + 6, f.y + 40 + i * 8, COLOR.g);
     drawText(value, f.x + f.b - 6, f.y + 40 + i * 8, color, { align: 'right' });
   });
   wrapLines(v.description, f.b - 12).forEach((l, i) => drawText(l, f.x + 6, f.y + 72 + i * 8, COLOR.a));
+  if (starterPower(pl, type) < 1) drawText('Starter: ' + Math.round(STARTER_POWER * 100) + '% power', f.x + 6, f.y + f.h - 10, COLOR.y);
 }
 
 // Clothes: the name, the rarity, where it is worn, what it does and a line about it.

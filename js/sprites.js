@@ -486,7 +486,165 @@ const GHOST_FRAMES = [
   ],
 ];
 
+// ---------- Animals and insects (floors 6 to 8) ----------
+
+// An ellipse with a dark outline around it.
+function outlinedEllipse(g, cx, cy, rx, ry, color) {
+  fillEllipse(g, cx, cy, rx + 1, ry + 1, COLOR.K);
+  fillEllipse(g, cx, cy, rx, ry, color);
+}
+
+// An ant seen from the side, facing right. o.k makes it bigger, o.body and o.dark are its colours, o.crown gives it a crown.
+function makeAntImage(frame, o) {
+  const k = o.k || 1, at = v => Math.round(v * k), size = v => Math.max(1, Math.round(v * k));
+  const [c, g] = createCanvas(at(14), at(8));
+  g.fillStyle = COLOR.K;
+  for (const x of [3, 5, 7]) g.fillRect(at(x + (frame ? 1 : 0)), at(6) - 1, size(1), size(2) + 1);
+  g.fillRect(at(12), at(1), 1, size(2)); g.fillRect(at(13) - 1, at(0), 1, size(2));   // feelers
+  outlinedEllipse(g, at(3), at(4), size(2), size(2), COLOR[o.body]);
+  outlinedEllipse(g, at(7), at(4), size(1), size(1), COLOR[o.dark]);
+  outlinedEllipse(g, at(10), at(4), size(2), size(2), COLOR[o.body]);
+  g.fillStyle = COLOR.W; g.fillRect(at(11), at(3), size(1), size(1));
+  g.fillStyle = COLOR.K; g.fillRect(at(12), at(5), size(1), size(1));
+  if (o.crown) { g.fillStyle = COLOR.O; g.fillRect(at(9), at(1), size(3), size(1)); g.fillRect(at(9), at(0), size(1), size(1)); g.fillRect(at(11), at(0), size(1), size(1)); }
+  return c;
+}
+
+// A wolf, facing right.
+function makeWolfImage(frame) {
+  const [c, g] = createCanvas(18, 11);
+  for (const [x, shift] of [[4, 1], [6, -1], [10, -1], [12, 1]]) {
+    const lx = x + (frame ? shift : 0);
+    g.fillStyle = COLOR.K; g.fillRect(lx - 1, 7, 4, 4);
+    g.fillStyle = COLOR.D; g.fillRect(lx, 7, 2, 3);
+  }
+  g.fillStyle = COLOR.K; g.fillRect(0, 2, 4, 3);                       // tail
+  g.fillStyle = COLOR.s; g.fillRect(1, 3, 3, 1);
+  outlinedEllipse(g, 8, 5, 6, 3, COLOR.s);                             // body
+  g.fillStyle = COLOR.D; g.fillRect(4, 3, 8, 1);
+  g.fillStyle = COLOR.g; g.fillRect(5, 7, 6, 1);
+  g.fillStyle = COLOR.K; g.fillRect(12, 0, 2, 3); g.fillRect(15, 1, 2, 2);  // ears
+  g.fillStyle = COLOR.D; g.fillRect(12, 1, 1, 2); g.fillRect(15, 2, 1, 1);
+  outlinedEllipse(g, 14, 4, 2, 2, COLOR.s);                            // head
+  g.fillStyle = COLOR.K; g.fillRect(16, 4, 2, 3);
+  g.fillStyle = COLOR.g; g.fillRect(16, 5, 1, 1);
+  g.fillStyle = COLOR.y; g.fillRect(14, 3, 1, 1);
+  g.fillStyle = COLOR.W; g.fillRect(16, 7, 1, 1);
+  return c;
+}
+
+// A wild boar with tusks, facing right.
+function makeBoarImage(frame) {
+  const [c, g] = createCanvas(22, 13);
+  for (const [x, shift] of [[5, 1], [8, -1], [13, -1], [16, 1]]) {
+    const lx = x + (frame ? shift : 0);
+    g.fillStyle = COLOR.K; g.fillRect(lx - 1, 9, 4, 4);
+    g.fillStyle = COLOR.U; g.fillRect(lx, 9, 2, 3);
+  }
+  g.fillStyle = COLOR.K; g.fillRect(0, 4, 3, 2);
+  outlinedEllipse(g, 10, 6, 8, 4, COLOR.u);                            // body
+  g.fillStyle = COLOR.U; g.fillRect(5, 2, 10, 1);
+  g.fillRect(4, 3, 3, 1);
+  outlinedEllipse(g, 17, 7, 3, 3, COLOR.u);                            // head
+  g.fillStyle = COLOR.K; g.fillRect(14, 2, 3, 3);
+  g.fillStyle = COLOR.U; g.fillRect(15, 3, 1, 2);
+  g.fillStyle = COLOR.K; g.fillRect(19, 7, 3, 4);                      // snout
+  g.fillStyle = COLOR.t; g.fillRect(20, 8, 1, 2);
+  g.fillStyle = COLOR.W; g.fillRect(19, 10, 1, 2); g.fillRect(17, 11, 1, 1);   // tusks
+  g.fillStyle = COLOR.W; g.fillRect(18, 5, 1, 1);
+  g.fillStyle = COLOR.K; g.fillRect(19, 5, 1, 1);
+  return c;
+}
+
+// A scorpion with its tail curled over its back, facing right.
+function makeScorpionImage(frame) {
+  const [c, g] = createCanvas(16, 12);
+  g.fillStyle = COLOR.K;
+  for (const x of [5, 7, 9]) g.fillRect(x + (frame ? 1 : 0), 9, 1, 3);
+  const tail = [[3, 6, 3, 3], [1, 4, 3, 3], [1, 2, 3, 3], [2, 1, 4, 2], [5, 2, 3, 3]];
+  for (const [x, y, w, h] of tail) g.fillRect(x - 1, y - 1, w + 2, h + 2);
+  outlinedEllipse(g, 8, 7, 4, 2, COLOR.o);
+  g.fillStyle = COLOR.K; g.fillRect(11, 5, 4, 4);
+  for (const [x, y, w, h] of tail) { g.fillStyle = COLOR.o; g.fillRect(x, y, w, h); }
+  g.fillStyle = COLOR.x; g.fillRect(2, 5, 1, 2); g.fillRect(2, 2, 1, 2);
+  g.fillStyle = COLOR.r; g.fillRect(6, 3, 1, 2);                       // the sting
+  outlinedEllipse(g, 14, 5, 1, 1, COLOR.o);                            // claws
+  outlinedEllipse(g, 14, 9, 1, 1, COLOR.o);
+  g.fillStyle = COLOR.o; g.fillRect(11, 6, 3, 2);
+  g.fillStyle = COLOR.y; g.fillRect(10, 6, 1, 1);
+  return c;
+}
+
+// A slot machine with a lever, 14x18.
+function makeSlotMachineImage() {
+  const [c, g] = createCanvas(14, 18);
+  g.fillStyle = COLOR.K; g.fillRect(0, 0, 12, 18); g.fillRect(11, 5, 3, 2); g.fillRect(12, 2, 2, 4);
+  g.fillStyle = COLOR.r; g.fillRect(1, 1, 10, 16);
+  g.fillStyle = COLOR.R; g.fillRect(1, 15, 10, 2);
+  g.fillStyle = COLOR.O; g.fillRect(2, 2, 8, 2);
+  g.fillStyle = COLOR.y; g.fillRect(3, 2, 1, 1); g.fillRect(6, 2, 1, 1); g.fillRect(9, 2, 1, 1);
+  g.fillStyle = COLOR.K; g.fillRect(2, 5, 8, 5);
+  g.fillStyle = COLOR.W; g.fillRect(3, 6, 6, 3);
+  g.fillStyle = COLOR.r; g.fillRect(3, 6, 2, 3);
+  g.fillStyle = COLOR.O; g.fillRect(5, 6, 2, 3);
+  g.fillStyle = COLOR.l; g.fillRect(7, 6, 2, 3);
+  g.fillStyle = COLOR.y; g.fillRect(3, 11, 1, 1); g.fillRect(5, 11, 1, 1); g.fillRect(7, 11, 1, 1);
+  g.fillStyle = COLOR.K; g.fillRect(3, 13, 6, 3);
+  g.fillStyle = COLOR.D; g.fillRect(4, 14, 4, 1);
+  g.fillStyle = COLOR.g; g.fillRect(12, 3, 1, 3);
+  g.fillStyle = COLOR.r; g.fillRect(12, 2, 2, 2);
+  return c;
+}
+
+// A mound of sand with a hole in the top, 16x10.
+function makeAnthillImage() {
+  const [c, g] = createCanvas(16, 10);
+  outlinedEllipse(g, 8, 6, 7, 3, COLOR.t);
+  fillEllipse(g, 8, 4, 5, 2, COLOR.a);
+  g.fillStyle = COLOR.q; g.fillRect(3, 7, 10, 1);
+  g.fillStyle = COLOR.K; g.fillRect(6, 3, 4, 2); g.fillRect(7, 5, 2, 1);
+  g.fillStyle = COLOR.U; g.fillRect(2, 5, 1, 1); g.fillRect(12, 6, 1, 1); g.fillRect(10, 2, 1, 1); g.fillRect(4, 3, 1, 1);
+  return c;
+}
+
 const ENEMY_IMAGES = {
+  bandit: humanoidFrames({ l: 'h', y: 'W', U: 'u', x: 'r' }, { n: 'U', S: 'u' }, 1, g => {
+    // a hat
+    g.fillStyle = COLOR.K; g.fillRect(3, 2, 10, 1); g.fillRect(5, 0, 6, 2);
+    g.fillStyle = COLOR.u; g.fillRect(4, 2, 8, 1); g.fillRect(6, 1, 4, 1);
+  }),
+  cardShark: humanoidFrames({ l: 't', y: 'W', U: 'K', x: 'r' }, { n: 'K', S: 'k' }, 1, g => {
+    // a green dealer's visor
+    g.fillStyle = COLOR.K; g.fillRect(4, 1, 8, 2);
+    g.fillStyle = COLOR.G; g.fillRect(5, 1, 6, 1);
+  }),
+  bouncer: humanoidFrames({ l: 'H', y: 'W', U: 'K', x: 'k' }, { n: 'K', S: 'k' }, 1, g => {
+    // dark glasses
+    g.fillStyle = COLOR.K; g.fillRect(4, 4, 8, 2);
+  }),
+  dealer: humanoidFrames({ l: 't', y: 'W', U: 'K', x: 'r' }, { n: 'K', S: 'k' }, 2, g => {
+    // a flat hat with a red band
+    g.fillStyle = COLOR.K; g.fillRect(3, 0, 10, 3);
+    g.fillStyle = COLOR.k; g.fillRect(4, 0, 8, 1);
+    g.fillStyle = COLOR.r; g.fillRect(4, 1, 8, 1);
+  }),
+  hunter: humanoidFrames({ l: 'h', y: 'W', U: 'G', x: 'f' }, { n: 'f', S: 'G' }, 1, g => {
+    // a green cap with a feather
+    g.fillStyle = COLOR.K; g.fillRect(4, 1, 8, 2);
+    g.fillStyle = COLOR.G; g.fillRect(5, 1, 6, 1);
+    g.fillStyle = COLOR.r; g.fillRect(10, 0, 1, 2);
+  }),
+  beastmaster: humanoidFrames({ l: 'h', y: 'W', U: 'G', x: 'u' }, { n: 'U', S: 'G' }, 2, g => {
+    // antlers
+    g.fillStyle = COLOR.a;
+    g.fillRect(3, 0, 1, 3); g.fillRect(2, 0, 1, 1); g.fillRect(12, 0, 1, 3); g.fillRect(13, 0, 1, 1);
+  }),
+  wolf: [makeWolfImage(0), makeWolfImage(1)],
+  boar: [makeBoarImage(0), makeBoarImage(1)],
+  ant: [makeAntImage(0, { body: 'U', dark: 'p' }), makeAntImage(1, { body: 'U', dark: 'p' })],
+  antSoldier: [makeAntImage(0, { k: 1.4, body: 'x', dark: 'R' }), makeAntImage(1, { k: 1.4, body: 'x', dark: 'R' })],
+  antQueen: [makeAntImage(0, { k: 1.4, body: 'x', dark: 'U', crown: true }), makeAntImage(1, { k: 1.4, body: 'x', dark: 'U', crown: true })].map(i => scaleSprite(i, 2)),
+  scorpion: [makeScorpionImage(0), makeScorpionImage(1)],
   slime: [makeSlimeImage(6, 4, false), makeSlimeImage(6, 4, true)],
   slimeling: [makeSlimeImage(3, 2, false), makeSlimeImage(3, 2, true)],
   bomber: [makeBomberImage(true), makeBomberImage(false)],
@@ -613,7 +771,7 @@ function makeFuseImage() {
   return c;
 }
 
-const BREAKABLE_IMAGES = { nest: makeNestImage(), coffin: makeCoffinImage(), camera: makeCameraImage() };
+const BREAKABLE_IMAGES = { nest: makeNestImage(), coffin: makeCoffinImage(), camera: makeCameraImage(), slot: makeSlotMachineImage(), anthill: makeAnthillImage() };
 const BREAKABLE_WHITE = {};
 for (const kind in BREAKABLE_IMAGES) BREAKABLE_WHITE[kind] = createSilhouette(BREAKABLE_IMAGES[kind], COLOR.W);
 const FUSE_IMAGE = makeFuseImage();

@@ -41,6 +41,8 @@ function draw() {
   ctx.save();
   ctx.translate(UI_X, 0);
   if (state === 'shop') drawShop();
+  else if (state === 'achievements') drawAchievements();
+  else if (state === 'stats') drawStats();
   else if (state === 'title') drawTitle();
   else {
     ctx.translate(-UI_X, 0);
@@ -55,7 +57,7 @@ function draw() {
   ctx.restore();
   drawTouch();
   if (mouse.inside && !touch.on) {
-    if (state === 'bag' || state === 'shop' || state === 'levelup') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
+    if (state === 'bag' || state === 'shop' || state === 'achievements' || state === 'stats' || state === 'levelup') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
     else drawCrosshair();
   }
 }
@@ -238,7 +240,7 @@ function drawHud() {
     // long messages are wrapped, so the box never gets wider than MESSAGE_WIDTH
     const slideIn = Math.min(1, (m.duration - m.time) * 6, m.time * 3);
     const lines = wrapLines(m.text, MESSAGE_WIDTH - 12);
-    const mb = Math.max(...lines.map(textWidth)) + 12, mh = 5 + lines.length * 8, mx = Math.round(SCREEN_W / 2 - mb / 2), my = Math.round(-mh - 1 + slideIn * (mh + 23));
+    const mb = Math.max(...lines.map(l => textWidth(l))) + 12, mh = 5 + lines.length * 8, mx = Math.round(SCREEN_W / 2 - mb / 2), my = Math.round(-mh - 1 + slideIn * (mh + 23));
     ctx.fillStyle = 'rgba(24,20,37,0.9)';
     ctx.fillRect(mx, my, mb, mh);
     ctx.fillStyle = COLOR.O;
@@ -262,12 +264,15 @@ function drawTitle() {
   drawText('Get as deep as you can.', BASE_W / 2, 72, COLOR.S, { align: 'center' });
   if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), BASE_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
   if (!touch.on) {
-    drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', BASE_W / 2, 146, COLOR.g, { align: 'center' });
-    drawText('1-4 or wheel switch weapon    Tab bag', BASE_W / 2, 154, COLOR.g, { align: 'center' });
+    drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', BASE_W / 2, 158, COLOR.g, { align: 'center' });
+    drawText('1-4 or wheel switch weapon    Tab bag', BASE_W / 2, 166, COLOR.g, { align: 'center' });
   }
-  drawText('Milestone 10', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
+  drawText('Milestone 11', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
   drawShopButton(TITLE_SHOP_Y);
-  drawText('Best floor ' + saved.bestFloor + '   ' + saved.gold + ' gold', BASE_W / 2, 136, COLOR.g, { align: 'center' });
+  drawAchButton(TITLE_SHOP_Y);
+  drawStatsButton(TITLE_SHOP_Y);
+  drawWeaponButton();
+  drawText('Best floor ' + saved.bestFloor + '   ' + saved.gold + ' gold', BASE_W / 2, 148, COLOR.g, { align: 'center' });
 }
 
 function drawDead() {

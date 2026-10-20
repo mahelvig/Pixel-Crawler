@@ -159,6 +159,13 @@ function updateEnemies(dt) {
     } else if (f.chasing) {
       if (t.bomber && f.fuse <= 0 && distance < 16) { f.fuse = t.bomber.fuse; sfx('bombFuse', f.x, f.y); }
       let move = false;
+      // chargers (boars) run at the player from a distance, after a moment of shaking
+      if (t.dash && f.cooldown <= 0 && distance < t.dashRange && distance > t.range + 12 && canSee(f.x, f.y - 4, pl.x, pl.y - 4)) {
+        f.dashWindup = t.dash.windup;
+        f.cooldown = t.dashCooldown * f.cooldownMult;
+        sfx('dashWind', f.x, f.y);
+        f.exclaim = t.dash.windup;
+      }
       if (t.keepAway) {
         // ranged enemies keep their distance: back off when too close, close in when too far or out of sight
         if (distance < t.keepAway * 0.7) { ix = -dx / distance; iy = -dy / distance; }
@@ -233,6 +240,7 @@ function hitEnemy(f, k) {
   let damage = k.damage, blocked = false;
   if (t.armor && !k.explosion && !k.armorPierce && Math.sign(k.vx) === -f.direction) { damage *= t.armor; blocked = true; }
   f.life -= damage;
+  if (k.weapon) f.lastWeapon = k.weapon;
   f.hitFlash = 0.08;
   sfx(t.boss ? 'bossHit' : 'hit', f.x, f.y);
   if (blocked) sfx('clang', f.x, f.y);
@@ -254,6 +262,7 @@ function hitEnemy(f, k) {
 
 function killEnemy(f) {
   const t = ENEMIES[f.type], center = f.y + t.body.dy;
+  if (f.lastWeapon) track('weaponKill', f);
   world.enemies.splice(world.enemies.indexOf(f), 1);
   sfx(t.boss ? 'bossDie' : 'die:' + f.type, f.x, f.y);
   if (t.bomber) bomberBoom(f, t);
@@ -265,6 +274,7 @@ function killEnemy(f) {
       spawnMinion(t.splits.type, spot.x, spot.y, null);
     }
   }
+  if (!t.boss) { track('killAny'); track('kill', f); }
   if (!t.boss && !f.minion) {
     world.killed++;
     world.killedByType[f.type] = (world.killedByType[f.type] || 0) + 1;
@@ -295,7 +305,7 @@ function killEnemy(f) {
   if (t.boss) { bossDefeated(f); return; }
   if (world.killed === 1 && !f.minion) {
     // the first kill always drops a weapon
-    systemMessage('New achievement! First blood. Reward: a weapon.');
+    systemMessage('First blood. The dungeon is feeling generous: have a weapon.');
     world.items.push(createItem(randomWeapon(), f.x, f.y));
   } else if (Math.random() < t.dropChance * (1 + DIFFICULTY.dropStep * f.tier + stat('luck')) * (f.minion ? 0.5 : 1)) {
     world.items.push(createItem(randomDrop(t.quality), f.x, f.y));
@@ -313,6 +323,8 @@ function damagePlayer(damage, from) {
   }
   if (damage > 0) damage = Math.max(1, damage - stat('armor'));
   pl.life = Math.max(0, pl.life - damage);
+  track('hurt', damage);
+  world.lastHitBy = from && (ENEMIES[from.type] ? from.type : from.by) || 'hazard';
   pl.invulnerable = PLAYER.invulnerableTime + stat('invuln');
   sfx('hurt');
   const v = Math.atan2(pl.y - from.y, pl.x - from.x);
