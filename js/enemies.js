@@ -2,12 +2,17 @@
 
 // ---------- Enemies ----------
 
+// How many times the whole dungeon has been beaten: the dungeon gets harder every time (see CYCLE).
+const dungeonCycle = () => Math.min(CYCLE.maxCycle, saved.stats.wins);
+
 function createEnemy(type, x, y, tier = 0) {
-  const t = ENEMIES[type], k = t.boss ? 0 : tier, life = Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * k));
+  const t = ENEMIES[type], cycle = dungeonCycle();
+  tier += cycle * CYCLE.cycleTiers;
+  const k = t.boss ? 0 : tier, life = Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * k) * (t.boss ? 1 + CYCLE.bossLifeStep * cycle : 1));
   return {
     type, x, y, vx: 0, vy: 0, pushX: 0, pushY: 0, life, maxLife: life, tier,
     speedMult: 1 + DIFFICULTY.speedStep * k, sightMult: 1 + DIFFICULTY.sightStep * k,
-    cooldownMult: Math.max(0.5, 1 - DIFFICULTY.cooldownStep * k), bonusDamage: Math.floor(k / DIFFICULTY.damageEvery),
+    cooldownMult: Math.max(0.5, 1 - DIFFICULTY.cooldownStep * k), bonusDamage: Math.floor(k / DIFFICULTY.damageEvery) + (t.boss ? Math.floor(cycle / CYCLE.bossDamageEvery) : 0),
     moveTime: 1.5, moveIndex: 0, dashWindup: 0, dashTime: 0, dashX: 0, dashY: 0, teleportTime: 0, minion: false, summoner: null,
     chasing: false, exclaim: 0, windup: 0, cooldown: 0, hitFlash: 0, slowTime: 0, fuse: 0, ghost: !!t.ghost,
     animTime: 0, direction: hash(x, y, 4) < 0.5 ? -1 : 1,

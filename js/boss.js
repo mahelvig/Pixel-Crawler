@@ -62,6 +62,7 @@ function nextLevel() {
 
 // Moves the player to another floor, keeping their weapons and ammo.
 function goToLevel(index) {
+  saved.tutorialDone = true;
   const old = world.player;
   sfx('descend');
   world = newWorld(index);

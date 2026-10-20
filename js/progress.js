@@ -7,13 +7,13 @@
 
 // ---------- Saved between runs ----------
 
-const saved = { gold: 0, upgrades: {}, bestFloor: 0, runs: 0, ach: {}, stats: emptyStats(), startWeapon: 'rubberBandGun' };
+const saved = { gold: 0, upgrades: {}, bestFloor: 0, runs: 0, ach: {}, stats: emptyStats(), startWeapon: 'rubberBandGun', tutorialDone: false };
 let saveDirty = false;
 
 // Reads what was saved last time. Anything that looks wrong is thrown away, and if the browser will not give us storage
 // the game just starts from nothing.
 function loadSaved() {
-  saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0; saved.ach = {}; saved.stats = emptyStats(); saved.startWeapon = 'rubberBandGun';
+  saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0; saved.ach = {}; saved.stats = emptyStats(); saved.startWeapon = 'rubberBandGun'; saved.tutorialDone = false;
   try {
     const raw = localStorage.getItem('pixelCrawler.save');
     const data = raw && JSON.parse(raw);
@@ -34,6 +34,7 @@ function loadSaved() {
       }
       if (count(st.deathsBy, 'hazard') > 0) saved.stats.deathsBy.hazard = count(st.deathsBy, 'hazard');
       for (const id in WEAPONS) if (count(st.killsByWeapon, id) > 0) saved.stats.killsByWeapon[id] = count(st.killsByWeapon, id);
+      saved.tutorialDone = data.tutorialDone === true || saved.runs > 0;
       if (typeof data.startWeapon === 'string' && WEAPONS[data.startWeapon]) saved.startWeapon = data.startWeapon;
     }
   } catch (e) { /* nothing saved, or storage is blocked */ }
@@ -46,6 +47,7 @@ function saveGame() {
 
 // Called when a run ends, by dying or by winning.
 function endRun(won = false) {
+  saved.tutorialDone = true;
   saved.runs++;
   saved.bestFloor = Math.max(saved.bestFloor, world.levelIndex + 1);
   track(won ? 'won' : 'dead');

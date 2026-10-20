@@ -35,7 +35,10 @@ function startGame() {
   resetRun();
   state = 'playing';
   sfx('start');
+  // the tutorial is only for the first run (floor 1 has been played once already)
+  if (saved.tutorialDone) { world.hasWalked = world.hasShot = world.hasFound = world.hasFoundGear = true; world.helpAlpha = 0; }
   systemMessage('Welcome to the dungeon. Try not to die.');
+  if (dungeonCycle() > 0) systemMessage('The dungeon has been beaten ' + saved.stats.wins + (saved.stats.wins === 1 ? ' time' : ' times') + '. It is angrier now, and it brought friends.', 5);
 }
 
 function systemMessage(text, duration = 4) {

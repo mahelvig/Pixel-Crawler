@@ -57,6 +57,11 @@ function buildLevel(map, tier = 0) {
       if (t.gear) lv.items.push(createItem(randomGear(), x * TILE + 8, y * TILE + 10));
     }
   }
+  // a dungeon that has been beaten before has more enemies
+  const share = dungeonCycle() * CYCLE.enemyShare;
+  for (const f of lv.enemies.slice()) {
+    for (let n = Math.floor(share) + (Math.random() < share % 1 ? 1 : 0); n > 0; n--) lv.enemies.push(createEnemy(f.type, f.x, f.y, tier));
+  }
   scatterEnemies(lv);
   lv.canvas = map.canvas || (map.canvas = drawLevel(lv));   // the map image never changes, so it is only made once
   return lv;

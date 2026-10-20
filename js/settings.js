@@ -572,6 +572,11 @@ const PICKUPS = { fuse: { name: 'Fuse' } };
 // and a better chance to drop a weapon. Bosses have their own numbers and are not scaled.
 const DIFFICULTY = { lifeStep: 0.22, speedStep: 0.05, sightStep: 0.08, cooldownStep: 0.06, damageEvery: 3, dropStep: 0.15 };
 
+// Every time the whole dungeon has been beaten (a won run) it starts over, harder (see dungeonCycle in enemies.js). Each cycle
+// counts as cycleTiers extra floors for normal enemies, bosses get bossLifeStep more life and +1 damage every bossDamageEvery cycles,
+// and there are enemyShare more enemies (0.3 = 30% extra of every kind). After maxCycle the dungeon stops getting harder.
+const CYCLE = { cycleTiers: 2, bossLifeStep: 0.3, bossDamageEvery: 2, enemyShare: 0.3, maxCycle: 8 };
+
 // The ENDESGA 32 palette. The letters are used in the sprites below.
 const COLOR = {
   K: '#181425', k: '#262b44', D: '#3a4466', s: '#5a6988', g: '#8b9bb4', S: '#c0cbdc', W: '#ffffff',
