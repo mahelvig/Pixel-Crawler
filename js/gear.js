@@ -16,7 +16,7 @@ function stat(name) {
     const type = pl.slots[BAG.equipStart + i], item = GEAR[type];
     if (item && item.stats[name]) total += scaledStat(name, item.stats[name], pl.gearLevel[type]);
   }
-  total += progressStat(name);
+  total += progressStat(name) + ruleStat(name);
   return Math.min(total, STAT_INFO[name].cap ?? Infinity);
 }
 
@@ -26,7 +26,7 @@ function scaledStat(name, value, level = 0) {
   return STAT_INFO[name].format === 'pct' ? Math.round(v * 1000) / 1000 : Math.round(v);
 }
 
-const maxLife = () => PLAYER.life + stat('maxLife');
+const maxLife = () => Math.max(1, PLAYER.life + stat('maxLife'));
 
 // Picks a rarity by the weights in RARITY. Luck makes the better ones more likely.
 function pickRarity() {

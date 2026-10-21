@@ -17,7 +17,7 @@ function addViewers(amount) {
     run.viewersHint = true;
     systemMessage('The viewers are watching! Kill with style and your sponsors will send a box.', 5);
   }
-  pl.fame = Math.min(viewersNeed(pl), pl.fame + amount);
+  pl.fame = Math.min(viewersNeed(pl), pl.fame + amount * ruleMult('viewers'));
   pl.fameIdle = 0;
   if (pl.fame >= viewersNeed(pl)) sponsorBox(pl);
 }

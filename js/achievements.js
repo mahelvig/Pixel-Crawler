@@ -142,9 +142,24 @@ const ACHIEVEMENTS = [
   { id: 'speedrun', name: 'In a Hurry', hint: 'Defeat a boss within 2 minutes of entering the floor.', reward: { box: 'silver' }, test: A => A.r.fastBoss,
     popup: 'Under two minutes. Were you late for something?',
     story: 'You went in, you killed the boss, and you were out before the tea was ready. The dungeon is slightly offended. It had planned a whole speech.' },
-  { id: 'seasonFinale', name: 'Season Finale', hint: 'Finish the game.', reward: { box: 'platinum' }, test: A => A.s.wins >= 1,
-    popup: 'You cleared the dungeon. The viewers want more.',
-    story: 'You walked out. A real, actual victory. The dungeon has applauded, once, with exactly one hand. A new season has been ordered. You have been informed that you are in it.' },
+  { id: 'seasonFinale', name: 'Season Finale', hint: 'Finish a season: beat the Core on floor 12.', reward: { box: 'platinum' }, test: A => A.s.wins >= 1,
+    popup: 'You beat the Core. The season is yours. The viewers want more.',
+    story: 'You reached the bottom of Harrow Court and beat the thing that runs it. HOME has applauded, once, with exactly one hand. A new season has been ordered. You have been informed that you are in it. You have always been in it.' },
+  { id: 'offScript', name: 'Off Script', hint: 'Refuse the finale and go below the Core.', reward: { box: 'gold' }, test: A => A.w.levelIndex >= 12,
+    popup: 'Floor 13. HOME did not write this one.',
+    story: 'Thirty-six times the contestant took the finale. Not this time. Below the Core there is no script, and HOME has to make the floors up as it goes. It is not very good at it. It is learning fast.' },
+  { id: 'deepCut', name: 'Deep Cut', hint: 'Reach floor 16.', reward: { box: 'gold' }, test: A => A.w.levelIndex >= 15,
+    popup: 'Floor 16. The viewers have stopped blinking.',
+    story: 'Four floors below the bottom. HOME has started to reuse the furniture, and Morris has started to reuse the jokes. The ratings, however, have never been higher. Nobody has ever been this far off script before.' },
+  { id: 'belowBasement', name: 'Below the Basement', hint: 'Reach floor 20.', reward: { box: 'platinum' }, test: A => A.w.levelIndex >= 19,
+    popup: 'Floor 20. There is no word for this deep.',
+    story: 'Eight floors below the Core. The building is a memory and the script is a rumour. HOME now speaks to you the way a person talks to a storm: politely, from a distance, hoping it passes. It will not pass.' },
+  { id: 'mixtape', name: 'Mixtape', hint: "Find 6 of HOME's tapes.", reward: { gold: 80 }, test: A => tapesFound() >= 6,
+    popup: 'Six tapes. HOME talks a lot when it thinks nobody is listening.',
+    story: "Half of HOME's private log, recovered from the floors it thought nobody would search. A management system that keeps a diary is either very lonely or very guilty. The tapes suggest both." },
+  { id: 'fullRecording', name: 'The Full Recording', hint: "Find all 12 of HOME's tapes.", reward: { box: 'platinum' }, test: A => tapesFound() >= 12,
+    popup: 'Every tape. You know what HOME knows.',
+    story: "All twelve tapes, from the noodles of entry one to the last entry of every season. You know why Harrow Court sank, why it keeps sinking and why Morris is the only one who remembers. What you do with it is, for once, not in the script." },
 
   { id: 'firstSponsor', name: 'Fan Favourite', hint: 'Get a box from your sponsors.', reward: { gold: 20 }, test: A => A.s.boxes >= 1,
     popup: 'Your first sponsor box. Somebody out there likes you.',
@@ -289,9 +304,13 @@ const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, cr
 
 let run = null;
 
+// seed decides the floors below the Core (see endless.js); season and cycle are fixed for the whole run, so winning the season does not
+// make the rest of the run harder. offScript is set when the finale was refused, seasonWon when the Core was beaten.
 function resetRun() {
+  const wins = typeof saved === 'undefined' ? 0 : saved.stats.wins;   // (this file is loaded before the saved progress)
   run = { time: 0, floorTime: 0, floorHits: 0, kills: [], bestCombo: 0, bestCombo10: 0, still: 0, walked: 0, lastWalked: 0, lastWorld: null, check: 0,
-    flawlessBoss: false, clutchBoss: false, fastBoss: false, empty: false, quickDeath: false, boxes: 0, viewersHint: false, boxHint: false };
+    flawlessBoss: false, clutchBoss: false, fastBoss: false, empty: false, quickDeath: false, boxes: 0, viewersHint: false, boxHint: false,
+    seed: Math.floor(Math.random() * 1e6), season: 37 + wins, cycle: Math.min(CYCLE.maxCycle, wins), offScript: false, seasonWon: false, finale: false };
 }
 resetRun();
 
@@ -337,6 +356,7 @@ function track(event, data) {
     case 'sold': s.sold++; break;
     case 'box': s.boxes++; break;
     case 'npc': s.npcs++; break;
+    case 'tape': break;
     case 'boxOpened': s.boxesOpened++; break;
     case 'elite': s.elites++; s.seenElites[data.elite] = 1; break;
     case 'seen': {
@@ -478,7 +498,7 @@ function drawAchButton(y) {
   ctx.fillStyle = 'rgba(24,20,37,0.85)';
   ctx.fillRect(b.x, b.y, b.w, b.h);
   border(b.x, b.y, b.w, b.h, hover ? COLOR.W : COLOR.O);
-  drawText(T('Achievements (A)', 'Achievements'), b.x + b.w / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
+  drawText('Achievements', b.x + b.w / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
 }
 
 function drawButton(b, label, hover) {

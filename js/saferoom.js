@@ -70,7 +70,7 @@ const tradeButtonShown = () => state === 'playing' && nearTrader();
 function tryTrade() {
   if (!tradeButtonShown()) return;
   if (traderDanger()) { sfx('deny'); world.floatingTexts.push({ x: world.player.x, y: world.player.y - 24, text: 'Too dangerous!', life: 1, color: COLOR.r }); return; }
-  openSafeRoom();
+  morrisTalk(openSafeRoom);
 }
 
 function drawTrader() {
@@ -94,7 +94,15 @@ function drawTrader() {
   ctx.fillStyle = COLOR.K; ctx.fillRect(x - 15, y - 12, 3, 9);
   ctx.fillStyle = COLOR.y; ctx.fillRect(x - 14, y - 15, 1, 1); ctx.fillRect(x - 15, y - 14, 3, 2);
   ctx.globalAlpha = 0.22 + 0.08 * Math.sin(time * 5); ctx.fillStyle = COLOR.y; ctx.fillRect(x - 18, y - 17, 9, 9); ctx.globalAlpha = 1;
-  drawText('TRADER', x, top - 9, COLOR.y, { align: 'center' });
+  drawText('MORRIS', x, top - 9, COLOR.y, { align: 'center' });
+  if (morrisPending()) {
+    // he has something to tell you
+    drawText('!', x, top - 18 - (Math.sin(time * 6) > 0 ? 1 : 0), COLOR.y, { align: 'center' });
+    if (state === 'playing' && !world.morrisCalled && Math.hypot(world.player.x - t.x, world.player.y - t.y) < 90) {
+      world.morrisCalled = true;
+      world.floatingTexts.push({ x: t.x, y: top - 14, text: 'Psst, 4B!', life: 1.8, color: COLOR.y });
+    }
+  }
 }
 
 // The little button on the screen next to the trader, and the boxes you carry.
@@ -147,10 +155,10 @@ function ammoBill(pl) {
 
 const heartsMissing = pl => Math.max(0, maxLife() - pl.life);
 
-function makeStock() {
-  const stock = [];
+function makeStock(index = world.levelIndex) {
+  const stock = [], quality = SAFE.quality + (isEndless(index) ? depthBelowCore(index) * 0.25 : 0);   // better stock below the Core
   for (let tries = 0; stock.length < SAFE.stock && tries < 60; tries++) {
-    const type = randomDrop(SAFE.quality);
+    const type = randomDrop(quality);
     if (!stock.some(s => s.type === type)) stock.push({ type, sold: false });
   }
   return stock;
@@ -268,11 +276,13 @@ function sellJunk() {
 // ---------- The screen ----------
 
 const SAFE_TABS = ['Boxes', 'Shop', 'Care', 'Tailor', 'Sell', 'Board'];
+const TRADER_LINES_DEEP = ['Off the map now, 4B. The stock is improvising too.', 'Deeper than anybody. Mind the rules.', 'HOME keeps changing the floors. I keep the prices.', 'No script down here. Just stairs, and me.'];
 const TRADER_LINES = ['Everything here is legally owned. Mostly.', 'No refunds. No questions. No witnesses.', 'The viewers cannot see in here. Take your time.', 'I do not ask where you got it. I just ask for gold.', 'Careful with the merchandise. It bites.'];
 
 function openSafeRoom() {
   state = 'safe';
-  safeUi = { tab: 0, note: { text: '', until: 0 }, opened: null, hover: -1, line: TRADER_LINES[Math.floor(Math.random() * TRADER_LINES.length)] };
+  const lines = isEndless(world.levelIndex) ? TRADER_LINES_DEEP : TRADER_LINES;
+  safeUi = { tab: 0, note: { text: '', until: 0 }, opened: null, hover: -1, line: lines[Math.floor(Math.random() * lines.length)] };
   mouse.down = false; mouse.moving = false;
   sfx('bagOpen');
   saveRun();
@@ -466,6 +476,7 @@ function drawBoardTab() {
   lines.forEach((o, i) => drawText((o.done ? 'DONE  ' : '      ') + o.text, 14, 78 + i * 10, o.done ? COLOR.l : COLOR.W));
   const y = 78 + lines.length * 10 + 6, left = world.enemies.filter(e => !e.minion && !ENEMIES[e.type].boss).length, elites = world.enemies.filter(e => e.elite).length;
   drawText(world.gateOpen ? 'The boss gate is open.' : 'The boss gate opens when everything is done.', 14, y, world.gateOpen ? COLOR.O : COLOR.g);
+  (world.level.rules || []).forEach((id, i) => drawText('Rule: ' + FLOOR_RULES[id].name + '. ' + FLOOR_RULES[id].text, 14, y + 30 + i * 10, COLOR.m));
   drawText(left + ' enemies left on the floor' + (elites ? ', ' + elites + ' of them elite.' : '.'), 14, y + 10, COLOR.g);
   drawText('Viewers: ' + (0.4 + 5.6 * world.player.fame / viewersNeed(world.player) + 0.3 * world.player.boxes).toFixed(1) + 'M, and sponsors sent ' + world.player.boxes + ' boxes.', 14, y + 20, COLOR.m);
 }

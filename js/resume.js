@@ -18,7 +18,9 @@ function readRun() {
     const d = JSON.parse(localStorage.getItem(RUN_KEY));
     if (!d || typeof d !== 'object' || !Array.isArray(d.slots) || d.slots.length !== BAG.equipStart + GEAR_SLOTS.length) return null;
     const run = {
-      floor: clampInt(d.floor, 0, LEVEL_ORDER.length - 1),
+      floor: clampInt(d.floor, 0, d.offScript ? 999 : LEVEL_ORDER.length - 1),
+      seed: clampInt(d.seed, 0, 1e6), season: clampInt(d.season, 37, 9999), cycle: clampInt(d.cycle, 0, CYCLE.maxCycle),
+      offScript: d.offScript === true, seasonWon: d.seasonWon === true, finale: d.finale === true,
       life: Math.max(1, Number(d.life) || 1),
       slots: d.slots.map((t, i) => (typeof t === 'string' && (isWeapon(t) || isGear(t)) && canPlace(t, i)) ? t : null),
       ammo: {}, gearLevel: {}, perks: {}, boxBag: emptyBoxBag(),
@@ -38,10 +40,11 @@ function readRun() {
 let savedRun = readRun();   // what the title screen offers to continue
 
 function saveRun() {
-  if (!world || !['playing', 'pause', 'bag', 'levelup', 'safe'].includes(state) || world.player.life <= 0) return;
+  if (!world || !['playing', 'pause', 'bag', 'levelup', 'safe', 'story'].includes(state) || world.player.life <= 0) return;
   const pl = world.player;
   const data = { floor: world.levelIndex, life: pl.life, slots: pl.slots, ammo: pl.ammo, gearLevel: pl.gearLevel, perks: pl.perks, starter: pl.starter, fame: pl.fame, boxes: pl.boxes,
-    active: pl.active, xp: pl.xp, level: pl.level, pending: pl.pending, runGold: pl.runGold, boxBag: pl.boxBag };
+    active: pl.active, xp: pl.xp, level: pl.level, pending: pl.pending, runGold: pl.runGold, boxBag: pl.boxBag,
+    seed: run.seed, season: run.season, cycle: run.cycle, offScript: run.offScript, seasonWon: run.seasonWon, finale: run.finale };
   lastRunSave = time;
   try { localStorage.setItem(RUN_KEY, JSON.stringify(data)); } catch (e) { return; /* storage may be blocked */ }
   savedRun = readRun();
@@ -70,8 +73,9 @@ function updateRunSave() {
 function resumeRun() {
   const d = savedRun;
   if (!d) return;
-  world = newWorld(d.floor);
   resetRun();
+  Object.assign(run, { seed: d.seed, season: d.season, cycle: d.cycle, offScript: d.offScript, seasonWon: d.seasonWon });
+  world = newWorld(d.floor);
   floorStarted();
   const pl = world.player;
   Object.assign(pl, { slots: d.slots, ammo: d.ammo, gearLevel: d.gearLevel, perks: d.perks, starter: d.starter, fame: d.fame, boxes: d.boxes, active: d.active,
@@ -89,6 +93,7 @@ function resumeRun() {
   sfx('start');
   systemMessage('Welcome back. Floor ' + (d.floor + 1) + ' starts over, and you keep everything you carry.', 5);
   systemMessage(world.level.briefing || 'Complete the objectives to open the boss gate.', 6);
+  if (d.finale) seasonFinale();   // the run was left at the finale: offer it again
 }
 
 // ---------- The buttons of the title screen ----------

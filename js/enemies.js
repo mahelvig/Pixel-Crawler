@@ -3,7 +3,7 @@
 // ---------- Enemies ----------
 
 // How many times the whole dungeon has been beaten: the dungeon gets harder every time (see CYCLE).
-const dungeonCycle = () => Math.min(CYCLE.maxCycle, saved.stats.wins);
+const dungeonCycle = () => run ? run.cycle : Math.min(CYCLE.maxCycle, saved.stats.wins);
 
 // Turns an enemy into an elite with one of the traits in ELITES.
 function makeElite(f, id) {
@@ -22,7 +22,8 @@ function makeElite(f, id) {
 // Picks the elites of a new floor (see ELITE).
 function pickElites(list, floor) {
   const normal = list.filter(f => !ENEMIES[f.type].boss), picked = [];
-  for (const f of normal) if (Math.random() < Math.min(ELITE.maxChance, ELITE.chance + ELITE.perTier * f.tier)) picked.push(f);
+  const mult = ruleMult('eliteMult'), cap = Math.min(0.7, ELITE.maxChance * Math.max(1, mult));
+  for (const f of normal) if (Math.random() < Math.min(cap, (ELITE.chance + ELITE.perTier * f.tier) * mult)) picked.push(f);
   if (!picked.length && normal.length && floor >= ELITE.guaranteeFrom) picked.push(normal[Math.floor(Math.random() * normal.length)]);
   for (const f of picked) {
     const ids = Object.keys(ELITES).filter(id => !(id === 'volatile' && ENEMIES[f.type].bomber));
@@ -34,11 +35,11 @@ function createEnemy(type, x, y, tier = 0) {
   const t = ENEMIES[type], cycle = dungeonCycle();
   tier += cycle * CYCLE.cycleTiers;
   const k = t.boss ? 0 : tier, kLife = k > DIFFICULTY.softCap ? DIFFICULTY.softCap + (k - DIFFICULTY.softCap) * 0.5 : k;   // deep floors grow slower
-  const life = Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * kLife) * (t.boss ? 1 + CYCLE.bossLifeStep * cycle : 1));
+  const life = Math.max(1, Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * kLife) * (t.boss ? 1 + CYCLE.bossLifeStep * cycle : ruleMult('enemyLife'))));
   return {
     type, x, y, vx: 0, vy: 0, pushX: 0, pushY: 0, life, maxLife: life, tier,
-    speedMult: 1 + DIFFICULTY.speedStep * k, sightMult: 1 + DIFFICULTY.sightStep * k,
-    cooldownMult: Math.max(0.5, 1 - DIFFICULTY.cooldownStep * k), bonusDamage: Math.floor(k / DIFFICULTY.damageEvery) + (t.boss ? Math.floor(cycle / CYCLE.bossDamageEvery) : 0),
+    speedMult: (1 + DIFFICULTY.speedStep * Math.min(k, DIFFICULTY.speedCap)) * ruleMult('enemySpeed'), sightMult: 1 + DIFFICULTY.sightStep * Math.min(k, DIFFICULTY.speedCap),
+    cooldownMult: Math.max(0.5, 1 - DIFFICULTY.cooldownStep * k), bonusDamage: Math.floor(Math.min(k, DIFFICULTY.damageCap) / DIFFICULTY.damageEvery) + (t.boss ? Math.floor(cycle / CYCLE.bossDamageEvery) : 0),
     moveTime: 1.5, moveIndex: 0, dashWindup: 0, dashTime: 0, dashX: 0, dashY: 0, teleportTime: 0, minion: false, summoner: null,
     chasing: false, exclaim: 0, windup: 0, cooldown: 0, hitFlash: 0, slowTime: 0, fuse: 0, ghost: !!t.ghost,
     animTime: 0, direction: hash(x, y, 4) < 0.5 ? -1 : 1,
@@ -134,7 +135,7 @@ function updateEnemies(dt) {
     if (!f.seen && distance < 150 && canSee(f.x, f.y - 4, pl.x, pl.y - 4)) { f.seen = true; track('seen', f); }
     f.cooldown -= dt;
     if (f.slowTime > 0) f.slowTime -= dt;
-    if (f.elite === 'regenerating' && f.life < f.maxLife && (f.regenIdle += dt) > ELITE.regenDelay) f.life = Math.min(f.maxLife, f.life + f.maxLife * ELITE.regenRate * dt);
+    if (f.elite === 'regenerating' && f.life < f.maxLife && (f.regenIdle += dt) > ELITE.regenDelay) f.life = Math.min(f.maxLife, f.life + f.maxLife * ELITE.regenRate * (t.boss ? 0.2 : 1) * dt);
     if (f.elite === 'summoner' && f.chasing && (f.summonTime -= dt) <= 0) {
       f.summonTime = ELITE.summonEvery;
       if (world.enemies.filter(e => e.summoner === f).length < ELITE.summonMax) { const spot = freeSpotNear(f.x, f.y, 'bat', 6, 14); spawnMinion('bat', spot.x, spot.y, f); }
@@ -331,6 +332,7 @@ function killEnemy(f) {
     spawnDrops('gem', f.x, f.y - 3, Math.max(exp, f.minion ? 0 : 1));
     if (!f.minion) spawnDrops('coin', f.x, f.y - 3, Math.max(1, Math.round(exp * EXP.goldPerExp * (f.elite ? ELITE.goldMult / ELITE.expMult : 1))));
   }
+  if (ruleOn('volatile') && !t.boss && !t.bomber && f.elite !== 'volatile') bomberBoom(f, { bomber: { radius: 26, damage: 1 } });   // the floor rule Everything Explodes
   if (Math.random() < stat('volatile')) explodeAt({ x: f.x, y: f.y - 4, vx: 0, vy: 0, explode: { radius: 34, damage: 4 }, knockbackMult: 1 });
   // some clothes heal a heart now and then when an enemy dies
   const owner = world.player;
@@ -367,7 +369,7 @@ function damagePlayer(damage, from) {
     pl.invulnerable = 0.3;
     return;
   }
-  if (damage > 0) damage = Math.max(1, damage - stat('armor'));
+  if (damage > 0) damage = Math.max(1, Math.ceil(damage * ruleMult('enemyDamage')) - stat('armor'));
   pl.life = Math.max(0, pl.life - damage);
   track('hurt', damage);
   world.lastHitBy = from && (ENEMIES[from.type] ? from.type : from.by) || 'hazard';

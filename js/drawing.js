@@ -47,6 +47,7 @@ function draw() {
   else if (state === 'achievements') drawAchievements();
   else if (state === 'stats') drawStats();
   else if (state === 'safe') drawSafeRoom();
+  else if (state === 'journal') drawJournal();
   else if (state === 'title') drawTitle();
   else {
     ctx.translate(-UI_X, 0);
@@ -57,11 +58,12 @@ function draw() {
     if (state === 'won') drawWon();
     if (state === 'bag') drawBag();
     if (state === 'levelup') drawLevelUp();
+    if (state === 'story') drawStoryDialog();
   }
   ctx.restore();
   drawTouch();
   if (mouse.inside && !touch.on) {
-    if (state === 'bag' || state === 'shop' || state === 'achievements' || state === 'stats' || state === 'levelup' || state === 'safe') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
+    if (state === 'bag' || state === 'shop' || state === 'achievements' || state === 'stats' || state === 'levelup' || state === 'safe' || state === 'story' || state === 'journal') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
     else drawCrosshair();
   }
 }
@@ -254,6 +256,7 @@ function drawHud() {
   drawViewers();
   drawNpcPointer();
   drawTradeHud();
+  drawRulesHud();
   drawText('Floor ' + (world.levelIndex + 1), SCREEN_W - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
 
   // the controls, top left, until they have been tried
@@ -294,20 +297,21 @@ function dim(alpha) {
 function drawTitle() {
   dim(0.7);
   drawText('Pixel Crawler', BASE_W / 2, 34, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
-  drawText('The apartment block has sunk into a dungeon.', BASE_W / 2, 64, COLOR.S, { align: 'center' });
-  drawText('Get as deep as you can.', BASE_W / 2, 72, COLOR.S, { align: 'center' });
+  drawText('Harrow Court has sunk twelve floors into a dungeon.', BASE_W / 2, 64, COLOR.S, { align: 'center' });
+  drawText('Season ' + (37 + saved.stats.wins) + '. The viewers are waiting.', BASE_W / 2, 72, COLOR.S, { align: 'center' });
   if (savedRun) drawRunButtons();
   else if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), BASE_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
   if (!touch.on) {
     drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', BASE_W / 2, 158, COLOR.g, { align: 'center' });
-    drawText('1-4 or wheel switch weapon    Tab bag', BASE_W / 2, 166, COLOR.g, { align: 'center' });
+    drawText('1-4 or wheel switch weapon    Tab bag    E trade', BASE_W / 2, 166, COLOR.g, { align: 'center' });
   }
-  drawText('Milestone 12', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
+  drawText('Milestone 13', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
   drawShopButton(TITLE_SHOP_Y);
   drawAchButton(TITLE_SHOP_Y);
   drawStatsButton(TITLE_SHOP_Y);
+  drawJournalButton(TITLE_SHOP_Y);
   drawWeaponButton();
-  drawText('Best floor ' + saved.bestFloor + '   ' + saved.gold + ' gold', BASE_W / 2, 148, COLOR.g, { align: 'center' });
+  drawText('Best floor ' + saved.bestFloor + (saved.bestFloor > LEVEL_ORDER.length ? ' (off script)' : '') + '   ' + saved.gold + ' gold', BASE_W / 2, 148, COLOR.g, { align: 'center' });
 }
 
 function drawDead() {
@@ -315,7 +319,8 @@ function drawDead() {
   dim(Math.min(0.7, elapsed * 1.2));
   drawText('You died', BASE_W / 2, 52, COLOR.r, { scale: 3, align: 'center', shadow: COLOR.p });
   drawText(`Killed ${world.killed} of ${world.enemyTotal} enemies.`, BASE_W / 2, 84, COLOR.S, { align: 'center' });
-  drawText('The viewers have seen better.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
+  const deep = isEndless(world.levelIndex);
+  drawText(deep ? 'Floor ' + (world.levelIndex + 1) + ', off script. Deeper than any season before.' : 'The viewers have seen better.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
   if (elapsed > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to try again', 'Tap to try again'), BASE_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
   drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, BASE_W / 2, 102, COLOR.y, { align: 'center' });
   drawShopButton(END_SHOP_Y);
@@ -324,9 +329,9 @@ function drawDead() {
 function drawWon() {
   const since = time - world.wonTime;
   dim(Math.min(0.8, since * 1.2));
-  drawText('To be continued', BASE_W / 2, 52, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
-  drawText('You cleared ' + LEVEL_ORDER.length + ' floors.', BASE_W / 2, 84, COLOR.S, { align: 'center' });
-  drawText('The viewers want more.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
+  drawText('Season ' + season() + ' complete', BASE_W / 2, 52, COLOR.O, { scale: 2, align: 'center', shadow: COLOR.x });
+  drawText('Harrow Court rises. Nobody remembers a thing.', BASE_W / 2, 84, COLOR.S, { align: 'center' });
+  drawText('Season ' + (season() + 1) + ' begins when you are ready. It will be harder.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
   if (since > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to play again', 'Tap to play again'), BASE_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
   drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, BASE_W / 2, 102, COLOR.y, { align: 'center' });
   drawShopButton(END_SHOP_Y);

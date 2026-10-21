@@ -5,10 +5,11 @@
 // overview, monsters, bosses and weapons. The title screen has a row of three buttons (upgrades, achievements, statistics)
 // and one button that picks the weapon the next run starts with.
 
-// The row of buttons under "Click to start": upgrades, achievements, statistics.
+// The row of buttons under "Click to start": upgrades, achievements, statistics and the journal (keys U, A, S and J).
+const TITLE_LABELS = ['Upgrades', 'Achievements', 'Statistics', 'Journal'];
 function titleButtons(y) {
-  const labels = [T('Upgrades (U)', 'Upgrades'), T('Achievements (A)', 'Achievements'), T('Statistics (S)', 'Statistics')];
-  const widths = labels.map(l => textWidth(l) + 12), gap = 5, total = widths.reduce((a, b) => a + b, 0) + gap * 2;
+  const labels = TITLE_LABELS;
+  const widths = labels.map(l => textWidth(l) + 12), gap = 5, total = widths.reduce((a, b) => a + b, 0) + gap * (labels.length - 1);
   let x = Math.round(BASE_W / 2 - total / 2);
   return labels.map((label, i) => { const b = { x, y, w: widths[i], h: 13 }; x += widths[i] + gap; return b; });
 }
@@ -17,8 +18,12 @@ const statsButton = y => titleButtons(y)[2];
 function overStatsButton(y) { return state === 'title' && inBox(statsButton(y)); }
 function drawStatsButton(y) {
   const b = statsButton(y);
-  drawButton(b, T('Statistics (S)', 'Statistics'), overStatsButton(y));
+  drawButton(b, 'Statistics', overStatsButton(y));
 }
+
+const journalButton = y => titleButtons(y)[3];
+const overJournalButton = () => state === 'title' && inBox(journalButton(TITLE_SHOP_Y));
+function drawJournalButton(y) { drawButton(journalButton(y), 'Journal', overJournalButton()); }
 
 // ---------- The start weapon ----------
 
@@ -93,8 +98,8 @@ function statsLines(tab) {
   const s = saved.stats, sum = obj => Object.values(obj).reduce((a, b) => a + b, 0);
   if (tab === 0) {
     return [
-      [['Runs', formatCount(saved.runs)], ['Deaths', formatCount(s.deaths)], ['Victories', formatCount(s.wins)], ['Best floor', saved.bestFloor + ' / ' + LEVEL_ORDER.length],
-        ['Play time', formatTime(s.playTime)], ['Levels gained', formatCount(s.levels)], ['Gold earned', formatCount(s.goldEarned)], ['Items sold', formatCount(s.sold)], ['Sponsor boxes', formatCount(s.boxes)], ['Dungeon loop', formatCount(dungeonCycle())]],
+      [['Season', formatCount(37 + s.wins)], ['Runs', formatCount(saved.runs)], ['Deaths', formatCount(s.deaths)], ['Seasons won', formatCount(s.wins)], ['Best floor', formatCount(saved.bestFloor)],
+        ['Play time', formatTime(s.playTime)], ['Levels gained', formatCount(s.levels)], ['Gold earned', formatCount(s.goldEarned)], ['Items sold', formatCount(s.sold)], ['Sponsor boxes', formatCount(s.boxes)], ['Tapes found', tapesFound() + ' / ' + LEVEL_ORDER.length]],
       [['Monsters killed', formatCount(s.kills)], ['Bosses defeated', formatCount(sum(s.bossTypes))], ['Elites slain', formatCount(s.elites)], ['People saved', formatCount(s.npcs)], ['Boxes opened', formatCount(s.boxesOpened)], ['Shots fired', formatCount(s.shots)], ['Critical hits', formatCount(s.crits)],
         ['Damage taken', formatCount(s.damageTaken)], ['Distance walked', formatCount(s.walked / TILE) + ' m'], ['Things smashed', formatCount(s.destroyed)], ['Upgrades bought', formatCount(s.bought)]],
     ];
@@ -132,7 +137,7 @@ function drawStats() {
   const columns = statsLines(statsUi.tab), three = columns.length === 3, xs = three ? [10, 112, 214] : [12, 170], width = three ? 94 : 138;
   columns.forEach((rows, c) => {
     rows.forEach(([label, value, color], i) => {
-      const y = 48 + i * 11;
+      const y = 48 + i * (rows.length > 10 ? 10 : 11);
       if (value === undefined) { drawText(label, xs[c], y, COLOR.O); return; }
       drawText(label, xs[c], y, COLOR.g);
       drawText(value, xs[c] + width, y, color || COLOR.W, { align: 'right' });

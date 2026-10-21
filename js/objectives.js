@@ -163,10 +163,11 @@ function updatePickups(dt) {
     if (Math.hypot(pl.x - p.x, pl.y - p.y) > BAG.pickupDistance + stat('pickupRange')) continue;
     world.pickups.splice(i, 1);
     world.collected[p.kind] = (world.collected[p.kind] || 0) + 1;
-    if (world.level.dark) { world.flickerTime = 1.2; sfx('lights'); }
+    if (world.level.dark && p.kind === world.level.dark.fix) { world.flickerTime = 1.2; sfx('lights'); }
     sfx('fuse');
     world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: '+1 ' + PICKUPS[p.kind].name.toUpperCase(), life: 1.2, color: COLOR.y });
     for (let n = 0; n < 8; n++) particle(p.x, p.y - 4, randRange(-35, 35), randRange(-45, 10), n % 2 ? COLOR.y : COLOR.W, 0.4);
+    if (p.kind === 'tape') foundTape(world.levelIndex);
   }
 }
 
@@ -193,7 +194,7 @@ function drawPickup(p) {
   ctx.fillStyle = COLOR.y;
   ctx.fillRect(x - 5, y - 8 + bob, 10, 12);
   ctx.globalAlpha = 1;
-  const image = p.kind === 'chip' ? CHIP_IMAGE : FUSE_IMAGE;
+  const image = p.kind === 'chip' ? CHIP_IMAGE : p.kind === 'tape' ? TAPE_IMAGE : FUSE_IMAGE;
   ctx.drawImage(image, x - (image.width >> 1), y - 7 + bob);
   if (Math.floor(p.time * 3) % 4 === 0) { ctx.fillStyle = COLOR.W; ctx.fillRect(x + 3, y - 8 + bob, 1, 1); }
 }

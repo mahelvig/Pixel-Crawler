@@ -7,13 +7,13 @@
 
 // ---------- Saved between runs ----------
 
-const saved = { gold: 0, upgrades: {}, bestFloor: 0, runs: 0, ach: {}, stats: emptyStats(), startWeapon: 'rubberBandGun', tutorialDone: false };
+const saved = { gold: 0, upgrades: {}, bestFloor: 0, runs: 0, ach: {}, stats: emptyStats(), startWeapon: 'rubberBandGun', tutorialDone: false, story: { seen: {}, tapes: {} } };
 let saveDirty = false;
 
 // Reads what was saved last time. Anything that looks wrong is thrown away, and if the browser will not give us storage
 // the game just starts from nothing.
 function loadSaved() {
-  saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0; saved.ach = {}; saved.stats = emptyStats(); saved.startWeapon = 'rubberBandGun'; saved.tutorialDone = false;
+  saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0; saved.ach = {}; saved.stats = emptyStats(); saved.startWeapon = 'rubberBandGun'; saved.tutorialDone = false; saved.story = { seen: {}, tapes: {} };
   try {
     const raw = localStorage.getItem('pixelCrawler.save');
     const data = raw && JSON.parse(raw);
@@ -37,6 +37,10 @@ function loadSaved() {
       if (count(st.deathsBy, 'hazard') > 0) saved.stats.deathsBy.hazard = count(st.deathsBy, 'hazard');
       for (const id in WEAPONS) if (count(st.killsByWeapon, id) > 0) saved.stats.killsByWeapon[id] = count(st.killsByWeapon, id);
       saved.tutorialDone = data.tutorialDone === true || saved.runs > 0;
+      // what has been seen of the story (see story.js): short ids, and the floors whose tape has been found
+      const story = data.story || {};
+      for (const id in story.seen || {}) if (/^[a-z]+[0-9]*$/.test(id) && id.length < 16) saved.story.seen[id] = 1;
+      for (let i = 0; i < LEVEL_ORDER.length; i++) if (story.tapes && story.tapes[i]) saved.story.tapes[i] = 1;
       if (typeof data.startWeapon === 'string' && WEAPONS[data.startWeapon]) saved.startWeapon = data.startWeapon;
     }
   } catch (e) { /* nothing saved, or storage is blocked */ }
@@ -53,7 +57,8 @@ function endRun(won = false) {
   saved.tutorialDone = true;
   saved.runs++;
   saved.bestFloor = Math.max(saved.bestFloor, world.levelIndex + 1);
-  track(won ? 'won' : 'dead');
+  if (!won) track('dead');
+  else if (!run.seasonWon) track('won');   // the finale counts the win itself
   saveGame();
 }
 
@@ -77,7 +82,7 @@ function gainExp(amount) {
 
 // Gold goes straight into the wallet that is kept between runs.
 function awardGold(amount, show) {
-  const pl = world.player, value = Math.round(amount * (1 + stat('goldGain')));
+  const pl = world.player, value = Math.round(amount * (1 + stat('goldGain')) * ruleMult('gold'));
   saved.gold += value;
   saved.stats.goldEarned += value;
   pl.runGold += value;

@@ -8,7 +8,9 @@ let world = null;
 const camera = { x: 0, y: 0, shake: 0 };
 
 function newWorld(index = 0) {
-  const level = buildLevel(MAPS[LEVEL_ORDER[index]], index);
+  const id = isEndless(index) ? endlessMapId(index) : LEVEL_ORDER[index];
+  const level = buildLevel(MAPS[id], floorTier(index), { floor: index, rules: isEndless(index) ? endlessRules(index) : [] });
+  level.id = id;
   return {
     levelIndex: index,
     level,
@@ -22,7 +24,7 @@ function newWorld(index = 0) {
     hasWalked: false, hasShot: false, walkedDistance: 0, helpAlpha: 1, goalShown: false,
     targetsHit: 0,
     enemies: level.enemies, enemyTotal: level.enemies.length, killed: 0, killedByType: {}, eliteKilled: 0,
-    npcs: (level.npcs || []).map(createNpc), npcSafe: 0, npcLost: 0, stock: makeStock(), rerolls: 0,
+    npcs: (level.npcs || []).map(createNpc), npcSafe: 0, npcLost: 0, stock: makeStock(index), rerolls: 0,
     breakables: level.breakables, pickups: level.pickups, destroyed: {}, collected: {},
     totals: { destroy: countBy(level.breakables, 'kind'), collect: countBy(level.pickups, 'kind'), killType: countBy(level.enemies, 'type'), elites: level.enemies.filter(e => e.elite).length, npcs: (level.npcs || []).length },
     surviveTime: 0, waveTime: 5, objectiveDone: [],
@@ -32,14 +34,14 @@ function newWorld(index = 0) {
 }
 
 function startGame() {
-  world = newWorld();
   resetRun();
+  world = newWorld();
   state = 'playing';
   sfx('start');
   // the tutorial is only for the first run (floor 1 has been played once already)
   if (saved.tutorialDone) { world.hasWalked = world.hasShot = world.hasFound = world.hasFoundGear = true; world.helpAlpha = 0; }
-  systemMessage('Welcome to the dungeon. Try not to die.');
-  if (dungeonCycle() > 0) systemMessage('The dungeon has been beaten ' + saved.stats.wins + (saved.stats.wins === 1 ? ' time' : ' times') + '. It is angrier now, and it brought friends.', 5);
+  storyFloor(0);
+  if (dungeonCycle() > 0) systemMessage('HOME: Welcome back to Harrow Court. Everything is a little harder this season. The viewers insist.', 5);
 }
 
 function systemMessage(text, duration = 4) {
@@ -82,6 +84,20 @@ window.addEventListener('keydown', e => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'Tab'].includes(e.code)) e.preventDefault();
   if (e.repeat) return;
   if (e.code === 'Backquote') { devCycle(); return; }
+  if (state === 'story') {
+    const page = storyPage();
+    if (e.code === 'Escape') skipStory();
+    else if (page && page.choices && /^Digit[1-9]$/.test(e.code)) chooseStory(Number(e.code.slice(5)) - 1);
+    else if (['Space', 'Enter', 'KeyE', 'NumpadEnter'].includes(e.code)) advanceStory();
+    return;
+  }
+  if (state === 'journal') {
+    if (e.code === 'Escape' || e.code === 'KeyJ') closeJournal();
+    else if (e.code === 'ArrowUp' || e.code === 'ArrowDown') journalMove(e.code === 'ArrowUp' ? -1 : 1);
+    else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') journalTab(e.code === 'ArrowLeft' ? -1 : 1);
+    return;
+  }
+  if (e.code === 'KeyJ' && state === 'title') { openJournal(); return; }
   if (e.code === 'KeyE' && state === 'bag') { equipAtMouse(); return; }
   if (e.code === 'KeyE' && state === 'playing') { tryTrade(); return; }
   if (devKey(e.code)) return;
@@ -154,6 +170,8 @@ canvas.addEventListener('pointerdown', e => {
   if (state === 'achievements') { if (e.button === 0) clickAchievements(); return; }
   if (state === 'stats') { if (e.button === 0) clickStats(); return; }
   if (state === 'safe') { if (e.button === 0) clickSafeRoom(); return; }
+  if (state === 'story') { if (e.button === 0) clickStory(); return; }
+  if (state === 'journal') { if (e.button === 0) clickJournal(); return; }
   if (state === 'playing' && e.button === 0 && tradeButtonShown() && inBox(tradeButton())) { tryTrade(); return; }
   if (state === 'bag') { clickInBag(e.button); return; }
   if (e.button === 2 && state === 'playing' && OPTIONS.rightClickMove) {
@@ -162,7 +180,7 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
   if (e.button !== 0) return;
-  if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overWeaponButton()) cycleStartWeapon(); else if (savedRun) { if (overContinue()) resumeRun(); else if (overNewRun()) startGame(); } else startGame(); return; }
+  if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overJournalButton()) openJournal(); else if (overWeaponButton()) cycleStartWeapon(); else if (savedRun) { if (overContinue()) resumeRun(); else if (overNewRun()) startGame(); } else startGame(); return; }
   if (state === 'pause') {
     const option = overPauseOption();
     if (overMainMenu()) leaveToMenu();

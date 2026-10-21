@@ -80,7 +80,7 @@ function drawShopButton(y) {
   ctx.fillStyle = 'rgba(24,20,37,0.85)';
   ctx.fillRect(b.x, b.y, b.w, b.h);
   border(b.x, b.y, b.w, b.h, hover ? COLOR.W : COLOR.O);
-  drawText(T('Upgrades (U)', 'Upgrades'), b.x + b.w / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
+  drawText(y === TITLE_SHOP_Y ? 'Upgrades' : T('Upgrades (U)', 'Upgrades'), b.x + b.w / 2, b.y + 4, hover ? COLOR.W : COLOR.O, { align: 'center' });
 }
 
 function drawShop() {

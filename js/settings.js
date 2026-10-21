@@ -683,17 +683,18 @@ const SAFE = {
 const NPC = {
   fromFloor: 9, life: 5, speed: 56, followDistance: 20, contactRange: 11, hurtEvery: 0.9, wakeRange: 70, exitRadius: 22,
   gold: 60, guards: 2, cages: 2, cagesDeep: 3,
-  names: ['Gary the Intern', 'Brenda from Accounting', 'Old Pete', 'Mordecai', 'Little Tim', 'Doris the Chef', 'Sven the Plumber', 'Priya from HR'],
+  names: ['Mrs. Lund from 3C', 'Gary from 6B', 'Old Pete from 1C', 'Priya from 9D', 'Sven from 2A', 'Doris from 5F', 'Little Tim from 8E', 'Mordecai from 10A'],
 };
 
-const PICKUPS = { fuse: { name: 'Fuse' }, chip: { name: 'Chip' } };
+const PICKUPS = { fuse: { name: 'Fuse' }, chip: { name: 'Chip' }, tape: { name: 'Tape' } };
 
 // Every floor is harder than the last. Normal enemies on floor n (counting from 0) get tier = n:
 // life x (1 + lifeStep * tier), speed x (1 + speedStep * tier), sight x (1 + sightStep * tier),
 // attack cooldowns and shot intervals shorter by cooldownStep * tier, +1 damage every damageEvery floors,
 // and a better chance to drop a weapon. Bosses have their own numbers and are not scaled.
-// softCap is the tier above which life grows at half speed (the deep floors would otherwise be endless to shoot through).
-const DIFFICULTY = { lifeStep: 0.22, speedStep: 0.05, sightStep: 0.08, cooldownStep: 0.06, damageEvery: 3, dropStep: 0.15, softCap: 7 };
+// softCap is the tier above which life grows at half speed (the deep floors would otherwise be endless to shoot through), and
+// speedCap and damageCap the tiers above which enemies stop getting faster and stop hitting harder.
+const DIFFICULTY = { lifeStep: 0.22, speedStep: 0.05, sightStep: 0.08, cooldownStep: 0.06, damageEvery: 3, dropStep: 0.15, softCap: 7, speedCap: 13, damageCap: 14 };
 
 // Every time the whole dungeon has been beaten (a won run) it starts over, harder (see dungeonCycle in enemies.js). Each cycle
 // counts as cycleTiers extra floors for normal enemies, bosses get bossLifeStep more life and +1 damage every bossDamageEvery cycles,

@@ -31,11 +31,17 @@ function floorUnder(lv, x, y) {
 }
 
 // tier is the floor number counting from 0: every floor is harder than the last (see DIFFICULTY)
-function buildLevel(map, tier = 0) {
-  map = layoutOf(map);
+// floor is the floor number counting from 0 (tier can be lower below the Core), rules the floor rules (see endless.js).
+function buildLevel(map, tier = 0, options = {}) {
+  const floor = options.floor ?? tier, rules = options.rules || [];
+  BUILD_RULES = rules;
+  try { return buildFloor(layoutOf(map), tier, floor, rules); } finally { BUILD_RULES = null; }
+}
+
+function buildFloor(map, tier, floor, rules) {
   const lv = {
     name: map.name, boss: map.boss, objectives: map.objectives || [], briefing: map.briefing, dark: map.dark, breakables: [], pickups: [], b: map.rows[0].length, h: map.rows.length, gate: null, bossSpawn: null, stairs: null,
-    chars: map.rows.map(row => [...row]), targets: [], enemies: [], items: [], npcs: [], exit: null, trader: null,
+    chars: map.rows.map(row => [...row]), targets: [], enemies: [], items: [], npcs: [], exit: null, trader: null, rules, floor,
   };
   lv.solid = new Uint8Array(lv.b * lv.h);
   lv.start = { x: lv.b * TILE / 2, y: lv.h * TILE / 2 };
@@ -59,13 +65,16 @@ function buildLevel(map, tier = 0) {
     }
   }
   // a dungeon that has been beaten before has more enemies
-  const share = dungeonCycle() * CYCLE.enemyShare;
+  const share = dungeonCycle() * CYCLE.enemyShare + ruleSum('enemyShare');
+  const dark = rules.map(id => FLOOR_RULES[id].dark).find(Boolean);
+  if (dark && !lv.dark) lv.dark = { level: dark };
   for (const f of lv.enemies.slice()) {
     for (let n = Math.floor(share) + (Math.random() < share % 1 ? 1 : 0); n > 0; n--) lv.enemies.push(createEnemy(f.type, f.x, f.y, tier));
   }
-  pickElites(lv.enemies, tier);
+  pickElites(lv.enemies, floor);
   scatterEnemies(lv);
-  rollObjectives(map, lv, tier);
+  rollObjectives(map, lv, Math.min(floor, LEVEL_ORDER.length - 1));
+  placeTape(lv, floor);
   lv.trader = traderSpot(lv);
   lv.canvas = map.canvas || (map.canvas = drawLevel(lv));   // the map image never changes, so it is only made once
   return lv;

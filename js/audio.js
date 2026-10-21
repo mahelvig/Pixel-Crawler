@@ -534,11 +534,12 @@ function stopMusic() {
 
 // Which tune should play right now?
 function wantedTrack() {
-  if (state === 'title' || state === 'shop' || !world) return 'title';
+  if (state === 'title' || state === 'shop' || state === 'journal' || !world) return 'title';
   if (state === 'dead') return 'dead';
   if (state === 'won') return 'won';
-  if (world.enemies.some(e => ENEMIES[e.type].boss && e.chasing)) return 'boss' + world.levelIndex;
-  return LEVEL_ORDER[world.levelIndex];
+  const id = world.level.id || LEVEL_ORDER[world.levelIndex];
+  if (world.enemies.some(e => ENEMIES[e.type].boss && e.chasing)) return 'boss' + LEVEL_ORDER.indexOf(id);
+  return id;
 }
 
 // Called a few times a second: picks the tune, sets the volumes and schedules the next notes a little ahead of time.

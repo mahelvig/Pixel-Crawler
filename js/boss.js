@@ -9,10 +9,15 @@ function openGate() {
   world.gateOpen = true;
   world.gateOpenTime = time;
   for (const t of lv.gate.tiles) lv.solid[t.y * lv.b + t.x] = 0;
-  world.enemies.push(createEnemy(lv.boss, lv.bossSpawn.x, lv.bossSpawn.y, world.levelIndex));
+  const boss = createEnemy(lv.boss, lv.bossSpawn.x, lv.bossSpawn.y, floorTier(world.levelIndex));
+  if (isEndless(world.levelIndex)) endlessBoss(boss);
+  world.enemies.push(boss);
+  bossGuards(boss);
   camera.shake = 4;
   sfx('gate');
   systemMessage('A heavy gate grinds open. Something big is waiting inside.', 5);
+  const line = bossStoryLine('gate');
+  if (line) systemMessage(fillStory(line), 6);
   const gx = lv.gate.tiles.reduce((s, t) => s + t.x, 0) / lv.gate.tiles.length * TILE + 8, gy = lv.gate.tiles[0].y * TILE + 8;
   for (let p = 0; p < 24; p++) particle(gx + randRange(-16, 16), gy + randRange(-6, 6), randRange(-15, 15), randRange(0, 40), p % 2 ? COLOR.g : COLOR.s, randRange(0.5, 1));
 }
@@ -26,9 +31,12 @@ function bossDefeated(f) {
   spawnDrops('coin', f.x, f.y, EXP.bossGold * (world.levelIndex + 1));
   sfx('stairs', undefined, undefined, 0.9);
   if (world.stairs) { world.stairs.active = true; world.stairs.time = 0; }
-  systemMessage(t.name + ' is dead. A staircase leads further down.', 5);
+  systemMessage((f.eliteName || t.name) + ' is dead. A staircase leads further down.', 5);
+  const line = bossStoryLine('death');
+  if (line) systemMessage(fillStory(line), 6);
   world.items.push(createItem(t.reward, f.x, f.y + 4));
   world.items.push(createItem(randomGear(null, BOSS_QUALITY), f.x + 10, f.y + 4));   // and something to wear, with a good chance of it being rare, epic or legendary
+  if (isEndless(world.levelIndex)) giveBox(depthBelowCore(world.levelIndex) >= 6 ? 'platinum' : 'gold');   // below the Core: a sealed box as well
   // the boss's minions, shots and danger zones disappear with it
   for (const e of [...world.enemies]) if (e.minion) { puff(e.x, e.y); world.enemies.splice(world.enemies.indexOf(e), 1); }
   world.enemyBullets.length = 0;
@@ -49,14 +57,8 @@ function updateStairs(dt) {
 // Takes the player down to the next floor, keeping their weapons and ammo. After the last floor the game ends.
 function nextLevel() {
   const index = world.levelIndex + 1;
-  if (index >= LEVEL_ORDER.length) {
-    state = 'won';
-    endRun(true);
-    world.wonTime = time;
-    mouse.down = false;
-    mouse.moving = false;
-    return;
-  }
+  // below the Core is the season finale, unless it has already been refused
+  if (index === LEVEL_ORDER.length && !run.offScript) { mouse.down = false; mouse.moving = false; seasonFinale(); return; }
   goToLevel(index);
 }
 
@@ -78,8 +80,9 @@ function goToLevel(index) {
   camera.x = clamp(pl.x - SCREEN_W / 2, 0, Math.max(0, world.level.b * TILE - SCREEN_W));
   camera.y = clamp(pl.y - SCREEN_H / 2, 0, Math.max(0, world.level.h * TILE - SCREEN_H));
   camera.shake = 0;
-  systemMessage('Floor ' + (index + 1) + ': ' + world.level.name + '. You recover two hearts.');
+  systemMessage('Floor ' + (index + 1) + ': ' + world.level.name + (isEndless(index) ? ', off script' : '') + '. You recover two hearts.');
   systemMessage(world.level.briefing || 'Complete the objectives to open the boss gate.', 6);
+  storyFloor(index);
   saveRun();
 }
 
@@ -329,7 +332,7 @@ function drawBossBar() {
   const f = world.enemies.find(e => ENEMIES[e.type].boss && e.chasing);
   if (!f) return;
   const t = ENEMIES[f.type], w = 140, x = Math.round((SCREEN_W - w) / 2), y = 12;
-  drawText(t.name, SCREEN_W / 2, 4, COLOR.W, { align: 'center' });
+  drawText(f.eliteName || t.name, SCREEN_W / 2, 4, f.elite ? COLOR[ELITES[f.elite].color] : COLOR.W, { align: 'center' });
   ctx.fillStyle = 'rgba(24,20,37,0.9)';
   ctx.fillRect(x - 2, y - 2, w + 4, 9);
   ctx.fillStyle = f.enraged ? COLOR.o : COLOR.r;

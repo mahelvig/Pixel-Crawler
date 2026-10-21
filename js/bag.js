@@ -148,7 +148,7 @@ function bagMessage(text) {
 function pickUp(pl, g) {
   if (isGear(g.type)) return pickUpGear(pl, g);
   const v = WEAPONS[g.type], color = RARITY[v.rarity].color;
-  const gave = g.ammo ?? v.ammoPickup;
+  const gave = g.ammo ?? Math.max(1, Math.round(v.ammoPickup * ruleMult('ammo')));
   let text;
   if (pl.slots.includes(g.type)) {
     // already owned: the pickup only adds ammo
