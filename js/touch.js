@@ -85,6 +85,7 @@ function touchDown(e) {
   if (state !== 'playing') return false;
   const p = touchPoint(e);
   mouse.x = p.x; mouse.y = p.y;
+  if (tradeButtonShown() && inRect(p, tradeButton(), 3)) { tryTrade(); return true; }
   for (const b of TOUCH_BUTTONS) {
     if (inRect(p, b, 3)) {
       if (b.id === 'pause') { state = 'pause'; sfx('pause'); } else toggleBag();

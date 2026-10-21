@@ -21,12 +21,13 @@ function readRun() {
       floor: clampInt(d.floor, 0, LEVEL_ORDER.length - 1),
       life: Math.max(1, Number(d.life) || 1),
       slots: d.slots.map((t, i) => (typeof t === 'string' && (isWeapon(t) || isGear(t)) && canPlace(t, i)) ? t : null),
-      ammo: {}, gearLevel: {}, perks: {},
+      ammo: {}, gearLevel: {}, perks: {}, boxBag: emptyBoxBag(),
       starter: typeof d.starter === 'string' && WEAPONS[d.starter] ? d.starter : 'rubberBandGun',
       fame: Math.max(0, Number(d.fame) || 0), boxes: clampInt(d.boxes, 0, 999),
       active: clampInt(d.active, 0, BAG.hotbarSlots - 1),
       xp: Math.max(0, Number(d.xp) || 0), level: clampInt(d.level, 1, 99), pending: clampInt(d.pending, 0, 50), runGold: clampInt(d.runGold, 0, 1e9),
     };
+    for (const tier of BOX_ORDER) run.boxBag[tier] = clampInt(d.boxBag && d.boxBag[tier], 0, 99);
     for (const id in WEAPONS) if (d.ammo && d.ammo[id] > 0) run.ammo[id] = clampInt(d.ammo[id], 0, WEAPONS[id].ammoMax || 0);
     for (const id in GEAR) if (d.gearLevel && d.gearLevel[id] > 0) run.gearLevel[id] = clampInt(d.gearLevel[id], 0, GEAR_UPGRADE.maxLevel);
     for (const id in PERKS) if (!PERKS[id].effect && d.perks && d.perks[id] > 0) run.perks[id] = clampInt(d.perks[id], 0, PERKS[id].max);
@@ -37,10 +38,10 @@ function readRun() {
 let savedRun = readRun();   // what the title screen offers to continue
 
 function saveRun() {
-  if (!world || !['playing', 'pause', 'bag', 'levelup'].includes(state) || world.player.life <= 0) return;
+  if (!world || !['playing', 'pause', 'bag', 'levelup', 'safe'].includes(state) || world.player.life <= 0) return;
   const pl = world.player;
   const data = { floor: world.levelIndex, life: pl.life, slots: pl.slots, ammo: pl.ammo, gearLevel: pl.gearLevel, perks: pl.perks, starter: pl.starter, fame: pl.fame, boxes: pl.boxes,
-    active: pl.active, xp: pl.xp, level: pl.level, pending: pl.pending, runGold: pl.runGold };
+    active: pl.active, xp: pl.xp, level: pl.level, pending: pl.pending, runGold: pl.runGold, boxBag: pl.boxBag };
   lastRunSave = time;
   try { localStorage.setItem(RUN_KEY, JSON.stringify(data)); } catch (e) { return; /* storage may be blocked */ }
   savedRun = readRun();
@@ -74,7 +75,7 @@ function resumeRun() {
   floorStarted();
   const pl = world.player;
   Object.assign(pl, { slots: d.slots, ammo: d.ammo, gearLevel: d.gearLevel, perks: d.perks, starter: d.starter, fame: d.fame, boxes: d.boxes, active: d.active,
-    xp: d.xp, level: d.level, pending: d.pending, runGold: d.runGold });
+    xp: d.xp, level: d.level, pending: d.pending, runGold: d.runGold, boxBag: d.boxBag });
   for (const type of pl.slots.slice()) if (isWeapon(type) && !isInfinite(pl, type) && !(pl.ammo[type] > 0)) useUp(pl, type);   // empty weapons are gone
   updateActive(pl);
   pl.lastMax = maxLife();

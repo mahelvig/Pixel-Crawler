@@ -32,6 +32,18 @@ const ENEMY_LORE = {
   host: 'Hosts the show you are starring in. Loves an audience. Hates a surprise guest, which is you.',
   dealer: 'The house always wins. The dealer is the house. The house is on your back now.',
   beastmaster: 'Runs the hunting grounds with a whistle and a leash. The leash is for show. The animals are not.',
+  snowman: 'Built by somebody with a lot of free time and a grudge. Throws snowballs. The snowballs have rocks in them.',
+  yeti: 'Not a myth, a municipal employee. Charges from across the room, then looks surprised that you are not frozen.',
+  santa: 'Works one day a year and has strong feelings about the other 364. His list has one name on it. It is yours.',
+  guard: 'Behind a riot shield and behind on his rent. The front is armoured. The back, as ever, is not.',
+  inmate: 'Serving 40 years for something he swears was a misunderstanding. Wants out. You are, regrettably, in the way.',
+  warden: 'Has run this block for thirty years and has not once been wrong, according to the warden.',
+  tome: 'A book that was never returned and has become bitter about it. Flies, flaps, and fires three pages at a time.',
+  scribe: 'Writes everything down, including your death. Prefers to do it from a safe distance.',
+  archivist: 'Keeps the forbidden section forbidden. You are in the forbidden section. This is a problem for you.',
+  drone: 'A flying camera with a gun, because the viewers asked for a closer shot. Fast, jumpy and always filming.',
+  sentry: 'Armoured, patient and programmed to say nothing. It does not say nothing. It says it with three bullets.',
+  overseer: 'The eye of the dungeon. It has watched every floor and every death. You are, it admits, its favourite.',
   antQueen: 'The mother of the hive. Every ant in the dungeon answers to her. She did not ask for this either.',
 };
 
@@ -57,7 +69,7 @@ function bestiaryMet(e) {
 }
 
 const bestiary = { sel: 0 };
-const BESTIARY_COLUMNS = 9, CELL = 18, CELL_STEP = 19;
+const BESTIARY_COLUMNS = 9, BESTIARY_ROWS = 5, CELL = 18, CELL_STEP = 19;
 const bestiaryCell = i => ({ x: 10 + (i % BESTIARY_COLUMNS) * CELL_STEP, y: 48 + Math.floor(i / BESTIARY_COLUMNS) * CELL_STEP, w: CELL, h: CELL });
 
 function clickBestiary() {
@@ -104,8 +116,8 @@ function drawBestiary() {
     else drawEliteMark(e.id, c.x, c.y, c.w);
   });
   const met = entries.filter(bestiaryMet).length;
-  drawText('Met ' + met + ' of ' + entries.length, 10, 48 + 4 * CELL_STEP + 4, COLOR.g);
-  drawText('Click an entry to read about it.', 10, 48 + 4 * CELL_STEP + 14, COLOR.D);
+  drawText('Met ' + met + ' of ' + entries.length, 10, 48 + BESTIARY_ROWS * CELL_STEP + 3, COLOR.g);
+  drawText('Click an entry to read about it.', 10, 48 + BESTIARY_ROWS * CELL_STEP + 13, COLOR.D);
 
   // the page about the chosen one
   const px = 180, py = 46, pw = 130, ph = 114, known = bestiaryMet(sel);

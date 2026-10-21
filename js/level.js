@@ -14,7 +14,7 @@ const isSolid = (lv, x, y) => x < 0 || y < 0 || x >= lv.b || y >= lv.h || lv.sol
 const blocksBullets = (lv, x, y) => {
   if (!isSolid(lv, x, y)) return false;
   const t = tileTypeAt(lv, x, y);
-  return !(t.target || t.breakable);
+  return !(t.target || t.breakable || t.furniture === 'bars');   // prison bars can be shot through
 };
 
 // Which floor lies under a tile? Furniture and special tiles inherit the floor around them.
@@ -32,9 +32,10 @@ function floorUnder(lv, x, y) {
 
 // tier is the floor number counting from 0: every floor is harder than the last (see DIFFICULTY)
 function buildLevel(map, tier = 0) {
+  map = layoutOf(map);
   const lv = {
     name: map.name, boss: map.boss, objectives: map.objectives || [], briefing: map.briefing, dark: map.dark, breakables: [], pickups: [], b: map.rows[0].length, h: map.rows.length, gate: null, bossSpawn: null, stairs: null,
-    chars: map.rows.map(row => [...row]), targets: [], enemies: [], items: [],
+    chars: map.rows.map(row => [...row]), targets: [], enemies: [], items: [], npcs: [], exit: null, trader: null,
   };
   lv.solid = new Uint8Array(lv.b * lv.h);
   lv.start = { x: lv.b * TILE / 2, y: lv.h * TILE / 2 };
@@ -64,6 +65,8 @@ function buildLevel(map, tier = 0) {
   }
   pickElites(lv.enemies, tier);
   scatterEnemies(lv);
+  rollObjectives(map, lv, tier);
+  lv.trader = traderSpot(lv);
   lv.canvas = map.canvas || (map.canvas = drawLevel(lv));   // the map image never changes, so it is only made once
   return lv;
 }
@@ -88,6 +91,7 @@ function scatterEnemies(lv) {
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (isSolid(lv, x + dx, y + dy)) return false;
     return reach[y * lv.b + x] === 1;
   };
+  lv.reach = reach;   // what can be walked to from the start without passing the gate
   const placed = [];
   for (const f of lv.enemies) {
     const ox = Math.floor(f.x / TILE), oy = Math.floor(f.y / TILE);

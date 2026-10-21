@@ -106,6 +106,30 @@ const ACHIEVEMENTS = [
   { id: 'floor8', name: 'Hive Mind', hint: 'Reach floor 8.', reward: { box: 'gold' }, test: A => A.w.levelIndex >= 7,
     popup: 'Floor 8. The ground is moving. That is ants.',
     story: 'A scorched desert of tunnels and a queen who has never once heard the word no. The ants are organised, loyal and extremely hungry. You are, for them, a very large and very walkable picnic.' },
+  { id: 'floor9', name: 'Cold Open', hint: 'Reach floor 9.', reward: { box: 'silver' }, test: A => A.w.levelIndex >= 8,
+    popup: 'Floor 9. It is freezing and everyone is selling something.',
+    story: 'A shopping mall that froze mid-sale. Every store is "closing down", every sign is "everything must go", and every snowman has been waiting a very long time for a customer. Please keep your hands out of the displays. The displays bite.' },
+  { id: 'floor10', name: 'Life Sentence', hint: 'Reach floor 10.', reward: { box: 'silver' }, test: A => A.w.levelIndex >= 9,
+    popup: 'Floor 10. Welcome to the Stockade. Mind the paperwork.',
+    story: 'The Stockade holds three thousand inmates, two hundred guards and one warden, and nobody is entirely sure which of them is in charge. The inmates would like you to know that they are innocent. The guards would like you to know that you are not.' },
+  { id: 'floor11', name: 'Overdue', hint: 'Reach floor 11.', reward: { box: 'gold' }, test: A => A.w.levelIndex >= 10,
+    popup: 'Floor 11. Shh. The books are listening.',
+    story: 'The Archive keeps every record of every crawler who has ever died here. Your file is already open. It is thin, but optimistic. The late fees on the books are astronomical, and they are collected personally.' },
+  { id: 'floor12', name: 'Core Values', hint: 'Reach floor 12.', reward: { box: 'gold' }, test: A => A.w.levelIndex >= 11,
+    popup: 'Floor 12. The Core. The dungeon is watching, personally.',
+    story: 'You have reached the machine that runs the dungeon. It hums. It knows your name, your weapon, your last three meals and the exact number of viewers who are rooting for you. It has bad news. It has had bad news for a while.' },
+  { id: 'goodSamaritan', name: 'Good Samaritan', hint: 'Save somebody: lead a survivor out or free a prisoner.', reward: { gold: 60 }, test: A => A.s.npcs >= 1,
+    popup: 'You saved somebody. The viewers are confused, but moved.',
+    story: 'Somebody asked for help and you actually provided it. This is, strictly speaking, not what the dungeon was designed for. The viewers have been told to expect heroism once per season. They did not expect it this early.' },
+  { id: 'socialWorker', name: 'Social Worker', hint: 'Save 10 people.', reward: { box: 'gold' }, test: A => A.s.npcs >= 10,
+    popup: '10 people saved. You have a caseload now.',
+    story: 'Ten people, led out of the dark by somebody who was also lost. The dungeon has started to file paperwork about you. The paperwork is a petition. It is not a friendly one. The ten, however, are throwing you a party in the lobby.' },
+  { id: 'unboxing', name: 'Unboxing Video', hint: 'Open a box at a trader.', reward: { gold: 40 }, test: A => A.s.boxesOpened >= 1,
+    popup: 'Your first box, opened. It was exactly as exciting as advertised.',
+    story: 'You opened a sponsor box. Inside was something that fits in a bag and, by the dungeon\'s legal department, may be described as "a prize". The viewers watched every second. Several of them are now unboxing their own, in front of a camera, for no reason at all.' },
+  { id: 'boxOffice', name: 'Box Office', hint: 'Open 20 boxes.', reward: { box: 'gold' }, test: A => A.s.boxesOpened >= 20,
+    popup: '20 boxes opened. The sponsors are running out of cardboard.',
+    story: 'Twenty boxes, opened and emptied. The sponsors have noticed that you are a fan, and the trader has noticed that you are a customer, and these are different kinds of attention. One of them sends flowers. It is not the trader.' },
   { id: 'employee', name: 'Employee of the Month', hint: 'Finish all objectives on a floor.', reward: { gold: 25 }, test: A => A.w.gateOpen,
     popup: 'All objectives done. A gold star has been glued to your forehead.',
     story: 'You did everything you were told, which is rare and slightly suspicious. A certificate has been printed. It is blank, because the dungeon does not do praise, but the paper is nice.' },
@@ -259,15 +283,15 @@ const unlockedStarters = () => Object.keys(WEAPONS).filter(starterUnlocked).sort
 // ---------- Counting what happens ----------
 // Totals that last for ever live in saved.stats (see progress.js), what happens during one run in run.
 
-const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels', 'boxes', 'elites'];
-const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0, boxes: 0, elites: 0,
+const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels', 'boxes', 'elites', 'npcs', 'boxesOpened'];
+const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0, boxes: 0, elites: 0, npcs: 0, boxesOpened: 0,
   killsBy: {}, bossTypes: {}, killsByWeapon: {}, deathsBy: {}, seen: {}, seenElites: {} });
 
 let run = null;
 
 function resetRun() {
   run = { time: 0, floorTime: 0, floorHits: 0, kills: [], bestCombo: 0, bestCombo10: 0, still: 0, walked: 0, lastWalked: 0, lastWorld: null, check: 0,
-    flawlessBoss: false, clutchBoss: false, fastBoss: false, empty: false, quickDeath: false, boxes: 0, viewersHint: false };
+    flawlessBoss: false, clutchBoss: false, fastBoss: false, empty: false, quickDeath: false, boxes: 0, viewersHint: false, boxHint: false };
 }
 resetRun();
 
@@ -312,6 +336,8 @@ function track(event, data) {
     case 'bought': s.bought++; break;
     case 'sold': s.sold++; break;
     case 'box': s.boxes++; break;
+    case 'npc': s.npcs++; break;
+    case 'boxOpened': s.boxesOpened++; break;
     case 'elite': s.elites++; s.seenElites[data.elite] = 1; break;
     case 'seen': {
       // the first time an enemy (or an elite trait) comes into sight it goes into the bestiary
@@ -352,7 +378,7 @@ function updateAchievements(dt) {
 function achievementArgs() { return { s: saved.stats, r: run, pl: world.player, w: world }; }
 
 function checkAchievements() {
-  if (dev.on || !world || (state !== 'playing' && state !== 'dead' && state !== 'won')) return;
+  if (dev.on || !world || (state !== 'playing' && state !== 'dead' && state !== 'won' && state !== 'safe')) return;
   const args = achievementArgs();
   for (const a of ACHIEVEMENTS) {
     if (!saved.ach[a.id] && a.test(args)) unlockAchievement(a);
@@ -372,20 +398,14 @@ function weaponOfRarity(rarity) {
   return list.length ? list[Math.floor(Math.random() * list.length)] : randomWeapon();
 }
 
-// A box is a weapon or a piece of clothing of the right rarity; it lands at the player's feet.
-function dropBox(tier) {
-  const pl = world.player, rarity = BOX_TIERS[tier].rarity, type = Math.random() < 0.5 ? randomGear(rarity) : weaponOfRarity(rarity);
-  world.items.push(createItem(type, pl.x, pl.y + 6, true));
-}
-
 function unlockAchievement(a) {
   const pl = world.player, r = a.reward;
   saved.ach[a.id] = 1;
   saveGame();
   if (r.gold) awardGold(r.gold, true);
   else if (r.box) {
-    if (state === 'playing') {
-      dropBox(r.box);
+    if (state === 'playing' || state === 'safe') {
+      giveBox(r.box);
     } else {
       awardGold(60, true);   // the run is over, so a box would be lost
     }

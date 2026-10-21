@@ -95,19 +95,19 @@ function statsLines(tab) {
     return [
       [['Runs', formatCount(saved.runs)], ['Deaths', formatCount(s.deaths)], ['Victories', formatCount(s.wins)], ['Best floor', saved.bestFloor + ' / ' + LEVEL_ORDER.length],
         ['Play time', formatTime(s.playTime)], ['Levels gained', formatCount(s.levels)], ['Gold earned', formatCount(s.goldEarned)], ['Items sold', formatCount(s.sold)], ['Sponsor boxes', formatCount(s.boxes)], ['Dungeon loop', formatCount(dungeonCycle())]],
-      [['Monsters killed', formatCount(s.kills)], ['Bosses defeated', formatCount(sum(s.bossTypes))], ['Elites slain', formatCount(s.elites)], ['Shots fired', formatCount(s.shots)], ['Critical hits', formatCount(s.crits)],
+      [['Monsters killed', formatCount(s.kills)], ['Bosses defeated', formatCount(sum(s.bossTypes))], ['Elites slain', formatCount(s.elites)], ['People saved', formatCount(s.npcs)], ['Boxes opened', formatCount(s.boxesOpened)], ['Shots fired', formatCount(s.shots)], ['Critical hits', formatCount(s.crits)],
         ['Damage taken', formatCount(s.damageTaken)], ['Distance walked', formatCount(s.walked / TILE) + ' m'], ['Things smashed', formatCount(s.destroyed)], ['Upgrades bought', formatCount(s.bought)]],
     ];
   }
   if (tab === 1) {
     const rows = Object.keys(ENEMIES).filter(id => !ENEMIES[id].boss).map(id => [ENEMIES[id].name, s.killsBy[id] ? formatCount(s.killsBy[id]) : '-', s.killsBy[id] ? COLOR.W : COLOR.D]);
-    return [rows.slice(0, 10), rows.slice(10)];
+    return [rows.slice(0, 9), rows.slice(9, 18), rows.slice(18)];
   }
   if (tab === 2) {
-    const bosses = Object.keys(ENEMIES).filter(id => ENEMIES[id].boss).map(id => [ENEMIES[id].name, s.bossTypes[id] ? formatCount(s.bossTypes[id]) + 'x' : '-', s.bossTypes[id] ? COLOR.l : COLOR.D]);
+    const bosses = Object.keys(ENEMIES).filter(id => ENEMIES[id].boss).map(id => [ENEMIES[id].name.replace(/^The /, ''), s.bossTypes[id] ? formatCount(s.bossTypes[id]) + 'x' : '-', s.bossTypes[id] ? COLOR.l : COLOR.D]);
     const killers = Object.keys(s.deathsBy).sort((a, b) => s.deathsBy[b] - s.deathsBy[a]).slice(0, 8)
       .map(id => [ENEMIES[id] ? ENEMIES[id].name : 'Traps and hazards', formatCount(s.deathsBy[id]) + 'x', COLOR.r]);
-    return [[['Bosses defeated'], ...bosses], [['Killed by'], ...(killers.length ? killers : [['Nothing yet', '', COLOR.D]])]];
+    return [[['Bosses defeated'], ...bosses.slice(0, 6)], [['Bosses, continued'], ...bosses.slice(6)], [['Killed by'], ...(killers.length ? killers.map(k => [k[0].replace(/^The /, ''), k[1], k[2]]) : [['Nothing yet', '', COLOR.D]])]];
   }
   const weapons = Object.keys(WEAPONS).map(id => {
     const w = WEAPONS[id], kills = s.killsByWeapon[id] || 0, need = MASTERY_KILLS[w.rarity], chosen = chosenStartWeapon() === id;
@@ -129,7 +129,7 @@ function drawStats() {
     drawText(name, b.x + b.w / 2, b.y + 5, on ? COLOR.W : COLOR.g, { align: 'center' });
   });
   if (statsUi.tab === 4) { drawBestiary(); return; }
-  const columns = statsLines(statsUi.tab), xs = [12, 170], width = 138;
+  const columns = statsLines(statsUi.tab), three = columns.length === 3, xs = three ? [10, 112, 214] : [12, 170], width = three ? 94 : 138;
   columns.forEach((rows, c) => {
     rows.forEach(([label, value, color], i) => {
       const y = 48 + i * 11;

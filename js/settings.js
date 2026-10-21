@@ -383,6 +383,104 @@ const ENEMIES = {
     dash: { windup: 0.6, time: 0.4, speed: 250, damage: 3, hit: 18, say: 'KNEEL!' },
     summon: { type: 'ant', count: 4, max: 10, say: 'MY CHILDREN!' },
   },
+
+  // ---- floor 9: the Frostbite Mall ----
+  snowman: {
+    name: 'Snowman', life: 8, speed: 24, damage: 1, sight: 140, forget: 260, dropChance: 0.3, quality: 1.2,
+    range: 0, windup: 0, cooldown: 1, knockback: 40, keepAway: 85,
+    hitbox: { b: 8, h: 6 }, body: { b: 12, h: 18, dy: -6 }, colors: ['W', 'S', 'O'], shadowWidth: 12,
+    shootInterval: 2.1, shots: 1, shotSpeed: 85, shotDamage: 2,
+  },
+  yeti: {
+    name: 'Yeti', life: 24, speed: 32, damage: 3, sight: 120, forget: 250, dropChance: 0.6, quality: 1.7,
+    range: 17, windup: 0.6, cooldown: 1.6, knockback: 12, dashRange: 105, dashCooldown: 4,
+    dash: { windup: 0.6, time: 0.5, speed: 170, damage: 3, hit: 16 },
+    hitbox: { b: 12, h: 8 }, body: { b: 18, h: 26, dy: -10 }, colors: ['W', 'S', 'c'], shadowWidth: 18, scale: 2,
+  },
+  santa: {
+    name: 'The Mall Santa', boss: true, life: 330, speed: 42, damage: 3, sight: 170, forget: 99999, dropChance: 0,
+    range: 22, windup: 0.5, cooldown: 1.2, knockback: 5,
+    hitbox: { b: 14, h: 8 }, body: { b: 20, h: 28, dy: -12 }, colors: ['r', 'W', 'R'], shadowWidth: 22, scale: 2,
+    reward: 'lightningGun', moveInterval: 2.2, randomMoves: true, moves: ['fan', 'ring', 'summon', 'hazards', 'dash'],
+    fan: { shots: 7, speed: 85, damage: 1, say: 'HO HO HO!' },
+    ring: { shots: 12, speed: 65, damage: 1, say: 'SNOWFLAKES!' },
+    summon: { type: 'snowman', count: 2, max: 4, say: 'MY LITTLE HELPERS!' },
+    hazards: { count: 4, radius: 19, warn: 0.8, active: 2.5, damage: 1, color: 'c', say: 'NAUGHTY LIST!' },
+    dash: { windup: 0.55, time: 0.4, speed: 245, damage: 3, hit: 16, say: 'SLEIGH RIDE!' },
+  },
+
+  // ---- floor 10: the Stockade ----
+  guard: {
+    name: 'Guard', life: 16, speed: 32, damage: 3, sight: 120, forget: 250, dropChance: 0.5, quality: 1.5,
+    range: 15, windup: 0.5, cooldown: 1.4, knockback: 18,
+    hitbox: { b: 9, h: 6 }, body: { b: 13, h: 17, dy: -5 }, colors: ['H', 'k', 'b'], shadowWidth: 12, armor: 0.35,
+  },
+  inmate: {
+    name: 'Inmate', life: 7, speed: 60, damage: 2, sight: 130, forget: 260, dropChance: 0.2, quality: 0.9,
+    range: 12, windup: 0.2, cooldown: 0.9, knockback: 70,
+    hitbox: { b: 8, h: 6 }, body: { b: 10, h: 15, dy: -4 }, colors: ['o', 'O', 'k'],
+  },
+  warden: {
+    name: 'The Warden', boss: true, life: 380, speed: 44, damage: 3, sight: 170, forget: 99999, dropChance: 0,
+    range: 22, windup: 0.5, cooldown: 1.2, knockback: 5,
+    hitbox: { b: 14, h: 8 }, body: { b: 20, h: 28, dy: -12 }, colors: ['b', 'k', 'O'], shadowWidth: 22, scale: 2,
+    reward: 'minigun', moveInterval: 2.2, moves: ['dash', 'fan', 'summon', 'hazards', 'dash'],
+    fan: { shots: 7, speed: 95, damage: 2, say: 'HALT!' },
+    summon: { type: 'inmate', count: 3, max: 6, say: 'LOCKDOWN!' },
+    hazards: { count: 4, radius: 19, warn: 0.8, active: 2.5, damage: 1, color: 'y', say: 'SEARCHLIGHT!' },
+    dash: { windup: 0.5, time: 0.45, speed: 255, damage: 3, hit: 16, say: 'ROLL CALL!' },
+  },
+
+  // ---- floor 11: the Forbidden Archive ----
+  tome: {
+    name: 'Tome', life: 6, speed: 52, damage: 1, sight: 150, forget: 270, dropChance: 0.3, quality: 1.2,
+    range: 0, windup: 0, cooldown: 1, knockback: 70, keepAway: 70,
+    hitbox: { b: 7, h: 5 }, body: { b: 11, h: 9, dy: -6 }, colors: ['P', 'i', 'y'], shadowWidth: 9, hover: 6, flutter: 1,
+    shootInterval: 2.4, shots: 3, shotSpeed: 80, shotDamage: 1,
+  },
+  scribe: {
+    name: 'Scribe', life: 10, speed: 34, damage: 1, sight: 150, forget: 270, dropChance: 0.35, quality: 1.3,
+    range: 0, windup: 0, cooldown: 1, knockback: 50, keepAway: 95,
+    hitbox: { b: 8, h: 6 }, body: { b: 10, h: 15, dy: -4 }, colors: ['K', 'P', 't'],
+    shootInterval: 1.8, shots: 1, shotSpeed: 150, shotDamage: 2, shootSound: 'fire:crossbow',
+  },
+  archivist: {
+    name: 'The Archivist', boss: true, life: 430, speed: 44, damage: 3, sight: 170, forget: 99999, dropChance: 0,
+    range: 22, windup: 0.5, cooldown: 1.2, knockback: 5,
+    hitbox: { b: 14, h: 8 }, body: { b: 20, h: 28, dy: -12 }, colors: ['S', 'P', 'y'], shadowWidth: 22, scale: 2,
+    reward: 'ricochetPistol', moveInterval: 2.2, randomMoves: true, moves: ['teleport', 'ring', 'summon', 'hazards', 'fan'],
+    teleport: { say: 'OVERDUE!' },
+    fan: { shots: 7, speed: 90, damage: 1, say: 'SHHH!' },
+    ring: { shots: 14, speed: 65, damage: 1, say: 'LATE FEES!' },
+    summon: { type: 'tome', count: 2, max: 5, say: 'RETURN YOUR BOOKS!' },
+    hazards: { count: 4, radius: 19, warn: 0.8, active: 2.5, damage: 1, color: 'P', say: 'INK SPILL!' },
+  },
+
+  // ---- floor 12: the Core ----
+  drone: {
+    name: 'Drone', life: 7, speed: 66, damage: 1, sight: 160, forget: 280, dropChance: 0.25, quality: 1.3,
+    range: 0, windup: 0, cooldown: 1, knockback: 80, keepAway: 80,
+    hitbox: { b: 7, h: 5 }, body: { b: 11, h: 9, dy: -6 }, colors: ['S', 'c', 'D'], shadowWidth: 9, hover: 5, flutter: 0.8,
+    shootInterval: 1.5, shots: 1, shotSpeed: 140, shotDamage: 2, shootSound: 'fire:nailGun',
+  },
+  sentry: {
+    name: 'Sentry', life: 30, speed: 24, damage: 3, sight: 150, forget: 270, dropChance: 0.6, quality: 1.8,
+    range: 0, windup: 0, cooldown: 1, knockback: 10, keepAway: 100,
+    hitbox: { b: 12, h: 8 }, body: { b: 16, h: 26, dy: -10 }, colors: ['S', 'c', 'D'], shadowWidth: 16, scale: 2, armor: 0.45,
+    shootInterval: 2.6, shots: 3, shotSpeed: 100, shotDamage: 2, shootSound: 'fire:minigun',
+  },
+  overseer: {
+    name: 'The Overseer', boss: true, life: 560, speed: 46, damage: 3, sight: 170, forget: 99999, dropChance: 0,
+    range: 26, windup: 0.5, cooldown: 1.1, knockback: 3,
+    hitbox: { b: 16, h: 8 }, body: { b: 26, h: 26, dy: -12 }, colors: ['c', 'S', 'W'], shadowWidth: 26, hover: 6, scale: 2,
+    reward: 'sniperRifle', moveInterval: 2, randomMoves: true, moves: ['fan', 'ring', 'teleport', 'hazards', 'summon', 'dash'],
+    teleport: { say: 'RELOCATING.' },
+    fan: { shots: 9, speed: 100, damage: 1, say: 'TARGET ACQUIRED.' },
+    ring: { shots: 16, speed: 70, damage: 1, say: 'EVERYONE IS A WITNESS.' },
+    summon: { type: 'drone', count: 3, max: 6, say: 'BACKUP IS COMING.' },
+    hazards: { count: 5, radius: 19, warn: 0.7, active: 2.5, damage: 1, color: 'c', say: 'ORBITAL STRIKE!' },
+    dash: { windup: 0.5, time: 0.4, speed: 260, damage: 3, hit: 18, say: 'THIS WAS NEVER IN THE PLAN.' },
+  },
 };
 
 // Clothes, hats, shoes, rings and amulets. slot is where it is worn (see GEAR_SLOTS), rarity says how strong it is:
@@ -408,7 +506,7 @@ const STARTER_POWER = 0.6;
 // exciting the meter drains decay per second. tiers are the weights for the box that comes (tierPerFloor is added per floor).
 const VIEWERS = {
   base: 100, perBox: 25, maxNeed: 300, idle: 5, decay: 2.5,
-  kill: 3, comboBonus: 1.5, comboCap: 6, boss: 30, flawless: 20, objective: 12, destroy: 3, target: 2, crit: 0.5, elite: 12,
+  kill: 3, comboBonus: 1.5, comboCap: 6, boss: 30, flawless: 20, objective: 12, destroy: 3, target: 2, crit: 0.5, elite: 12, npc: 20,
   tiers: { bronze: 58, silver: 30, gold: 9, platinum: 3 }, tierPerFloor: { bronze: 0, silver: 1, gold: 1, platinum: 0.5 },
 };
 const GEAR_UPGRADE = { perLevel: 0.25, maxLevel: 4 };   // finding a piece of clothing you already have makes it stronger: +25% of its stats per level, up to level 4
@@ -562,15 +660,40 @@ const BREAKABLES = {
   camera: { name: 'TV camera', life: 7, w: 12, h: 14, colors: ['k', 'D', 'r'] },
   slot: { name: 'Slot machine', life: 8, w: 12, h: 18, colors: ['r', 'O', 'y'], release: { type: 'bandit', count: 1 } },
   anthill: { name: 'Anthill', life: 12, w: 16, h: 10, colors: ['t', 'q', 'u'], spawn: { type: 'ant', every: 4, max: 4, range: 150 } },
+  cage: { name: 'Cage', life: 12, w: 14, h: 18, colors: ['s', 'g', 'D'], rescue: true },   // rescue: a prisoner is inside, see npc.js
 };
 
-const PICKUPS = { fuse: { name: 'Fuse' } };
+// The trader and the safe room (see saferoom.js). range is how close you must stand to the trader, and they will not trade while an enemy
+// that is after you is within danger pixels. stock is how many things they sell (of quality quality, see LOOT_RARITY), buy is the price by
+// rarity (plus buyFloor per floor), reroll the cost of new stock (growing by rerollGrowth every time). heart is the price of a heart
+// (plus heartFloor per floor), ammo the price of a shot by rarity, tailor the price of the first upgrade of a piece of clothing, sellBonus
+// how much more than the bag's own price the trader pays (plus sellLevel per upgrade level), and boxes what a sealed box costs.
+const SAFE = {
+  range: 26, danger: 140, stock: 4, quality: 3,
+  buy: { common: 35, rare: 80, epic: 170, legendary: 340 }, buyFloor: 0.06, reroll: 20, rerollGrowth: 1.6,
+  heart: 18, heartFloor: 0.08, ammo: { common: 0.15, rare: 0.3, epic: 0.5, legendary: 0.8 }, tailor: 40,
+  sellBonus: 1.5, sellLevel: 8, boxes: { bronze: 60, silver: 150, gold: 380, platinum: 900 },
+};
+
+// The people of the dungeon (see npc.js). From floor fromFloor (counting from 1) every floor has a quest with them: either lead a survivor
+// from where they hide to the way out at the start (escort), or shoot open the cages of prisoners that are guarded by enemies (rescue).
+// A survivor has life hearts and follows at speed, keeping followDistance pixels away. Enemies that chase you hurt them when they get within
+// contactRange pixels (one heart every hurtEvery seconds), so keep them away. wakeRange is how close you must come for them to follow.
+// exitRadius is how close to the start they must get. Saving them is worth gold (and a box for an escort, a good item and some hearts for a rescue).
+const NPC = {
+  fromFloor: 9, life: 5, speed: 56, followDistance: 20, contactRange: 11, hurtEvery: 0.9, wakeRange: 70, exitRadius: 22,
+  gold: 60, guards: 2, cages: 2, cagesDeep: 3,
+  names: ['Gary the Intern', 'Brenda from Accounting', 'Old Pete', 'Mordecai', 'Little Tim', 'Doris the Chef', 'Sven the Plumber', 'Priya from HR'],
+};
+
+const PICKUPS = { fuse: { name: 'Fuse' }, chip: { name: 'Chip' } };
 
 // Every floor is harder than the last. Normal enemies on floor n (counting from 0) get tier = n:
 // life x (1 + lifeStep * tier), speed x (1 + speedStep * tier), sight x (1 + sightStep * tier),
 // attack cooldowns and shot intervals shorter by cooldownStep * tier, +1 damage every damageEvery floors,
 // and a better chance to drop a weapon. Bosses have their own numbers and are not scaled.
-const DIFFICULTY = { lifeStep: 0.22, speedStep: 0.05, sightStep: 0.08, cooldownStep: 0.06, damageEvery: 3, dropStep: 0.15 };
+// softCap is the tier above which life grows at half speed (the deep floors would otherwise be endless to shoot through).
+const DIFFICULTY = { lifeStep: 0.22, speedStep: 0.05, sightStep: 0.08, cooldownStep: 0.06, damageEvery: 3, dropStep: 0.15, softCap: 7 };
 
 // Every time the whole dungeon has been beaten (a won run) it starts over, harder (see dungeonCycle in enemies.js). Each cycle
 // counts as cycleTiers extra floors for normal enemies, bosses get bossLifeStep more life and +1 damage every bossDamageEvery cycles,

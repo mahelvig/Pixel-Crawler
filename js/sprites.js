@@ -631,7 +631,132 @@ function makeAnthillImage() {
   return c;
 }
 
+// ---------- Floors 9 to 12 ----------
+
+// A snowman with a scarf and a carrot nose, 14x20. The second frame has the head a little lower.
+function makeSnowmanImage(frame) {
+  const [c, g] = createCanvas(14, 20), b = frame ? 1 : 0;
+  g.fillStyle = COLOR.U; g.fillRect(0, 8 + b, 4, 1); g.fillRect(10, 8 + b, 4, 1); g.fillRect(0, 7 + b, 1, 1); g.fillRect(13, 7 + b, 1, 1);
+  outlinedEllipse(g, 7, 14, 5, 4, COLOR.W);
+  outlinedEllipse(g, 7, 9, 3, 3, COLOR.W);
+  g.fillStyle = COLOR.S; g.fillRect(8, 16, 4, 1); g.fillRect(10, 14, 2, 1); g.fillRect(9, 10, 2, 1);
+  outlinedEllipse(g, 7, 4 + b, 3, 3, COLOR.W);
+  g.fillStyle = COLOR.r; g.fillRect(4, 7 + b, 7, 1); g.fillRect(9, 8 + b, 2, 2);
+  g.fillStyle = COLOR.K; g.fillRect(6, 3 + b, 1, 1); g.fillRect(8, 3 + b, 1, 1); g.fillRect(7, 11, 1, 1); g.fillRect(7, 13, 1, 1);
+  g.fillStyle = COLOR.O; g.fillRect(7, 5 + b, 3, 1);
+  g.fillStyle = COLOR.K; g.fillRect(4, 0, 7, 1); g.fillRect(5, 1 - 1, 5, 1);
+  return c;
+}
+
+// A flying book with flapping covers, 12 wide.
+const TOME_FRAMES = [
+  [
+    'KK........KK',
+    'KWKK....KKWK',
+    'KWWWK..KWWWK',
+    'KWWWWKKWWWWK',
+    '.KWWWPPWWWK.',
+    '..KKWPyWKK..',
+    '....KPPK....',
+    '.....KK.....',
+  ],
+  [
+    '............',
+    '............',
+    '....KPPK....',
+    '.KKKWPyWKKK.',
+    'KWWWWPPWWWWK',
+    'KWWWKKKKWWWK',
+    '.KKK.KK.KKK.',
+    '............',
+  ],
+];
+
+// A hovering drone with a cyan eye and spinning rotors, 12 wide.
+const DRONE_FRAMES = [
+  [
+    'KKK......KKK',
+    '.KSKKKKKKSK.',
+    '..KSSSSSSK..',
+    '..KSccccSK..',
+    '..KSccccSK..',
+    '...KSSSSK...',
+    '....KKKK....',
+  ],
+  [
+    '............',
+    '..KK....KK..',
+    '..KSKKKKSK..',
+    '..KSSSSSSK..',
+    '..KSccccSK..',
+    '...KSccSK...',
+    '....KKKK....',
+  ],
+];
+
+// The Overseer: a floating metal eye, 28x28.
+function makeOverseerImage(frame) {
+  const [c, g] = createCanvas(28, 28), pupil = frame ? 3 : 4;
+  fillEllipse(g, 14, 14, 13, 13, COLOR.K);
+  fillEllipse(g, 14, 14, 12, 12, COLOR.D);
+  fillEllipse(g, 14, 14, 11, 11, COLOR.S);
+  fillEllipse(g, 13, 12, 8, 7, COLOR.g);
+  fillEllipse(g, 14, 14, 8, 8, COLOR.K);
+  fillEllipse(g, 14, 14, 7, 7, COLOR.W);
+  fillEllipse(g, 14, 14, 5, 5, COLOR.c);
+  fillEllipse(g, 14, 14, pupil, pupil, COLOR.K);
+  g.fillStyle = COLOR.W; g.fillRect(12, 11, 2, 2);
+  g.fillStyle = COLOR.K; g.fillRect(0, 13, 3, 3); g.fillRect(25, 13, 3, 3); g.fillRect(13, 0, 3, 3); g.fillRect(13, 25, 3, 3);
+  g.fillStyle = COLOR.c; g.fillRect(1, 14, 1, 1); g.fillRect(26, 14, 1, 1); g.fillRect(14, 1, 1, 1); g.fillRect(14, 26, 1, 1);
+  return c;
+}
+
 const ENEMY_IMAGES = {
+  snowman: [makeSnowmanImage(0), makeSnowmanImage(1)],
+  yeti: humanoidFrames({ l: 'W', y: 'c', U: 'S', x: 'c' }, { n: 'S', S: 'W' }, 2),
+  santa: humanoidFrames({ l: 'h', y: 'W', U: 'W', x: 'r' }, { n: 'r', S: 'K' }, 2, g => {
+    // a red hat with a white rim and a big white beard
+    g.fillStyle = COLOR.K; g.fillRect(3, 0, 10, 4);
+    g.fillStyle = COLOR.r; g.fillRect(4, 0, 8, 2); g.fillStyle = COLOR.W; g.fillRect(3, 2, 10, 2);
+    g.fillRect(12, 0, 2, 2);
+    g.fillStyle = COLOR.W; g.fillRect(4, 6, 8, 3); g.fillStyle = COLOR.S; g.fillRect(5, 8, 6, 1);
+  }),
+  guard: humanoidFrames({ l: 'H', y: 'c', U: 'k', x: 'b' }, { n: 'b', S: 'k' }, 1, g => {
+    // a helmet with a visor and a riot shield on the side it faces
+    g.fillStyle = COLOR.K; g.fillRect(4, 1, 8, 4);
+    g.fillStyle = COLOR.b; g.fillRect(5, 1, 6, 2); g.fillStyle = COLOR.c; g.fillRect(5, 4, 6, 1);
+    g.fillStyle = COLOR.K; g.fillRect(12, 6, 4, 9);
+    g.fillStyle = COLOR.D; g.fillRect(13, 7, 2, 7); g.fillStyle = COLOR.c; g.fillRect(13, 8, 2, 2);
+  }),
+  inmate: humanoidFrames({ l: 'h', y: 'W', U: 'k', x: 'o' }, { n: 'o', S: 'O' }, 1),
+  warden: humanoidFrames({ l: 'h', y: 'W', U: 'k', x: 'O' }, { n: 'b', S: 'k' }, 2, g => {
+    // a peaked cap with a gold badge
+    g.fillStyle = COLOR.K; g.fillRect(3, 1, 10, 3);
+    g.fillStyle = COLOR.b; g.fillRect(4, 1, 8, 2); g.fillStyle = COLOR.O; g.fillRect(7, 2, 2, 1);
+    g.fillStyle = COLOR.K; g.fillRect(2, 3, 12, 1);
+  }),
+  tome: TOME_FRAMES.map(rows => createSprite(rows)),
+  scribe: humanoidFrames({ l: 'h', y: 'W', U: 'K', x: 'P' }, { n: 'K', S: 'P' }, 1, g => {
+    // a hood, and a feather quill in the hand
+    g.fillStyle = COLOR.K; g.fillRect(3, 1, 10, 4);
+    g.fillStyle = COLOR.P; g.fillRect(4, 1, 8, 2);
+    g.fillStyle = COLOR.W; g.fillRect(14, 7, 1, 4); g.fillStyle = COLOR.y; g.fillRect(14, 11, 1, 1);
+  }),
+  archivist: humanoidFrames({ l: 'S', y: 'y', U: 'P', x: 'y' }, { n: 'P', S: 'K' }, 2, g => {
+    // a pointed hood, and spectacles
+    g.fillStyle = COLOR.K; g.fillRect(4, 0, 8, 5); g.fillRect(3, 3, 10, 2);
+    g.fillStyle = COLOR.P; g.fillRect(5, 0, 6, 3);
+    g.fillStyle = COLOR.y; g.fillRect(4, 5, 3, 2); g.fillRect(9, 5, 3, 2);
+  }),
+  drone: DRONE_FRAMES.map(rows => createSprite(rows)),
+  sentry: humanoidFrames({ l: 'g', y: 'c', U: 'D', x: 'c' }, { n: 'D', S: 's' }, 2, g => {
+    // a visor and a gun on each shoulder
+    g.fillStyle = COLOR.K; g.fillRect(4, 3, 8, 3);
+    g.fillStyle = COLOR.c; g.fillRect(5, 4, 6, 1);
+    g.fillStyle = COLOR.K; g.fillRect(1, 7, 3, 2); g.fillRect(12, 7, 3, 2);
+    g.fillStyle = COLOR.s; g.fillRect(1, 7, 2, 1); g.fillRect(13, 7, 2, 1);
+  }),
+  overseer: [makeOverseerImage(0), makeOverseerImage(1)],
   bandit: humanoidFrames({ l: 'h', y: 'W', U: 'u', x: 'r' }, { n: 'U', S: 'u' }, 1, g => {
     // a hat
     g.fillStyle = COLOR.K; g.fillRect(3, 2, 10, 1); g.fillRect(5, 0, 6, 2);
@@ -692,6 +817,22 @@ const ENEMY_IMAGES = {
   goblin: ['stand', 'walk1', 'stand', 'walk2']
     .map(legs => createSprite([...GOBLIN_TOP, ...PLAYER_LEGS[legs].map(row => row.replace(/n/g, 'G').replace(/S/g, 'l'))])),
 };
+
+// The people of the dungeon: the same body in four sets of clothes (see npc.js).
+const NPC_LOOKS = [
+  { top: { l: 'h', y: 'W', U: 'u', x: 'b' }, legs: { n: 'D', S: 'k' } },
+  { top: { l: 'h', y: 'W', U: 'W', x: 'W' }, legs: { n: 'W', S: 'S' } },
+  { top: { l: 'q', y: 'W', U: 'K', x: 'O' }, legs: { n: 'u', S: 'U' } },
+  { top: { l: 'h', y: 'W', U: 'S', x: 'l' }, legs: { n: 'G', S: 'k' } },
+  // the last one is the trader: a green coat and a gold-trimmed hat
+  { top: { l: 'q', y: 'W', U: 'U', x: 'G' }, legs: { n: 'G', S: 'k' }, extra: g => {
+    g.fillStyle = COLOR.K; g.fillRect(3, 1, 10, 3);
+    g.fillStyle = COLOR.G; g.fillRect(4, 0, 8, 3);
+    g.fillStyle = COLOR.O; g.fillRect(4, 2, 8, 1);
+    g.fillStyle = COLOR.K; g.fillRect(2, 3, 12, 1);
+  } },
+];
+const NPC_IMAGES = NPC_LOOKS.map(look => humanoidFrames(look.top, look.legs, 1, look.extra));
 const ENEMY_WHITE = {};
 for (const type in ENEMY_IMAGES) ENEMY_WHITE[type] = ENEMY_IMAGES[type].map(b => createSilhouette(b, COLOR.W));
 // frozen enemies get an icy blue layer on top
@@ -795,10 +936,31 @@ function makeFuseImage() {
   return c;
 }
 
-const BREAKABLE_IMAGES = { nest: makeNestImage(), coffin: makeCoffinImage(), camera: makeCameraImage(), slot: makeSlotMachineImage(), anthill: makeAnthillImage() };
+// A cage with a prisoner behind the bars, 16x22.
+function makeCageImage() {
+  const [c, g] = createCanvas(16, 22);
+  g.drawImage(NPC_IMAGES[1][0], 0, 5);
+  g.fillStyle = COLOR.K; g.fillRect(0, 3, 16, 3); g.fillRect(0, 19, 16, 3);
+  g.fillStyle = COLOR.s; g.fillRect(1, 4, 14, 1); g.fillRect(1, 20, 14, 1);
+  for (const x of [1, 7, 13]) { g.fillStyle = COLOR.K; g.fillRect(x, 6, 2, 13); g.fillStyle = COLOR.g; g.fillRect(x, 6, 1, 13); }
+  return c;
+}
+
+const BREAKABLE_IMAGES = { cage: makeCageImage(), nest: makeNestImage(), coffin: makeCoffinImage(), camera: makeCameraImage(), slot: makeSlotMachineImage(), anthill: makeAnthillImage() };
 const BREAKABLE_WHITE = {};
 for (const kind in BREAKABLE_IMAGES) BREAKABLE_WHITE[kind] = createSilhouette(BREAKABLE_IMAGES[kind], COLOR.W);
 const FUSE_IMAGE = makeFuseImage();
+
+// A sponsor chip: a small gold disc with a stamp on it.
+function makeChipImage() {
+  const [c, g] = createCanvas(7, 7);
+  g.fillStyle = COLOR.K; g.fillRect(1, 0, 5, 7); g.fillRect(0, 1, 7, 5);
+  g.fillStyle = COLOR.O; g.fillRect(1, 1, 5, 5);
+  g.fillStyle = COLOR.y; g.fillRect(2, 1, 3, 1); g.fillRect(1, 2, 1, 3);
+  g.fillStyle = COLOR.W; g.fillRect(3, 2, 1, 3); g.fillRect(2, 3, 3, 1);
+  return c;
+}
+const CHIP_IMAGE = makeChipImage();
 
 // ---------- Pressure gauges (the targets in the boiler room) ----------
 

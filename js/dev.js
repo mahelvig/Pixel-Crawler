@@ -40,6 +40,9 @@ function devCompleteObjectives() {
     }
     if (o.type === 'killType') for (const f of [...w.enemies]) if (f.type === o.enemy && !f.minion) killEnemy(f);
     if (o.type === 'survive') w.surviveTime = o.seconds;
+    if (o.type === 'escort') for (const n of [...w.npcs]) if (n.state !== 'safe') npcSafe(n);
+    if (o.type === 'cull') for (const f of [...w.enemies]) if (w.killed < o.count && !f.minion && !ENEMIES[f.type].boss) killEnemy(f);
+    if (o.type === 'killElite') for (const f of [...w.enemies]) if (f.elite && !f.minion) killEnemy(f);
   }
   updateObjectives(0);
 }

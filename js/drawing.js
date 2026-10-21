@@ -16,6 +16,7 @@ function draw() {
   drawGate();
   if (world.stairs && world.stairs.active) drawStairs(world.stairs);
   drawHazards();
+  drawExitMarker();
 
   const figures = world.targets.map(dummy => ({ y: dummy.y + 7, paint: () => drawTarget(dummy) }));
   for (const f of world.enemies) figures.push({ y: f.y + 1, paint: () => drawEnemy(f) });
@@ -23,6 +24,8 @@ function draw() {
   for (const g of world.items) figures.push({ y: g.y, paint: () => drawItem(g) });
   for (const b of world.breakables) figures.push({ y: b.y + 7, paint: () => drawBreakable(b) });
   for (const p of world.pickups) figures.push({ y: p.y, paint: () => drawPickup(p) });
+  for (const n of world.npcs) figures.push({ y: n.y + 1, paint: () => drawNpc(n) });
+  if (world.level.trader) figures.push({ y: world.level.trader.y + 1, paint: drawTrader });
   if (state !== 'dead') figures.push({ y: world.player.y + 3, paint: () => drawPlayer(world.player) });
   figures.sort((a, b) => a.y - b.y).forEach(f => f.paint());
 
@@ -43,6 +46,7 @@ function draw() {
   if (state === 'shop') drawShop();
   else if (state === 'achievements') drawAchievements();
   else if (state === 'stats') drawStats();
+  else if (state === 'safe') drawSafeRoom();
   else if (state === 'title') drawTitle();
   else {
     ctx.translate(-UI_X, 0);
@@ -57,7 +61,7 @@ function draw() {
   ctx.restore();
   drawTouch();
   if (mouse.inside && !touch.on) {
-    if (state === 'bag' || state === 'shop' || state === 'achievements' || state === 'stats' || state === 'levelup') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
+    if (state === 'bag' || state === 'shop' || state === 'achievements' || state === 'stats' || state === 'levelup' || state === 'safe') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
     else drawCrosshair();
   }
 }
@@ -248,6 +252,8 @@ function drawHud() {
   drawDevPanel();
   drawProgressHud();
   drawViewers();
+  drawNpcPointer();
+  drawTradeHud();
   drawText('Floor ' + (world.levelIndex + 1), SCREEN_W - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
 
   // the controls, top left, until they have been tried
@@ -296,7 +302,7 @@ function drawTitle() {
     drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', BASE_W / 2, 158, COLOR.g, { align: 'center' });
     drawText('1-4 or wheel switch weapon    Tab bag', BASE_W / 2, 166, COLOR.g, { align: 'center' });
   }
-  drawText('Milestone 11', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
+  drawText('Milestone 12', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
   drawShopButton(TITLE_SHOP_Y);
   drawAchButton(TITLE_SHOP_Y);
   drawStatsButton(TITLE_SHOP_Y);

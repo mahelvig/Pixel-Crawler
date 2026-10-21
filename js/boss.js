@@ -67,7 +67,7 @@ function goToLevel(index) {
   sfx('descend');
   world = newWorld(index);
   const pl = world.player;
-  pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.starter = old.starter; pl.fame = old.fame; pl.fameIdle = old.fameIdle; pl.boxes = old.boxes; pl.active = old.active; pl.weapon = old.weapon;
+  pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.starter = old.starter; pl.fame = old.fame; pl.fameIdle = old.fameIdle; pl.boxes = old.boxes; pl.boxBag = old.boxBag; pl.active = old.active; pl.weapon = old.weapon;
   pl.xp = old.xp; pl.level = old.level; pl.pending = old.pending; pl.perks = old.perks; pl.runGold = old.runGold;
   pl.lastMax = old.lastMax;
   floorStarted();
@@ -235,6 +235,9 @@ function updateEnemyBullets(dt) {
     } else if (!gone && Math.abs(k.x - pl.x) < 5 && Math.abs(k.y - (pl.y - 5)) < 6) {
       damagePlayer(k.damage, k);
       gone = true;
+    } else if (!gone) {
+      const victim = world.npcs.find(n => n.state !== 'safe' && Math.abs(k.x - n.x) < 5 && Math.abs(k.y - (n.y - 5)) < 6);
+      if (victim) { if (victim.hurtTime <= 0) hurtNpc(victim, 1); gone = true; }
     }
     if (gone) world.enemyBullets.splice(i, 1);
   }
@@ -248,8 +251,12 @@ function drawGate() {
   if (!g) return;
   const p = world.gateOpen ? clamp((time - world.gateOpenTime) / 1.2, 0, 1) : 0;
   if (p >= 1) return;
-  const x0 = g.tiles[0].x * TILE, y0 = g.tiles[0].y * TILE, w = g.tiles.length * TILE, h = Math.round(TILE * (1 - p));
+  // drawn lying down; a gate in a wall that runs up and down is drawn the same way with the axes swapped
+  const vertical = g.tiles.length > 1 && g.tiles[0].x === g.tiles[1].x;
+  const x0 = 0, y0 = 0, w = g.tiles.length * TILE, h = Math.round(TILE * (1 - p));
   ctx.save();
+  ctx.translate(g.tiles[0].x * TILE, g.tiles[0].y * TILE);
+  if (vertical) ctx.transform(0, 1, 1, 0, 0, 0);
   ctx.beginPath();
   ctx.rect(x0, y0, w, h);
   ctx.clip();

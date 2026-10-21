@@ -33,7 +33,8 @@ function pickElites(list, floor) {
 function createEnemy(type, x, y, tier = 0) {
   const t = ENEMIES[type], cycle = dungeonCycle();
   tier += cycle * CYCLE.cycleTiers;
-  const k = t.boss ? 0 : tier, life = Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * k) * (t.boss ? 1 + CYCLE.bossLifeStep * cycle : 1));
+  const k = t.boss ? 0 : tier, kLife = k > DIFFICULTY.softCap ? DIFFICULTY.softCap + (k - DIFFICULTY.softCap) * 0.5 : k;   // deep floors grow slower
+  const life = Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * kLife) * (t.boss ? 1 + CYCLE.bossLifeStep * cycle : 1));
   return {
     type, x, y, vx: 0, vy: 0, pushX: 0, pushY: 0, life, maxLife: life, tier,
     speedMult: 1 + DIFFICULTY.speedStep * k, sightMult: 1 + DIFFICULTY.sightStep * k,
@@ -95,8 +96,8 @@ function updatePathMap() {
 }
 
 // Next point the enemy should walk towards: straight at the player if the way is clear, otherwise the next tile in the path map.
-function pathTo(f) {
-  const lv = world.level, pl = world.player, tb = ENEMIES[f.type].hitbox;
+function pathTo(f, tb = ENEMIES[f.type].hitbox) {
+  const lv = world.level, pl = world.player;
   if (clearPath(f.x, f.y, pl.x, pl.y, tb.b, tb.h)) return pl;
   const tx = Math.floor(f.x / TILE), ty = Math.floor(f.y / TILE);
   let best = world.pathMap[ty * lv.b + tx], goal = null;
@@ -314,6 +315,7 @@ function killEnemy(f) {
   }
   if (!t.boss) { track('killAny'); track('kill', f); }
   if (f.elite) {
+    if (!f.minion) world.eliteKilled++;
     track('elite', f);
     world.floatingTexts.push({ x: f.x, y: f.y - 22, text: 'ELITE DOWN!', life: 1.4, color: COLOR[ELITES[f.elite].color] });
     for (let p = 0; p < 14; p++) particle(f.x, center, randRange(-70, 70), randRange(-70, 30), COLOR[ELITES[f.elite].color], 0.5);

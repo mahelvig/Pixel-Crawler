@@ -23,7 +23,7 @@ function addViewers(amount) {
 }
 
 // What the meter reacts to (the events come from track in achievements.js).
-const VIEWER_EVENTS = { crit: 'crit', destroyed: 'destroy', objective: 'objective', target: 'target', elite: 'elite' };
+const VIEWER_EVENTS = { crit: 'crit', destroyed: 'destroy', objective: 'objective', target: 'target', elite: 'elite', npc: 'npc' };
 
 function viewerReaction(event) {
   const amount = VIEWERS[VIEWER_EVENTS[event]];
@@ -44,11 +44,11 @@ function sponsorBox(pl) {
   pl.fame = 0;
   pl.boxes++;
   run.boxes++;
-  dropBox(tier);
+  giveBox(tier);
   sfx('objective');
   world.floatingTexts.push({ x: pl.x, y: pl.y - 26, text: 'SPONSOR BOX!', life: 1.4, color: COLOR.m });
   for (let p = 0; p < 12; p++) particle(pl.x, pl.y - 8, randRange(-45, 45), randRange(-60, 0), p % 2 ? COLOR.m : COLOR.y, 0.5);
-  systemMessage('The viewers love you! Your sponsors send a ' + BOX_TIERS[tier].name + '.', 4);
+  systemMessage('The viewers love you! Your sponsors send a ' + BOX_TIERS[tier].name + '. A trader can open it.', 4);
   track('box');
 }
 

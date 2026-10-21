@@ -241,6 +241,53 @@ function drawLevel(lv) {
         r(x0 + rx + 2, y0 + ry + 1, 5, 1, F.q);
       }
     },
+    ice(tx, ty, x0, y0) {
+      // frozen floor with cracks and glints
+      r(x0, y0, 16, 16, F.S);
+      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const n = hash(x0 + px, y0 + py, 61);
+        if (n < 0.025) r(x0 + px, y0 + py, 1, 1, F.c);
+        else if (n < 0.06) r(x0 + px, y0 + py, 1, 1, F.W);
+        else if (n < 0.09) r(x0 + px, y0 + py, 1, 1, F.g);
+      }
+      r(x0, y0, 16, 1, F.g); r(x0, y0, 1, 16, F.g);
+      if (hash(tx, ty, 63) < 0.22) {
+        let x = 2 + Math.floor(hash(tx, ty, 64) * 10), y = 1;
+        for (let i = 0; i < 12 && y < 15; i++) { r(x0 + x, y0 + y, 1, 1, F.b); y++; x = clamp(x + Math.floor(hash(tx + i, ty, 65) * 3) - 1, 0, 15); }
+      }
+    },
+    slab(tx, ty, x0, y0) {
+      // dull prison flagstones with a faded paint line here and there
+      r(x0, y0, 16, 16, F.s);
+      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const n = hash(x0 + px, y0 + py, 67);
+        if (n < 0.07) r(x0 + px, y0 + py, 1, 1, F.g);
+        else if (n < 0.12) r(x0 + px, y0 + py, 1, 1, F.D);
+      }
+      r(x0, y0, 16, 1, F.D); r(x0, y0, 1, 16, F.D);
+      r(x0 + 8, y0 + 8, 8, 1, F.D); r(x0 + 8, y0, 1, 8, F.D);
+      if (ty % 7 === 3) { r(x0, y0 + 6, 16, 2, F.q); r(x0, y0 + 8, 16, 1, F.t); }
+    },
+    ink(tx, ty, x0, y0) {
+      // dark purple carpet with a diamond pattern and the odd ink blot
+      r(x0, y0, 16, 16, F.p);
+      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+        const mx = (x0 + px) % 8, my = (y0 + py) % 8;
+        if (Math.abs(mx - 3.5) + Math.abs(my - 3.5) === 3) r(x0 + px, y0 + py, 1, 1, F.P);
+        else if (hash(x0 + px, y0 + py, 69) < 0.04) r(x0 + px, y0 + py, 1, 1, F.K);
+      }
+      if (hash(tx, ty, 71) < 0.12) { const bx = 3 + Math.floor(hash(tx, ty, 72) * 8), by = 3 + Math.floor(hash(tx, ty, 73) * 8); r(x0 + bx, y0 + by, 3, 2, F.K); r(x0 + bx + 1, y0 + by + 2, 2, 1, F.K); r(x0 + bx + 3, y0 + by, 1, 1, F.K); }
+    },
+    circuit(tx, ty, x0, y0) {
+      // a dark machine floor with glowing traces
+      r(x0, y0, 16, 16, F.k);
+      r(x0, y0, 16, 1, F.D); r(x0, y0, 1, 16, F.D);
+      const kind = hash(tx, ty, 75);
+      if (kind < 0.35) { r(x0, y0 + 8, 16, 1, F.b); r(x0 + 5, y0 + 8, 1, 4, F.b); r(x0 + 5, y0 + 12, 1, 1, F.c); }
+      else if (kind < 0.6) { r(x0 + 8, y0, 1, 16, F.b); r(x0 + 8, y0 + 4, 4, 1, F.b); r(x0 + 12, y0 + 4, 1, 1, F.c); }
+      else if (kind < 0.7) { r(x0 + 4, y0 + 4, 8, 8, F.K); r(x0 + 5, y0 + 5, 6, 6, F.D); r(x0 + 7, y0 + 7, 2, 2, F.c); }
+      for (let i = 0; i < 4; i++) r(x0 + Math.floor(hash(tx, ty, 80 + i) * 16), y0 + Math.floor(hash(ty, tx, 90 + i) * 16), 1, 1, F.D);
+    },
     marble(tx, ty, x0, y0) {
       // a glossy checkerboard
       for (let by = 0; by < 2; by++) {
@@ -257,7 +304,7 @@ function drawLevel(lv) {
   function wallTop(tx, ty, x0, y0) {
     // seen from above, a wall takes its colour from the floor next to it: hedges, adobe and so on
     const around = [[0, 1], [1, 0], [-1, 0], [0, -1]].map(([dx, dy]) => (v(tx + dx, ty + dy) ? null : floorUnder(lv, tx + dx, ty + dy))).find(Boolean);
-    const top = around === 'grass' || around === 'dirt' ? F.f : around === 'sand' ? F.q : around === 'planks' || around === 'felt' ? F.p : F.k;
+    const top = around === 'grass' || around === 'dirt' ? F.f : around === 'sand' ? F.q : around === 'planks' || around === 'felt' ? F.p : around === 'ice' ? F.g : around === 'ink' ? F.K : F.k;
     r(x0, y0, 16, 16, top);
     for (let i = 0; i < 6; i++) r(x0 + Math.floor(hash(tx, ty, i) * 16), y0 + Math.floor(hash(ty, tx, i) * 16), 1, 1, top === F.f ? F.G : F.K);
     if (!v(tx - 1, ty)) r(x0, y0, 1, 16, F.D);
@@ -278,7 +325,7 @@ function drawLevel(lv) {
       for (let px = 0; px < 16; px++) if ((x0 + px) % 4 === 0) r(x0 + px, y0 + 4, 1, 10, F.g);
       r(x0, y0 + 8, 16, 1, F.g); r(x0, y0 + 12, 16, 1, F.g);
       r(x0, y0 + 14, 16, 2, F.g); r(x0, y0 + 15, 16, 1, F.s);
-    } else if (room === 'planks' || room === 'felt') {
+    } else if (room === 'planks' || room === 'felt' || room === 'ink') {
       // dark wood panelling with a gold rail
       r(x0, y0 + 4, 16, 12, F.U);
       for (let px = 0; px < 16; px++) if ((x0 + px) % 4 === 0) r(x0 + px, y0 + 4, 1, 12, F.p);
@@ -304,7 +351,23 @@ function drawLevel(lv) {
         for (let px = 0; px < 16; px++) if ((x0 + px + row * 5) % 10 === 0) r(x0 + px, yy, 1, 3, F.x);
         r(x0, yy, 16, 1, F.t);
       }
-    } else if (room === 'concrete' || room === 'metal' || room === 'stone') {
+    } else if (room === 'ice') {
+      // frosted blue bricks
+      r(x0, y0 + 4, 16, 12, F.b);
+      for (let row = 0; row < 3; row++) {
+        const yy = y0 + 4 + row * 4;
+        r(x0, yy + 3, 16, 1, F.S);
+        for (let px = 0; px < 16; px++) if ((x0 + px + row * 4) % 8 === 0) r(x0 + px, yy, 1, 3, F.S);
+        r(x0, yy, 16, 1, F.c);
+      }
+      r(x0, y0 + 4, 16, 1, F.W);
+    } else if (room === 'circuit') {
+      // dark panels with a glowing seam
+      r(x0, y0 + 4, 16, 12, F.D);
+      for (let px = 0; px < 16; px++) if ((x0 + px) % 8 === 0) r(x0 + px, y0 + 4, 1, 12, F.k);
+      r(x0, y0 + 9, 16, 1, F.b); r(x0, y0 + 10, 16, 1, F.c);
+      r(x0, y0 + 15, 16, 1, F.K);
+    } else if (room === 'concrete' || room === 'metal' || room === 'stone' || room === 'slab') {
       // brick blocks
       r(x0, y0 + 4, 16, 12, F.s);
       for (let row = 0; row < 3; row++) {
@@ -505,6 +568,26 @@ function drawLevel(lv) {
       if (clutter < 0.3) { r(x0 + 4, y0 + 5, 3, 3, F.r); r(x0 + 4, y0 + 5, 3, 1, F.m); r(x0 + 9, y0 + 6, 3, 3, F.W); }
       else if (clutter < 0.55) { r(x0 + 6, y0 + 4, 4, 5, F.W); r(x0 + 7, y0 + 5, 2, 3, F.r); }
       else if (clutter < 0.7) { r(x0 + 3, y0 + 6, 2, 2, F.b); r(x0 + 5, y0 + 5, 2, 2, F.O); r(x0 + 11, y0 + 7, 2, 2, F.r); }
+    },
+    drift(tx, ty, x0, y0) {
+      fillEllipse(g, x0 + 8, y0 + 10, 7, 5, F.K);
+      fillEllipse(g, x0 + 8, y0 + 10, 6, 4, F.W);
+      fillEllipse(g, x0 + 7, y0 + 9, 4, 2, F.S);
+      r(x0 + 4, y0 + 12, 8, 1, F.g);
+      r(x0 + 9, y0 + 8, 2, 1, F.c);
+    },
+    bars(tx, ty, x0, y0) {
+      r(x0, y0 + 1, 16, 2, F.K); r(x0, y0 + 13, 16, 2, F.K);
+      r(x0, y0 + 1, 16, 1, F.s); r(x0, y0 + 13, 16, 1, F.s);
+      for (const px of [1, 5, 9, 13]) { r(x0 + px, y0 + 2, 2, 12, F.K); r(x0 + px, y0 + 2, 1, 12, F.g); }
+    },
+    pylon(tx, ty, x0, y0) {
+      r(x0 + 3, y0 + 1, 10, 14, F.K);
+      r(x0 + 4, y0 + 2, 8, 12, F.D);
+      r(x0 + 4, y0 + 2, 2, 12, F.k);
+      r(x0 + 7, y0 + 3, 2, 9, F.b);
+      r(x0 + 7, y0 + 5, 2, 2, F.c); r(x0 + 7, y0 + 9, 2, 2, F.W);
+      r(x0 + 2, y0 + 14, 12, 1, F.K);
     },
     crate(tx, ty, x0, y0) {
       r(x0 + 1, y0 + 1, 14, 14, F.U);

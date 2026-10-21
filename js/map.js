@@ -9,6 +9,8 @@
 // Floors 6 to 8: p saloon boards   l card-table felt   y grass   d dirt   _ sand   R barrel   Y tree   E cactus   I rock
 // W poker table   H slot machine   A anthill   x bandit   v card shark   u bouncer   q boar   j hunter   L wolf
 // Z ant   z ant soldier   c scorpion
+// Floors 9 to 12: 1 ice   2 prison slabs   3 ink carpet   4 circuit floor   5 snowdrift   6 prison bars   7 pylon
+// J snowman   U yeti   G guard   t inmate   8 tome   9 scribe   0 drone   ! sentry
 
 const MAPS = {
   apartment: {
@@ -104,10 +106,25 @@ const TILE_TYPES = {
   'Z': { enemy: 'ant' },
   'z': { enemy: 'antSoldier' },
   'c': { enemy: 'scorpion' },
+  '1': { floor: 'ice' },
+  '2': { floor: 'slab' },
+  '3': { floor: 'ink' },
+  '4': { floor: 'circuit' },
+  '5': { furniture: 'drift' },
+  '6': { furniture: 'bars' },
+  '7': { furniture: 'pylon' },
+  'J': { enemy: 'snowman' },
+  'U': { enemy: 'yeti' },
+  'G': { enemy: 'guard' },
+  't': { enemy: 'inmate' },
+  '8': { enemy: 'tome' },
+  '9': { enemy: 'scribe' },
+  '0': { enemy: 'drone' },
+  '!': { enemy: 'sentry' },
 };
 
 // The floors, in the order the player goes through them.
-const LEVEL_ORDER = ['apartment', 'sewers', 'boiler', 'catacombs', 'studio', 'casino', 'hunting', 'hive'];
+const LEVEL_ORDER = ['apartment', 'sewers', 'boiler', 'catacombs', 'studio', 'casino', 'hunting', 'hive', 'mall', 'stockade', 'archive', 'core'];
 
 // Every floor ends in a sealed boss room: a gate, a room with the boss, and the stairs down behind it.
 function bossRoomRows(w, floor) {
@@ -281,7 +298,7 @@ MAPS.studio = {
 // ---------- Floors 6 to 8 ----------
 
 // The floor characters that things can be put on.
-const FREE_FLOORS = 'plyd_.:,~%&$';
+const FREE_FLOORS = 'plyd_.:,~%&$1234';
 
 // Paints a rectangle with another floor, leaving walls and furniture alone.
 function paintFloor(g, x0, y0, x1, y1, c) {
@@ -404,5 +421,127 @@ MAPS.hive = {
   objectives: [
     { type: 'destroy', what: 'anthill', label: 'Anthills', done: 'The anthills are rubble. The queen is not pleased.' },
     { type: 'killType', enemy: 'antSoldier', label: 'Soldiers', done: 'No more soldiers. Only the queen is left.' },
+  ],
+};
+
+// ---------- Floors 9 to 12 ----------
+
+// Floor 9: a frozen shopping mall. A long food court with five shops along the top and five along the bottom.
+function mallRows() {
+  const g = emptyGrid(52, 28, '1');
+  paintFloor(g, 1, 10, 50, 17, ',');
+  const doors = [[5, 8], [15, 18], [25, 28], [36, 39], [46, 49]];
+  hWall(g, 9, 1, 50, doors);
+  hWall(g, 18, 1, 50, doors);
+  for (const x of [11, 21, 32, 43]) { vWall(g, x, 1, 8, []); vWall(g, x, 19, 26, []); }
+  putOn(g, [[3, 13]], '@');
+  putOn(g, Array.from({ length: 7 }, (_, i) => [14 + i, 13]).concat(Array.from({ length: 7 }, (_, i) => [31 + i, 13])), 'K');
+  putOn(g, [[24, 11], [26, 11], [24, 16], [26, 16], [8, 11], [44, 16], [47, 11], [10, 16]], 'T');
+  putOn(g, [[6, 12], [20, 15], [38, 11], [30, 16], [49, 14], [2, 16], [22, 11], [40, 15]], '5');
+  for (const x of [2, 3, 4, 13, 14, 16, 17, 23, 24, 26, 27, 34, 35, 37, 38, 45, 46]) { if (g[2][x] === '1') g[2][x] = 'B'; if (g[25][x] === '1') g[25][x] = 'B'; }
+  putOn(g, [[9, 6], [19, 6], [30, 22], [41, 22], [48, 6], [16, 23], [26, 6]], 'k');
+  sprinkle(g, 'J', 7, 1, 1, 50, 26, 41);
+  sprinkle(g, 'U', 4, 1, 1, 50, 26, 42);
+  sprinkle(g, 'L', 4, 1, 1, 50, 26, 43);
+  sprinkle(g, 'h', 3, 1, 1, 50, 26, 44);
+  sprinkle(g, 'w', 3, 1, 1, 50, 26, 45);
+  sprinkle(g, 'e', 2, 1, 1, 50, 26, 46);
+  return gridRows(g);
+}
+
+// Floor 10: a prison. Two rows of cells with barred fronts and a big yard in between.
+function stockadeRows() {
+  const g = emptyGrid(50, 28, '2');
+  for (const x of [9, 17, 25, 33, 41]) { vWall(g, x, 1, 7, []); vWall(g, x, 20, 26, []); }
+  const doors = [[4, 5], [12, 13], [20, 21], [28, 29], [36, 37], [44, 45]];
+  for (const y of [7, 20]) for (let x = 1; x <= 48; x++) if (g[y][x] === '2' && !doors.some(([a, b]) => x >= a && x <= b)) g[y][x] = '6';
+  putOn(g, [[3, 13]], '@');
+  for (const x of [2, 11, 19, 27, 35, 43]) { putOn(g, [[x, 1], [x, 2]], 'b'); putOn(g, [[x, 26], [x, 25]], 'b'); }
+  putOn(g, [[14, 12], [15, 12], [34, 15], [35, 15], [24, 10], [25, 17], [44, 11], [6, 16], [30, 12]], 'k');
+  putOn(g, [[20, 14], [21, 14], [28, 13], [46, 15], [9, 11]], 'R');
+  sprinkle(g, 't', 6, 1, 1, 48, 6, 51);
+  sprinkle(g, 't', 6, 1, 21, 48, 26, 52);
+  sprinkle(g, 'G', 6, 1, 8, 48, 19, 53);
+  sprinkle(g, 's', 3, 1, 8, 48, 19, 54);
+  sprinkle(g, 'i', 3, 1, 8, 48, 19, 55);
+  sprinkle(g, 'n', 2, 1, 8, 48, 19, 56);
+  sprinkle(g, 'w', 3, 1, 1, 48, 26, 57);
+  sprinkle(g, 'e', 2, 1, 1, 48, 26, 58);
+  return gridRows(g);
+}
+
+// Floor 11: an archive. Long shelves with gaps to slip through, split into two wings by a wall, and reading rooms in between.
+function archiveRows() {
+  const g = emptyGrid(48, 30, '3');
+  vWall(g, 24, 1, 28, [[3, 5], [14, 16], [25, 27]]);
+  const lines = [[6, [[10, 12], [34, 36]]], [12, [[4, 6], [22, 26], [40, 42]]], [18, [[10, 12], [30, 32]]], [24, [[4, 6], [22, 26], [40, 42]]]];
+  for (const [y, gaps] of lines) {
+    for (let x = 1; x <= 46; x++) {
+      if (gaps.some(([a, b]) => x >= a && x <= b)) continue;
+      if (g[y][x] === '3') g[y][x] = 'B';
+    }
+  }
+  putOn(g, [[3, 3]], '@');
+  putOn(g, [[8, 9], [9, 9], [16, 9], [17, 9], [30, 9], [31, 9], [38, 9], [39, 9], [8, 21], [9, 21], [16, 21], [17, 21], [30, 21], [31, 21], [38, 21], [39, 21]], 'T');
+  putOn(g, [[20, 3], [28, 3], [20, 27], [28, 27], [2, 15], [45, 15], [12, 15], [34, 15]], 'P');
+  putOn(g, [[5, 27], [43, 4], [13, 3], [36, 27]], 'k');
+  sprinkle(g, '8', 9, 1, 1, 46, 28, 61);
+  sprinkle(g, '9', 6, 1, 1, 46, 28, 62);
+  sprinkle(g, 'h', 4, 1, 1, 46, 28, 63);
+  sprinkle(g, 'a', 4, 1, 1, 46, 28, 64);
+  sprinkle(g, 'n', 2, 1, 1, 46, 28, 65);
+  sprinkle(g, 'w', 3, 1, 1, 46, 28, 66);
+  sprinkle(g, 'e', 2, 1, 1, 46, 28, 67);
+  return gridRows(g);
+}
+
+// Floor 12: the core of the dungeon. An outer ring around a walled chamber with pylons.
+function coreRows() {
+  const g = emptyGrid(54, 30, '4');
+  hWall(g, 9, 14, 39, [[24, 29]]);
+  hWall(g, 20, 14, 39, [[24, 29]]);
+  vWall(g, 14, 9, 20, [[13, 16]]);
+  vWall(g, 39, 9, 20, [[13, 16]]);
+  vWall(g, 27, 1, 6, []);
+  vWall(g, 27, 23, 28, []);
+  putOn(g, [[3, 3]], '@');
+  putOn(g, [[18, 13], [35, 13], [18, 16], [35, 16], [26, 14], [27, 15], [8, 8], [45, 8], [8, 21], [45, 21], [20, 3], [34, 26], [3, 14], [50, 15], [10, 26], [43, 3]], '7');
+  putOn(g, [[22, 12], [31, 17], [5, 20], [48, 9], [16, 5], [37, 24]], 'k');
+  sprinkle(g, '0', 10, 1, 1, 52, 28, 71);
+  sprinkle(g, '!', 5, 1, 1, 52, 28, 72);
+  sprinkle(g, 'i', 3, 1, 1, 52, 28, 73);
+  sprinkle(g, 'n', 2, 1, 1, 52, 28, 74);
+  sprinkle(g, 'h', 3, 1, 1, 52, 28, 75);
+  sprinkle(g, 'w', 3, 1, 1, 52, 28, 76);
+  sprinkle(g, 'e', 2, 1, 1, 52, 28, 77);
+  return gridRows(g);
+}
+
+MAPS.mall = {
+  name: 'The Frostbite Mall', boss: 'santa', rows: addBossRoom(mallRows(), '1'),
+  objectives: [
+    { type: 'killType', enemy: 'yeti', label: 'Yetis', done: 'The yetis are gone. The mall is quiet. Cold, but quiet.' },
+    { type: 'killType', enemy: 'snowman', label: 'Snowmen', done: 'The snowmen have melted. Mostly metaphorically.' },
+  ],
+};
+MAPS.stockade = {
+  name: 'The Stockade', boss: 'warden', rows: addBossRoom(stockadeRows(), '2'),
+  objectives: [
+    { type: 'killType', enemy: 'guard', label: 'Guards', done: 'The guards are down. The cells are, sadly, still locked.' },
+    { type: 'killType', enemy: 'inmate', label: 'Inmates', done: 'The inmates are done. Yard time is over.' },
+  ],
+};
+MAPS.archive = {
+  name: 'The Forbidden Archive', boss: 'archivist', rows: addBossRoom(archiveRows(), '3'),
+  objectives: [
+    { type: 'killType', enemy: 'tome', label: 'Tomes', done: 'The tomes are shut. All of them, permanently.' },
+    { type: 'killType', enemy: 'scribe', label: 'Scribes', done: 'The scribes are done writing. Their last chapter was short.' },
+  ],
+};
+MAPS.core = {
+  name: 'The Core', boss: 'overseer', rows: addBossRoom(coreRows(), '4'),
+  objectives: [
+    { type: 'killType', enemy: 'sentry', label: 'Sentries', done: 'The sentries are offline. Somebody is going to notice.' },
+    { type: 'killType', enemy: 'drone', label: 'Drones', done: 'The drones are scrap. The core is nearly defenceless.' },
   ],
 };

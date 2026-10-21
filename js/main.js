@@ -21,9 +21,10 @@ function newWorld(index = 0) {
     bullets: [], particles: [], floatingTexts: [], messages: [],
     hasWalked: false, hasShot: false, walkedDistance: 0, helpAlpha: 1, goalShown: false,
     targetsHit: 0,
-    enemies: level.enemies, enemyTotal: level.enemies.length, killed: 0, killedByType: {},
+    enemies: level.enemies, enemyTotal: level.enemies.length, killed: 0, killedByType: {}, eliteKilled: 0,
+    npcs: (level.npcs || []).map(createNpc), npcSafe: 0, npcLost: 0, stock: makeStock(), rerolls: 0,
     breakables: level.breakables, pickups: level.pickups, destroyed: {}, collected: {},
-    totals: { destroy: countBy(level.breakables, 'kind'), collect: countBy(level.pickups, 'kind'), killType: countBy(level.enemies, 'type') },
+    totals: { destroy: countBy(level.breakables, 'kind'), collect: countBy(level.pickups, 'kind'), killType: countBy(level.enemies, 'type'), elites: level.enemies.filter(e => e.elite).length, npcs: (level.npcs || []).length },
     surviveTime: 0, waveTime: 5, objectiveDone: [],
     stains: [], hurtFlash: 0, deathTime: 0, pathMap: null, pathMapTile: -1,
     items: level.items, holding: -1, hasFound: false, fullMessage: -99,
@@ -82,6 +83,7 @@ window.addEventListener('keydown', e => {
   if (e.repeat) return;
   if (e.code === 'Backquote') { devCycle(); return; }
   if (e.code === 'KeyE' && state === 'bag') { equipAtMouse(); return; }
+  if (e.code === 'KeyE' && state === 'playing') { tryTrade(); return; }
   if (devKey(e.code)) return;
   if (e.code === 'Tab' || e.code === 'KeyI') { toggleBag(); return; }
   if (e.code === 'KeyM') { setOption('music', !OPTIONS.music); return; }
@@ -90,6 +92,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyW' && state === 'title') { cycleStartWeapon(); return; }
   if (e.code === 'KeyC' && state === 'title' && savedRun) { resumeRun(); return; }
   if (e.code === 'KeyN' && state === 'title' && savedRun) { startGame(); return; }
+  if (state === 'safe' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { safeTab(e.code === 'ArrowLeft' ? -1 : 1); return; }
   if (state === 'stats' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { statsTab(e.code === 'ArrowLeft' ? -1 : 1); return; }
   if (state === 'stats' && statsUi.tab === 4 && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) { bestiaryMove(e.code === 'ArrowUp' ? -1 : 1); return; }
   if (state === 'achievements') {
@@ -103,6 +106,7 @@ window.addEventListener('keydown', e => {
     if (state === 'shop') { closeShop(); return; }
     if (state === 'achievements') { closeAchievements(); return; }
     if (state === 'stats') { closeStats(); return; }
+    if (state === 'safe') { closeSafeRoom(); return; }
     if (state === 'levelup') return;
     if (state === 'bag') toggleBag();
     else togglePause();
@@ -149,6 +153,8 @@ canvas.addEventListener('pointerdown', e => {
   if (state === 'shop') { if (e.button === 0) clickShop(); return; }
   if (state === 'achievements') { if (e.button === 0) clickAchievements(); return; }
   if (state === 'stats') { if (e.button === 0) clickStats(); return; }
+  if (state === 'safe') { if (e.button === 0) clickSafeRoom(); return; }
+  if (state === 'playing' && e.button === 0 && tradeButtonShown() && inBox(tradeButton())) { tryTrade(); return; }
   if (state === 'bag') { clickInBag(e.button); return; }
   if (e.button === 2 && state === 'playing' && OPTIONS.rightClickMove) {
     mouse.moving = true;
@@ -196,6 +202,7 @@ function update(dt) {
   if (state === 'playing') {
     updatePlayer(dt);
     updateEnemies(dt);
+    updateNpcs(dt);
     updateEnemyBullets(dt);
     updateHazards(dt);
     updateBullets(dt);
@@ -270,7 +277,7 @@ function updateTutorial(dt) {
     world.helpAlpha = Math.max(0, world.helpAlpha - dt * 0.5);
     if (!world.goalShown) {
       world.goalShown = true;
-      systemMessage('The block is crawling with vermin. Five targets wait in the basement.');
+      systemMessage(world.level.briefing);
     }
   }
 }

@@ -340,6 +340,38 @@ const MUSIC = {
     drums: { kick: 'x..x..x.x..x..x.', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.xx' },
     waves: { bass: 'sawtooth', arp: 'square', lead: 'sawtooth', pad: 'triangle' }, cutoff: { bass: 800 },
   },
+  mall: {
+    bpm: 96, root: 57, scale: MAJOR, chords: [0, 5, 3, 4],
+    bass: [0, _, _, _, 4, _, _, _, 5, _, _, _, 3, _, _, _],
+    arp: [0, 2, 4, 7, 4, 2, 0, 2, 4, 7, 9, 7, 4, 2, 0, 2],
+    lead: [7, _, _, _, 9, _, 7, _, 4, _, _, _, 5, _, 4, _, 2, _, _, _, 4, _, 5, _, 7, _, _, _, _, _, _, _],
+    drums: { kick: 'x.......x.......', snare: '........x.......', hat: 'x.x.x.x.x.x.x.x.' },
+    waves: { bass: 'sine', arp: 'triangle', lead: 'sine', pad: 'triangle' },
+  },
+  stockade: {
+    bpm: 104, root: 46, scale: MINOR, chords: [0, 0, 5, 4],
+    bass: [0, _, 0, 0, _, _, 0, _, 0, _, 0, 0, _, _, 3, _],
+    arp: [0, _, _, 4, _, _, 7, _, 0, _, _, 4, _, _, 2, _],
+    lead: [7, _, _, _, 7, _, 6, _, 4, _, _, _, 2, _, _, _, 3, _, _, _, 4, _, _, _, 2, _, _, _, _, _, _, _],
+    drums: { kick: 'x..x..x.x..x..x.', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.x.' },
+    waves: { bass: 'sawtooth', arp: 'square', lead: 'square', pad: 'triangle' }, cutoff: { bass: 600 },
+  },
+  archive: {
+    bpm: 84, root: 50, scale: HARMONIC, chords: [0, 5, 1, 4],
+    bass: [0, _, _, _, _, _, _, _, 4, _, _, _, _, _, 3, _],
+    arp: [0, _, 4, _, 7, _, 11, _, 7, _, 4, _, 3, _, 4, _],
+    lead: [11, _, _, _, 9, _, _, _, 7, _, _, _, 8, _, _, _, 7, _, _, _, 5, _, _, _, 4, _, _, _, _, _, _, _],
+    drums: { kick: 'x.......x.......', snare: '................', hat: '..x.......x.....' },
+    waves: { bass: 'sine', arp: 'triangle', lead: 'sine', pad: 'sine' },
+  },
+  core: {
+    bpm: 128, root: 45, scale: PHRYGIAN, chords: [0, 1, 0, 4],
+    bass: [0, _, 0, _, 0, 0, _, 0, 1, _, 1, _, 1, 1, _, 4],
+    arp: [0, 4, 7, 4, 0, 4, 8, 4, 1, 5, 8, 5, 4, 7, 9, 7],
+    lead: [7, _, 8, _, 7, _, 4, _, 5, _, _, _, 4, _, 1, _, 0, _, 1, _, 4, _, 5, _, 7, _, _, _, _, _, _, _],
+    drums: { kick: 'x...x...x...x..x', snare: '....x.......x...', hat: 'x.x.x.x.x.x.x.xx' },
+    waves: { bass: 'sawtooth', arp: 'square', lead: 'sawtooth', pad: 'triangle' }, cutoff: { bass: 1000 },
+  },
   // short, sad, plays once
   dead: {
     bpm: 60, root: 52, scale: MINOR, chords: [0, 5], bars: 2, loop: false, alwaysCombat: true,
@@ -378,6 +410,10 @@ MUSIC.boss4 = bossTheme(MUSIC.studio, 53);
 MUSIC.boss5 = bossTheme(MUSIC.casino, 50);
 MUSIC.boss6 = bossTheme(MUSIC.hunting, 52);
 MUSIC.boss7 = bossTheme(MUSIC.hive, 49);
+MUSIC.boss8 = bossTheme(MUSIC.mall, 57);
+MUSIC.boss9 = bossTheme(MUSIC.stockade, 46);
+MUSIC.boss10 = bossTheme(MUSIC.archive, 50);
+MUSIC.boss11 = bossTheme(MUSIC.core, 45);
 
 const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
 
