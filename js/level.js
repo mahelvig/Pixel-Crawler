@@ -62,6 +62,7 @@ function buildLevel(map, tier = 0) {
   for (const f of lv.enemies.slice()) {
     for (let n = Math.floor(share) + (Math.random() < share % 1 ? 1 : 0); n > 0; n--) lv.enemies.push(createEnemy(f.type, f.x, f.y, tier));
   }
+  pickElites(lv.enemies, tier);
   scatterEnemies(lv);
   lv.canvas = map.canvas || (map.canvas = drawLevel(lv));   // the map image never changes, so it is only made once
   return lv;

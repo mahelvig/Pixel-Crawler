@@ -123,6 +123,13 @@ function drawTarget(dummy) {
   ctx.drawImage(dummy.hitFlash > 0 ? TARGET_WHITE : TARGET_IMAGE, x - 8, y - 8);
 }
 
+// The outline of an elite: the sprite as a flat silhouette in the colour of its trait (made once per picture).
+const eliteGlows = {};
+function eliteGlow(f, frame) {
+  const key = f.type + '|' + f.elite + '|' + frame;
+  return eliteGlows[key] || (eliteGlows[key] = createSilhouette(ENEMY_IMAGES[f.type][frame], COLOR[ELITES[f.elite].color]));
+}
+
 function drawEnemy(f) {
   const t = ENEMIES[f.type], frames = (f.hitFlash > 0 || (f.fuse > 0 && Math.floor(time * 16) % 2 === 0)) ? ENEMY_WHITE[f.type] : ENEMY_IMAGES[f.type];
   const image = frames[Math.floor(f.animTime) % frames.length];
@@ -134,6 +141,13 @@ function drawEnemy(f) {
   ctx.save();
   ctx.translate(x + shake, 0);
   if (f.direction < 0) ctx.scale(-1, 1);
+  if (f.elite) {
+    // an elite glows in the colour of its trait
+    const glow = eliteGlow(f, Math.floor(f.animTime) % frames.length), alpha = ctx.globalAlpha, left = -Math.floor(image.width / 2);
+    ctx.globalAlpha = alpha * (0.65 + 0.3 * Math.sin(time * 5 + f.x));
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) ctx.drawImage(glow, left + dx, top + dy);
+    ctx.globalAlpha = alpha;
+  }
   ctx.drawImage(image, -Math.floor(image.width / 2), top);
   if (f.slowTime > 0) {
     // frozen: a layer of ice on top
@@ -144,14 +158,21 @@ function drawEnemy(f) {
   }
   ctx.restore();
   ctx.globalAlpha = 1;
-  if (!t.boss && f.life < f.maxLife) {
+  if (f.elite) {
+    const color = COLOR[ELITES[f.elite].color], bb = 16;
+    ctx.fillStyle = COLOR.K;
+    ctx.fillRect(x - bb / 2 - 1, top - 4, bb + 2, 3);
+    ctx.fillStyle = color;
+    ctx.fillRect(x - bb / 2, top - 3, Math.ceil(bb * f.life / f.maxLife), 1);
+    drawText(f.eliteName, x, top - 12, color, { align: 'center' });
+  } else if (!t.boss && f.life < f.maxLife) {
     const bb = 10;
     ctx.fillStyle = COLOR.K;
     ctx.fillRect(x - bb / 2 - 1, top - 4, bb + 2, 3);
     ctx.fillStyle = COLOR.r;
     ctx.fillRect(x - bb / 2, top - 3, Math.ceil(bb * f.life / f.maxLife), 1);
   }
-  if (f.exclaim > 0) drawText('!', x, top - 11 - Math.round(Math.max(0, f.exclaim - 0.5) * 10), COLOR.y, { align: 'center' });
+  if (f.exclaim > 0) drawText('!', x, top - (f.elite ? 20 : 11) - Math.round(Math.max(0, f.exclaim - 0.5) * 10), COLOR.y, { align: 'center' });
 }
 
 // the ring that flashes for a moment when something explodes
@@ -320,8 +341,10 @@ function drawPause() {
     if (on) { ctx.fillStyle = COLOR.l; ctx.fillRect(r.x + 7, r.y + 6, 5, 5); }
     drawText(option.label, r.x + 19, r.y + 6, hover ? COLOR.W : COLOR.S);
   });
+  drawButton(mainMenuButton(), 'Main menu', overMainMenu());
   const hovered = overPauseOption();
-  if (hovered >= 0) {
+  if (overMainMenu()) drawText('Saves your run. Use Continue on the main menu to carry on.', BASE_W / 2, SCREEN_H - 12, COLOR.g, { align: 'center' });
+  else if (hovered >= 0) {
     const option = pauseOptions()[hovered];
     drawText(OPTIONS[option.key] ? option.on : option.off, BASE_W / 2, SCREEN_H - 12, COLOR.g, { align: 'center' });
   }
@@ -344,6 +367,13 @@ function pauseOptionRect(i) {
   const w = Math.max(...pauseOptions().map(o => textWidth(o.label))) + 28, h = 14;
   return { x: Math.round(BASE_W / 2 - w / 2), y: 84 + i * 15, w, h };
 }
+
+// the button under the options that leaves for the main menu
+function mainMenuButton() {
+  const last = pauseOptionRect(pauseOptions().length - 1), w = 90;
+  return { x: Math.round(BASE_W / 2 - w / 2), y: last.y + last.h + 6, w, h: 14 };
+}
+const overMainMenu = () => state === 'pause' && mouse.inside && inBox(mainMenuButton());
 
 // the index of the option under the mouse, or -1
 function overPauseOption() {

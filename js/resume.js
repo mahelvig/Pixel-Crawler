@@ -51,6 +51,16 @@ function clearRun() {
   try { localStorage.removeItem(RUN_KEY); } catch (e) { /* storage may be blocked */ }
 }
 
+// From the pause menu: the run is saved, and the title screen offers to continue it.
+function leaveToMenu() {
+  saveRun();
+  world = newWorld(0);
+  state = 'title';
+  mouse.down = false;
+  mouse.moving = false;
+  sfx('uiClick');
+}
+
 // every frame while playing
 function updateRunSave() {
   if (time - lastRunSave > RUN_SAVE_EVERY) saveRun();
@@ -65,6 +75,7 @@ function resumeRun() {
   const pl = world.player;
   Object.assign(pl, { slots: d.slots, ammo: d.ammo, gearLevel: d.gearLevel, perks: d.perks, starter: d.starter, fame: d.fame, boxes: d.boxes, active: d.active,
     xp: d.xp, level: d.level, pending: d.pending, runGold: d.runGold });
+  for (const type of pl.slots.slice()) if (isWeapon(type) && !isInfinite(pl, type) && !(pl.ammo[type] > 0)) useUp(pl, type);   // empty weapons are gone
   updateActive(pl);
   pl.lastMax = maxLife();
   pl.life = Math.min(d.life, pl.lastMax);

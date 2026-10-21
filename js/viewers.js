@@ -23,7 +23,7 @@ function addViewers(amount) {
 }
 
 // What the meter reacts to (the events come from track in achievements.js).
-const VIEWER_EVENTS = { crit: 'crit', destroyed: 'destroy', objective: 'objective', target: 'target' };
+const VIEWER_EVENTS = { crit: 'crit', destroyed: 'destroy', objective: 'objective', target: 'target', elite: 'elite' };
 
 function viewerReaction(event) {
   const amount = VIEWERS[VIEWER_EVENTS[event]];

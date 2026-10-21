@@ -131,10 +131,10 @@ function fire(pl, v) {
   if (!isInfinite(pl, type) && !(dev.on && dev.ammo) && !(Math.random() < stat('ammoSave'))) {
     pl.ammo[type] -= 1;
     if (pl.ammo[type] <= 0) {
-      world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: 'OUT OF AMMO', life: 1, color: COLOR.r });
+      world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: WEAPONS[type].name + ' used up', life: 1.2, color: COLOR.r });
       sfx('outOfAmmo');
       track('empty');
-      switchToNextWithAmmo(pl);
+      useUp(pl, type);
     }
   }
 }

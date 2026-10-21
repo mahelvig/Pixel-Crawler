@@ -132,6 +132,17 @@ const ACHIEVEMENTS = [
     popup: 'Three boxes in one run. You are trending.',
     story: 'Three sponsor boxes in a single run. The dungeon has refreshed the ratings six times, because it assumed it was a mistake. It was not a mistake. You are very good at being watched.' },
 
+  { id: 'middleManagement', name: 'Middle Management', hint: 'Kill 5 elite enemies.', reward: { box: 'silver' }, test: A => A.s.elites >= 5,
+    popup: 'Five elites down. Somebody just got a performance review.',
+    story: "Elite enemies are the dungeon's middle managers: slightly larger, slightly meaner, and convinced that they are indispensable. You have shown five of them that they are not. HR has been notified. HR is also on fire." },
+  { id: 'upperManagement', name: 'Hostile Takeover', hint: 'Kill 25 elite enemies.', reward: { box: 'gold' }, test: A => A.s.elites >= 25,
+    popup: '25 elites. You are now technically in charge.',
+    story: 'Twenty-five elites, each with a nameplate, a trait and a dream. The dungeon has quietly moved your name to the top of the org chart. The pay is the same. The parking is worse. There is no parking. There is only the dungeon.' },
+
+  { id: 'fieldGuide', name: 'Field Guide', hint: 'Meet every kind of enemy in the bestiary.', reward: { box: 'gold' }, test: A => Object.keys(ENEMIES).every(id => A.s.seen[id] || A.s.killsBy[id] || A.s.bossTypes[id]),
+    popup: 'Every enemy met. The bestiary is complete.',
+    story: 'You have now been introduced to everything in the dungeon that wants you dead, which is everything in the dungeon. The bestiary is complete. A small committee has applauded. The committee is a rat. It applauded in a menacing way.' },
+
   // ---- dying ----
   { id: 'firstDeath', name: 'Rookie Mistake', hint: 'Die for the first time.', reward: { gold: 15 }, test: A => A.s.deaths >= 1,
     popup: 'You died. The viewers are delighted.',
@@ -248,9 +259,9 @@ const unlockedStarters = () => Object.keys(WEAPONS).filter(starterUnlocked).sort
 // ---------- Counting what happens ----------
 // Totals that last for ever live in saved.stats (see progress.js), what happens during one run in run.
 
-const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels', 'boxes'];
-const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0, boxes: 0,
-  killsBy: {}, bossTypes: {}, killsByWeapon: {}, deathsBy: {} });
+const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels', 'boxes', 'elites'];
+const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0, boxes: 0, elites: 0,
+  killsBy: {}, bossTypes: {}, killsByWeapon: {}, deathsBy: {}, seen: {}, seenElites: {} });
 
 let run = null;
 
@@ -301,6 +312,16 @@ function track(event, data) {
     case 'bought': s.bought++; break;
     case 'sold': s.sold++; break;
     case 'box': s.boxes++; break;
+    case 'elite': s.elites++; s.seenElites[data.elite] = 1; break;
+    case 'seen': {
+      // the first time an enemy (or an elite trait) comes into sight it goes into the bestiary
+      const fresh = !s.seen[data.type] && !s.killsBy[data.type] && !s.bossTypes[data.type], freshElite = data.elite && !s.seenElites[data.elite];
+      s.seen[data.type] = 1;
+      if (data.elite) s.seenElites[data.elite] = 1;
+      if (fresh || freshElite) world.floatingTexts.push({ x: data.x, y: data.y - (data.elite ? 34 : 26), text: 'Bestiary: ' + (freshElite && !fresh ? ELITES[data.elite].name + ' elite' : ENEMIES[data.type].name), life: 1.8, color: COLOR.y });
+      if (!fresh && !freshElite) return;
+      break;
+    }
     case 'objective': case 'target': return;
     case 'destroyed': s.destroyed++; break;
     case 'empty': run.empty = true; break;

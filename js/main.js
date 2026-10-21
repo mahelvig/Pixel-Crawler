@@ -91,6 +91,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyC' && state === 'title' && savedRun) { resumeRun(); return; }
   if (e.code === 'KeyN' && state === 'title' && savedRun) { startGame(); return; }
   if (state === 'stats' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) { statsTab(e.code === 'ArrowLeft' ? -1 : 1); return; }
+  if (state === 'stats' && statsUi.tab === 4 && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) { bestiaryMove(e.code === 'ArrowUp' ? -1 : 1); return; }
   if (state === 'achievements') {
     if (e.code === 'ArrowLeft') { achPage(-1); return; }
     if (e.code === 'ArrowRight') { achPage(1); return; }
@@ -158,7 +159,8 @@ canvas.addEventListener('pointerdown', e => {
   if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overWeaponButton()) cycleStartWeapon(); else if (savedRun) { if (overContinue()) resumeRun(); else if (overNewRun()) startGame(); } else startGame(); return; }
   if (state === 'pause') {
     const option = overPauseOption();
-    if (option >= 0) { setOption(pauseOptions()[option].key, !OPTIONS[pauseOptions()[option].key]); sfx('uiClick'); }
+    if (overMainMenu()) leaveToMenu();
+    else if (option >= 0) { setOption(pauseOptions()[option].key, !OPTIONS[pauseOptions()[option].key]); sfx('uiClick'); }
     else { state = 'playing'; sfx('pause'); }
     return;
   }

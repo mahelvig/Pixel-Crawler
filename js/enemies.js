@@ -5,6 +5,31 @@
 // How many times the whole dungeon has been beaten: the dungeon gets harder every time (see CYCLE).
 const dungeonCycle = () => Math.min(CYCLE.maxCycle, saved.stats.wins);
 
+// Turns an enemy into an elite with one of the traits in ELITES.
+function makeElite(f, id) {
+  const e = ELITES[id];
+  f.elite = id;
+  f.eliteName = e.name + ' ' + ENEMIES[f.type].name;
+  f.life = f.maxLife = Math.ceil(f.maxLife * e.life);
+  if (id === 'swift') { f.speedMult *= 1.45; f.cooldownMult = Math.max(0.5, f.cooldownMult * 0.65); }
+  if (id === 'vicious') { f.bonusDamage += 2; f.sightMult *= 1.3; }
+  if (id === 'juggernaut') f.knockMult = 0.3;
+  if (id === 'summoner') f.summonTime = 3;
+  if (id === 'regenerating') f.regenIdle = 0;
+  return f;
+}
+
+// Picks the elites of a new floor (see ELITE).
+function pickElites(list, floor) {
+  const normal = list.filter(f => !ENEMIES[f.type].boss), picked = [];
+  for (const f of normal) if (Math.random() < Math.min(ELITE.maxChance, ELITE.chance + ELITE.perTier * f.tier)) picked.push(f);
+  if (!picked.length && normal.length && floor >= ELITE.guaranteeFrom) picked.push(normal[Math.floor(Math.random() * normal.length)]);
+  for (const f of picked) {
+    const ids = Object.keys(ELITES).filter(id => !(id === 'volatile' && ENEMIES[f.type].bomber));
+    makeElite(f, ids[Math.floor(Math.random() * ids.length)]);
+  }
+}
+
 function createEnemy(type, x, y, tier = 0) {
   const t = ENEMIES[type], cycle = dungeonCycle();
   tier += cycle * CYCLE.cycleTiers;
@@ -105,8 +130,14 @@ function updateEnemies(dt) {
     if (!world.enemies.includes(f)) continue;   // killed earlier in this frame
     const t = ENEMIES[f.type];
     const dx = pl.x - f.x, dy = pl.y - f.y, distance = Math.hypot(dx, dy) || 1;
+    if (!f.seen && distance < 150 && canSee(f.x, f.y - 4, pl.x, pl.y - 4)) { f.seen = true; track('seen', f); }
     f.cooldown -= dt;
     if (f.slowTime > 0) f.slowTime -= dt;
+    if (f.elite === 'regenerating' && f.life < f.maxLife && (f.regenIdle += dt) > ELITE.regenDelay) f.life = Math.min(f.maxLife, f.life + f.maxLife * ELITE.regenRate * dt);
+    if (f.elite === 'summoner' && f.chasing && (f.summonTime -= dt) <= 0) {
+      f.summonTime = ELITE.summonEvery;
+      if (world.enemies.filter(e => e.summoner === f).length < ELITE.summonMax) { const spot = freeSpotNear(f.x, f.y, 'bat', 6, 14); spawnMinion('bat', spot.x, spot.y, f); }
+    }
     if (f.fuse > 0) {
       f.fuse -= dt;
       if (f.fuse <= 0) { killEnemy(f); continue; }   // the bomber goes off
@@ -247,6 +278,7 @@ function hitEnemy(f, k) {
   f.life -= damage;
   if (k.weapon) f.lastWeapon = k.weapon;
   f.hitFlash = 0.08;
+  f.regenIdle = 0;
   sfx(t.boss ? 'bossHit' : 'hit', f.x, f.y);
   if (blocked) sfx('clang', f.x, f.y);
   if (k.slow) { f.slowTime = Math.max(f.slowTime, t.boss ? k.slow / 2 : k.slow); sfx('iceHit', f.x, f.y); }
@@ -258,8 +290,9 @@ function hitEnemy(f, k) {
     sfx('bossRoar');
   }
   const l = Math.hypot(k.vx, k.vy) || 1;
-  f.pushX += k.vx / l * t.knockback * k.knockbackMult;
-  f.pushY += k.vy / l * t.knockback * k.knockbackMult;
+  const knock = t.knockback * k.knockbackMult * (f.knockMult ?? 1);
+  f.pushX += k.vx / l * knock;
+  f.pushY += k.vy / l * knock;
   world.floatingTexts.push({ x: f.x + randRange(-3, 3), y: f.y + t.body.dy - t.body.h / 2 - 6, text: blocked ? 'CLANG' : String(k.damage), life: 0.8, color: blocked ? COLOR.S : undefined });
   for (let p = 0; p < 4; p++) particle(k.x, k.y, -k.vx * 0.2 + randRange(-40, 40), -k.vy * 0.2 + randRange(-40, 40), p % 2 ? COLOR.r : COLOR[t.colors[0]], 0.3);
   if (f.life <= 0) killEnemy(f);
@@ -280,15 +313,21 @@ function killEnemy(f) {
     }
   }
   if (!t.boss) { track('killAny'); track('kill', f); }
+  if (f.elite) {
+    track('elite', f);
+    world.floatingTexts.push({ x: f.x, y: f.y - 22, text: 'ELITE DOWN!', life: 1.4, color: COLOR[ELITES[f.elite].color] });
+    for (let p = 0; p < 14; p++) particle(f.x, center, randRange(-70, 70), randRange(-70, 30), COLOR[ELITES[f.elite].color], 0.5);
+    if (f.elite === 'volatile') bomberBoom(f, { bomber: ELITE.blast });
+  }
   if (!t.boss && !f.minion) {
     world.killed++;
     world.killedByType[f.type] = (world.killedByType[f.type] || 0) + 1;
   }
   // exp gems and gold coins; things that were called by a boss or a nest give much less, and no gold
   if (!t.boss) {
-    const exp = Math.round(f.maxLife * EXP.perLife * (f.minion ? 0.25 : 1));
+    const exp = Math.round(f.maxLife * EXP.perLife * (f.minion ? 0.25 : 1) * (f.elite ? ELITE.expMult : 1));
     spawnDrops('gem', f.x, f.y - 3, Math.max(exp, f.minion ? 0 : 1));
-    if (!f.minion) spawnDrops('coin', f.x, f.y - 3, Math.max(1, Math.round(exp * EXP.goldPerExp)));
+    if (!f.minion) spawnDrops('coin', f.x, f.y - 3, Math.max(1, Math.round(exp * EXP.goldPerExp * (f.elite ? ELITE.goldMult / ELITE.expMult : 1))));
   }
   if (Math.random() < stat('volatile')) explodeAt({ x: f.x, y: f.y - 4, vx: 0, vy: 0, explode: { radius: 34, damage: 4 }, knockbackMult: 1 });
   // some clothes heal a heart now and then when an enemy dies
@@ -312,8 +351,8 @@ function killEnemy(f) {
     // the first kill always drops a weapon
     systemMessage('First blood. The dungeon is feeling generous: have a weapon.');
     world.items.push(createItem(randomWeapon(), f.x, f.y));
-  } else if (Math.random() < t.dropChance * (1 + DIFFICULTY.dropStep * f.tier + stat('luck')) * (f.minion ? 0.5 : 1)) {
-    world.items.push(createItem(randomDrop(t.quality), f.x, f.y));
+  } else if (f.elite ? Math.random() < ELITE.dropChance : Math.random() < t.dropChance * (1 + DIFFICULTY.dropStep * f.tier + stat('luck')) * (f.minion ? 0.5 : 1)) {
+    world.items.push(createItem(randomDrop(f.elite ? (t.quality || 1) + ELITE.quality : t.quality), f.x, f.y));
   }
 }
 

@@ -32,6 +32,8 @@ function loadSaved() {
         if (ENEMIES[type].boss && count(st.bossTypes, type) > 0) saved.stats.bossTypes[type] = count(st.bossTypes, type);
         if (count(st.deathsBy, type) > 0) saved.stats.deathsBy[type] = count(st.deathsBy, type);
       }
+      for (const type in ENEMIES) if (count(st.seen, type) > 0) saved.stats.seen[type] = 1;
+      for (const id in ELITES) if (count(st.seenElites, id) > 0) saved.stats.seenElites[id] = 1;
       if (count(st.deathsBy, 'hazard') > 0) saved.stats.deathsBy.hazard = count(st.deathsBy, 'hazard');
       for (const id in WEAPONS) if (count(st.killsByWeapon, id) > 0) saved.stats.killsByWeapon[id] = count(st.killsByWeapon, id);
       saved.tutorialDone = data.tutorialDone === true || saved.runs > 0;

@@ -89,6 +89,16 @@ function createItem(type, x, y, delayed = false, ammo = undefined, level = 0) {
   return { type, x, y, time: Math.random() * 6, delayed, ammo, level };
 }
 
+// A weapon that has run out of ammo is gone: it breaks, falls apart or is simply left behind. The hands go to the next weapon with ammo.
+function useUp(pl, type) {
+  const i = pl.slots.indexOf(type);
+  if (i < 0) return;
+  pl.slots[i] = null;
+  pl.ammo[type] = 0;
+  updateActive(pl);
+  if (!pl.weapon) switchToNextWithAmmo(pl);
+}
+
 function updateActive(pl) {
   const type = pl.slots[pl.active];
   pl.weapon = isWeapon(type) ? type : null;

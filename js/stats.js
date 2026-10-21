@@ -47,7 +47,7 @@ function cycleStartWeapon() {
 
 // ---------- The page ----------
 
-const STAT_TABS = ['Overview', 'Monsters', 'Bosses', 'Weapons'];
+const STAT_TABS = ['Overview', 'Monsters', 'Bosses', 'Weapons', 'Bestiary'];
 const statsUi = { tab: 0 };
 
 const statsBackButton = () => ({ x: BASE_W - 56, y: 3, w: 46, h: 17 });
@@ -79,6 +79,7 @@ function clickStats() {
   for (let i = 0; i < STAT_TABS.length; i++) {
     if (inBox(statsTabButton(i), 1)) { statsUi.tab = i; sfx('uiClick'); return; }
   }
+  if (statsUi.tab === 4) clickBestiary();
 }
 
 const formatCount = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -94,7 +95,7 @@ function statsLines(tab) {
     return [
       [['Runs', formatCount(saved.runs)], ['Deaths', formatCount(s.deaths)], ['Victories', formatCount(s.wins)], ['Best floor', saved.bestFloor + ' / ' + LEVEL_ORDER.length],
         ['Play time', formatTime(s.playTime)], ['Levels gained', formatCount(s.levels)], ['Gold earned', formatCount(s.goldEarned)], ['Items sold', formatCount(s.sold)], ['Sponsor boxes', formatCount(s.boxes)], ['Dungeon loop', formatCount(dungeonCycle())]],
-      [['Monsters killed', formatCount(s.kills)], ['Bosses defeated', formatCount(sum(s.bossTypes))], ['Shots fired', formatCount(s.shots)], ['Critical hits', formatCount(s.crits)],
+      [['Monsters killed', formatCount(s.kills)], ['Bosses defeated', formatCount(sum(s.bossTypes))], ['Elites slain', formatCount(s.elites)], ['Shots fired', formatCount(s.shots)], ['Critical hits', formatCount(s.crits)],
         ['Damage taken', formatCount(s.damageTaken)], ['Distance walked', formatCount(s.walked / TILE) + ' m'], ['Things smashed', formatCount(s.destroyed)], ['Upgrades bought', formatCount(s.bought)]],
     ];
   }
@@ -127,6 +128,7 @@ function drawStats() {
     border(b.x, b.y, b.w, b.h, on ? COLOR.O : hover ? COLOR.W : COLOR.D);
     drawText(name, b.x + b.w / 2, b.y + 5, on ? COLOR.W : COLOR.g, { align: 'center' });
   });
+  if (statsUi.tab === 4) { drawBestiary(); return; }
   const columns = statsLines(statsUi.tab), xs = [12, 170], width = 138;
   columns.forEach((rows, c) => {
     rows.forEach(([label, value, color], i) => {

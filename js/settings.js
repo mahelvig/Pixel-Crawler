@@ -408,7 +408,7 @@ const STARTER_POWER = 0.6;
 // exciting the meter drains decay per second. tiers are the weights for the box that comes (tierPerFloor is added per floor).
 const VIEWERS = {
   base: 100, perBox: 25, maxNeed: 300, idle: 5, decay: 2.5,
-  kill: 3, comboBonus: 1.5, comboCap: 6, boss: 30, flawless: 20, objective: 12, destroy: 3, target: 2, crit: 0.5,
+  kill: 3, comboBonus: 1.5, comboCap: 6, boss: 30, flawless: 20, objective: 12, destroy: 3, target: 2, crit: 0.5, elite: 12,
   tiers: { bronze: 58, silver: 30, gold: 9, platinum: 3 }, tierPerFloor: { bronze: 0, silver: 1, gold: 1, platinum: 0.5 },
 };
 const GEAR_UPGRADE = { perLevel: 0.25, maxLevel: 4 };   // finding a piece of clothing you already have makes it stronger: +25% of its stats per level, up to level 4
@@ -575,6 +575,22 @@ const DIFFICULTY = { lifeStep: 0.22, speedStep: 0.05, sightStep: 0.08, cooldownS
 // Every time the whole dungeon has been beaten (a won run) it starts over, harder (see dungeonCycle in enemies.js). Each cycle
 // counts as cycleTiers extra floors for normal enemies, bosses get bossLifeStep more life and +1 damage every bossDamageEvery cycles,
 // and there are enemyShare more enemies (0.3 = 30% extra of every kind). After maxCycle the dungeon stops getting harder.
+// Elite enemies: now and then a normal enemy is a named elite with one special trait (see ELITES). Every normal enemy has a chance of
+// chance + perTier x (its tier) to become one, at most maxChance, and from floor guaranteeFrom (counting from 0) every floor has at
+// least one. Elites are exp x expMult, gold x goldMult, and drop something good (quality + quality) with dropChance.
+// life is how much more life the trait gives. regenDelay and regenRate (share of life per second) are for the regenerating one,
+// summonEvery is the seconds between the bats of the summoner, and the volatile one blows up when it dies (blast).
+const ELITE = { chance: 0.04, perTier: 0.02, maxChance: 0.3, guaranteeFrom: 1, expMult: 1.5, goldMult: 2, quality: 2, dropChance: 0.85,
+  regenDelay: 2, regenRate: 0.08, summonEvery: 6, summonMax: 3, blast: { radius: 34, damage: 3 } };
+const ELITES = {
+  swift:       { name: 'Swift',       color: 'c', life: 1.6 },
+  juggernaut:  { name: 'Juggernaut',  color: 'S', life: 3.5 },
+  vicious:     { name: 'Vicious',     color: 'r', life: 1.8 },
+  volatile:    { name: 'Volatile',    color: 'O', life: 1.8 },
+  regenerating: { name: 'Mending',    color: 'l', life: 1.8 },
+  summoner:    { name: 'Commander',   color: 'i', life: 2 },
+};
+
 const CYCLE = { cycleTiers: 2, bossLifeStep: 0.3, bossDamageEvery: 2, enemyShare: 0.3, maxCycle: 8 };
 
 // The ENDESGA 32 palette. The letters are used in the sprites below.
