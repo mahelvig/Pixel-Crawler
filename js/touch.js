@@ -82,10 +82,13 @@ function touchFiring() { return touch.on && (stickVector(touch.aim).mag > 0 || !
 
 // returns true when the touch was used for playing; other states use the ordinary click handling
 function touchDown(e) {
+  if (state === 'map') { closeMap(); return true; }
   if (state !== 'playing') return false;
   const p = touchPoint(e);
   mouse.x = p.x; mouse.y = p.y;
   if (tradeButtonShown() && inRect(p, tradeButton(), 3)) { tryTrade(); return true; }
+  if (abilityShown() && inRect(p, abilityRect(), 4)) { useAbility(); return true; }
+  if (minimapRect() && inRect(p, minimapRect(), 2)) { openMap(); return true; }
   for (const b of TOUCH_BUTTONS) {
     if (inRect(p, b, 3)) {
       if (b.id === 'pause') { state = 'pause'; sfx('pause'); } else toggleBag();

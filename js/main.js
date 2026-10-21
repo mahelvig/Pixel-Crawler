@@ -24,6 +24,7 @@ function newWorld(index = 0) {
     hasWalked: false, hasShot: false, walkedDistance: 0, helpAlpha: 1, goalShown: false,
     targetsHit: 0,
     enemies: level.enemies, enemyTotal: level.enemies.length, killed: 0, killedByType: {}, eliteKilled: 0,
+    turrets: [], classWait: 1.2, classPick: null, minimap: null,
     npcs: (level.npcs || []).map(createNpc), npcSafe: 0, npcLost: 0, stock: makeStock(index), rerolls: 0,
     breakables: level.breakables, pickups: level.pickups, destroyed: {}, collected: {},
     totals: { destroy: countBy(level.breakables, 'kind'), collect: countBy(level.pickups, 'kind'), killType: countBy(level.enemies, 'type'), elites: level.enemies.filter(e => e.elite).length, npcs: (level.npcs || []).length },
@@ -34,6 +35,7 @@ function newWorld(index = 0) {
 }
 
 function startGame() {
+  if (!saved.name) askName();   // a save that has not been named yet
   resetRun();
   world = newWorld();
   state = 'playing';
@@ -54,7 +56,7 @@ const keys = new Set();
 const mouse = { x: SCREEN_W / 2, y: SCREEN_H / 2, down: false, inside: false, moving: false };
 
 // options the player can change in the pause menu, remembered between visits
-const OPTIONS = { rightClickMove: false, sfx: true, music: true, aimAssist: true, autoFire: true };
+const OPTIONS = { rightClickMove: false, sfx: true, music: true, aimAssist: true, autoFire: true, minimap: true };
 for (const key of Object.keys(OPTIONS)) {
   try {
     const saved = localStorage.getItem('pixelCrawler.' + key);
@@ -91,6 +93,11 @@ window.addEventListener('keydown', e => {
     else if (['Space', 'Enter', 'KeyE', 'NumpadEnter'].includes(e.code)) advanceStory();
     return;
   }
+  if (state === 'slots') {
+    if (e.code === 'Escape') closeSlots();
+    else if (/^Digit[1-3]$/.test(e.code)) chooseSave(Number(e.code.slice(5)) - 1);
+    return;
+  }
   if (state === 'journal') {
     if (e.code === 'Escape' || e.code === 'KeyJ') closeJournal();
     else if (e.code === 'ArrowUp' || e.code === 'ArrowDown') journalMove(e.code === 'ArrowUp' ? -1 : 1);
@@ -100,6 +107,9 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyJ' && state === 'title') { openJournal(); return; }
   if (e.code === 'KeyE' && state === 'bag') { equipAtMouse(); return; }
   if (e.code === 'KeyE' && state === 'playing') { tryTrade(); return; }
+  if ((e.code === 'Space' || e.code === 'KeyQ') && state === 'playing') { useAbility(); return; }
+  if (e.code === 'KeyN' && state === 'playing') { openMap(); return; }
+  if ((e.code === 'KeyN' || e.code === 'Escape' || e.code === 'KeyP') && state === 'map') { closeMap(); return; }
   if (devKey(e.code)) return;
   if (e.code === 'Tab' || e.code === 'KeyI') { toggleBag(); return; }
   if (e.code === 'KeyM') { setOption('music', !OPTIONS.music); return; }
@@ -123,13 +133,14 @@ window.addEventListener('keydown', e => {
     if (state === 'achievements') { closeAchievements(); return; }
     if (state === 'stats') { closeStats(); return; }
     if (state === 'safe') { closeSafeRoom(); return; }
-    if (state === 'levelup') return;
+    if (state === 'levelup' || state === 'class') return;
     if (state === 'bag') toggleBag();
     else togglePause();
     return;
   }
   const digit = /^Digit\d$/.test(e.code) ? Number(e.code.slice(5)) : 0;
   if (state === 'levelup' && digit >= 1 && digit <= 3) { choosePerk(digit - 1); return; }
+  if (state === 'class' && digit >= 1 && digit <= CLASS_SETTINGS.choices) { chooseClass(digit - 1); return; }
   if (digit >= 1 && digit <= BAG.hotbarSlots) {
     if (state === 'playing') selectSlot(world.player, digit - 1);
     else if (state === 'bag') moveToHotbar(digit - 1);
@@ -166,12 +177,14 @@ canvas.addEventListener('pointerdown', e => {
   canvas.focus();
   if (touch.on && touchDown(e)) return;
   if (state === 'levelup') { if (e.button === 0) clickPerk(); return; }
-  if (state === 'shop') { if (e.button === 0) clickShop(); return; }
+  if (state === 'class') { if (e.button === 0) clickClass(); return; }
+  if (state === 'map') { if (e.button === 0) closeMap(); return; }  if (state === 'shop') { if (e.button === 0) clickShop(); return; }
   if (state === 'achievements') { if (e.button === 0) clickAchievements(); return; }
   if (state === 'stats') { if (e.button === 0) clickStats(); return; }
   if (state === 'safe') { if (e.button === 0) clickSafeRoom(); return; }
   if (state === 'story') { if (e.button === 0) clickStory(); return; }
   if (state === 'journal') { if (e.button === 0) clickJournal(); return; }
+  if (state === 'slots') { if (e.button === 0) clickSlots(); return; }
   if (state === 'playing' && e.button === 0 && tradeButtonShown() && inBox(tradeButton())) { tryTrade(); return; }
   if (state === 'bag') { clickInBag(e.button); return; }
   if (e.button === 2 && state === 'playing' && OPTIONS.rightClickMove) {
@@ -180,7 +193,7 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
   if (e.button !== 0) return;
-  if (state === 'title') { if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overJournalButton()) openJournal(); else if (overWeaponButton()) cycleStartWeapon(); else if (savedRun) { if (overContinue()) resumeRun(); else if (overNewRun()) startGame(); } else startGame(); return; }
+  if (state === 'title') { if (overSlotButton()) openSlots(); else if (overShopButton(TITLE_SHOP_Y)) openShop(); else if (overAchButton(TITLE_SHOP_Y)) openAchievements(); else if (overStatsButton(TITLE_SHOP_Y)) openStats(); else if (overJournalButton()) openJournal(); else if (overWeaponButton()) cycleStartWeapon(); else if (savedRun) { if (overContinue()) resumeRun(); else if (overNewRun()) startGame(); } else startGame(); return; }
   if (state === 'pause') {
     const option = overPauseOption();
     if (overMainMenu()) leaveToMenu();
@@ -219,6 +232,8 @@ function update(dt) {
   if (state !== 'playing') touchRelease();
   if (state === 'playing') {
     updatePlayer(dt);
+    updateClass(dt);
+    updateMinimap();
     updateEnemies(dt);
     updateNpcs(dt);
     updateEnemyBullets(dt);
@@ -236,7 +251,7 @@ function update(dt) {
     updateAchievements(dt);
     updateViewers(dt);
     updateRunSave();
-    if (world.player.pending > 0 && !world.levelUp) openLevelUp();
+    if (state === 'playing' && world.player.pending > 0 && !world.levelUp) openLevelUp();
   } else if (state === 'dead' || state === 'won') {
     updateBullets(dt);
     updateEffects(dt);

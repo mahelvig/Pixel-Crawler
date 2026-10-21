@@ -667,12 +667,12 @@ const BREAKABLES = {
 // that is after you is within danger pixels. stock is how many things they sell (of quality quality, see LOOT_RARITY), buy is the price by
 // rarity (plus buyFloor per floor), reroll the cost of new stock (growing by rerollGrowth every time). heart is the price of a heart
 // (plus heartFloor per floor), ammo the price of a shot by rarity, tailor the price of the first upgrade of a piece of clothing, sellBonus
-// how much more than the bag's own price the trader pays (plus sellLevel per upgrade level), and boxes what a sealed box costs.
+// how much more than the bag's own price the trader pays (plus sellLevel per upgrade level), and boxes cannot be bought at all.
 const SAFE = {
   range: 26, danger: 140, stock: 4, quality: 3,
   buy: { common: 35, rare: 80, epic: 170, legendary: 340 }, buyFloor: 0.06, reroll: 20, rerollGrowth: 1.6,
-  heart: 18, heartFloor: 0.08, ammo: { common: 0.15, rare: 0.3, epic: 0.5, legendary: 0.8 }, tailor: 40,
-  sellBonus: 1.5, sellLevel: 8, boxes: { bronze: 60, silver: 150, gold: 380, platinum: 900 },
+  heart: 120, heartFloor: 0.1, ammo: { common: 0.15, rare: 0.3, epic: 0.5, legendary: 0.8 }, tailor: 40,
+  sellBonus: 1.5, sellLevel: 8,
 };
 
 // The people of the dungeon (see npc.js). From floor fromFloor (counting from 1) every floor has a quest with them: either lead a survivor

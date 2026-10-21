@@ -21,6 +21,7 @@ function draw() {
   const figures = world.targets.map(dummy => ({ y: dummy.y + 7, paint: () => drawTarget(dummy) }));
   for (const f of world.enemies) figures.push({ y: f.y + 1, paint: () => drawEnemy(f) });
   for (const d of world.drops) figures.push({ y: d.y, paint: () => drawDrop(d) });
+  for (const t of world.turrets) figures.push({ y: t.y, paint: () => drawTurret(t) });
   for (const g of world.items) figures.push({ y: g.y, paint: () => drawItem(g) });
   for (const b of world.breakables) figures.push({ y: b.y + 7, paint: () => drawBreakable(b) });
   for (const p of world.pickups) figures.push({ y: p.y, paint: () => drawPickup(p) });
@@ -48,6 +49,7 @@ function draw() {
   else if (state === 'stats') drawStats();
   else if (state === 'safe') drawSafeRoom();
   else if (state === 'journal') drawJournal();
+  else if (state === 'slots') drawSlots();
   else if (state === 'title') drawTitle();
   else {
     ctx.translate(-UI_X, 0);
@@ -58,12 +60,14 @@ function draw() {
     if (state === 'won') drawWon();
     if (state === 'bag') drawBag();
     if (state === 'levelup') drawLevelUp();
+    if (state === 'class') drawClassPick();
+    if (state === 'map') drawBigMap();
     if (state === 'story') drawStoryDialog();
   }
   ctx.restore();
   drawTouch();
   if (mouse.inside && !touch.on) {
-    if (state === 'bag' || state === 'shop' || state === 'achievements' || state === 'stats' || state === 'levelup' || state === 'safe' || state === 'story' || state === 'journal') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
+    if (state === 'bag' || state === 'shop' || state === 'achievements' || state === 'stats' || state === 'levelup' || state === 'class' || state === 'map' || state === 'safe' || state === 'story' || state === 'journal' || state === 'slots') ctx.drawImage(POINTER, Math.floor(mouse.x + UI_X), Math.floor(mouse.y));
     else drawCrosshair();
   }
 }
@@ -257,6 +261,8 @@ function drawHud() {
   drawNpcPointer();
   drawTradeHud();
   drawRulesHud();
+  drawMinimap();
+  if (abilityShown()) drawAbilityButton();
   drawText('Floor ' + (world.levelIndex + 1), SCREEN_W - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
 
   // the controls, top left, until they have been tried
@@ -298,19 +304,20 @@ function drawTitle() {
   dim(0.7);
   drawText('Pixel Crawler', BASE_W / 2, 34, COLOR.O, { scale: 3, align: 'center', shadow: COLOR.x });
   drawText('Harrow Court has sunk twelve floors into a dungeon.', BASE_W / 2, 64, COLOR.S, { align: 'center' });
-  drawText('Season ' + (37 + saved.stats.wins) + '. The viewers are waiting.', BASE_W / 2, 72, COLOR.S, { align: 'center' });
+  drawText('Season ' + (37 + saved.stats.wins) + '. The viewers are waiting, ' + playerName() + '.', BASE_W / 2, 72, COLOR.S, { align: 'center' });
   if (savedRun) drawRunButtons();
   else if (Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to start', 'Tap to start'), BASE_W / 2, 100, COLOR.W, { scale: 2, align: 'center' });
   if (!touch.on) {
     drawText((OPTIONS.rightClickMove ? 'Right-click' : 'WASD') + ' move    Mouse aim    Click shoot    Esc pause', BASE_W / 2, 158, COLOR.g, { align: 'center' });
-    drawText('1-4 or wheel switch weapon    Tab bag    E trade', BASE_W / 2, 166, COLOR.g, { align: 'center' });
+    drawText('1-4 weapon    Tab bag    E trade    Space ability    N map', BASE_W / 2, 166, COLOR.g, { align: 'center' });
   }
-  drawText('Milestone 13', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
+  drawText('Milestone 14', SCREEN_W - UI_X - 5, SCREEN_H - 9, COLOR.s, { align: 'right' });
   drawShopButton(TITLE_SHOP_Y);
   drawAchButton(TITLE_SHOP_Y);
   drawStatsButton(TITLE_SHOP_Y);
   drawJournalButton(TITLE_SHOP_Y);
   drawWeaponButton();
+  drawSlotButton();
   drawText('Best floor ' + saved.bestFloor + (saved.bestFloor > LEVEL_ORDER.length ? ' (off script)' : '') + '   ' + saved.gold + ' gold', BASE_W / 2, 148, COLOR.g, { align: 'center' });
 }
 
@@ -320,7 +327,7 @@ function drawDead() {
   drawText('You died', BASE_W / 2, 52, COLOR.r, { scale: 3, align: 'center', shadow: COLOR.p });
   drawText(`Killed ${world.killed} of ${world.enemyTotal} enemies.`, BASE_W / 2, 84, COLOR.S, { align: 'center' });
   const deep = isEndless(world.levelIndex);
-  drawText(deep ? 'Floor ' + (world.levelIndex + 1) + ', off script. Deeper than any season before.' : 'The viewers have seen better.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
+  drawText(deep ? 'Floor ' + (world.levelIndex + 1) + ', off script. Deeper than any season before.' : 'The viewers have seen better, ' + playerName() + '.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
   if (elapsed > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to try again', 'Tap to try again'), BASE_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
   drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, BASE_W / 2, 102, COLOR.y, { align: 'center' });
   drawShopButton(END_SHOP_Y);
@@ -330,7 +337,7 @@ function drawWon() {
   const since = time - world.wonTime;
   dim(Math.min(0.8, since * 1.2));
   drawText('Season ' + season() + ' complete', BASE_W / 2, 52, COLOR.O, { scale: 2, align: 'center', shadow: COLOR.x });
-  drawText('Harrow Court rises. Nobody remembers a thing.', BASE_W / 2, 84, COLOR.S, { align: 'center' });
+  drawText(playerName() + ', Harrow Court rises. Nobody remembers a thing.', BASE_W / 2, 84, COLOR.S, { align: 'center' });
   drawText('Season ' + (season() + 1) + ' begins when you are ready. It will be harder.', BASE_W / 2, 92, COLOR.g, { align: 'center' });
   if (since > 1 && Math.floor(time * 2.5) % 2 === 0) drawText(T('Click to play again', 'Tap to play again'), BASE_W / 2, 118, COLOR.W, { scale: 2, align: 'center' });
   drawText('Level ' + world.player.level + '   Gold earned: ' + world.player.runGold, BASE_W / 2, 102, COLOR.y, { align: 'center' });
@@ -348,9 +355,9 @@ function drawPause() {
     ctx.fillStyle = 'rgba(24,20,37,0.85)';
     ctx.fillRect(r.x, r.y, r.w, r.h);
     border(r.x, r.y, r.w, r.h, hover ? COLOR.W : COLOR.D);
-    border(r.x + 5, r.y + 4, 9, 9, on ? COLOR.l : COLOR.g);
-    if (on) { ctx.fillStyle = COLOR.l; ctx.fillRect(r.x + 7, r.y + 6, 5, 5); }
-    drawText(option.label, r.x + 19, r.y + 6, hover ? COLOR.W : COLOR.S);
+    border(r.x + 5, r.y + 1, 9, 9, on ? COLOR.l : COLOR.g);
+    if (on) { ctx.fillStyle = COLOR.l; ctx.fillRect(r.x + 7, r.y + 3, 5, 5); }
+    drawText(option.label, r.x + 19, r.y + 3, hover ? COLOR.W : COLOR.S);
   });
   drawButton(mainMenuButton(), 'Main menu', overMainMenu());
   const hovered = overPauseOption();
@@ -364,6 +371,7 @@ function drawPause() {
 // The options in the pause menu. on and off explain what the option does in each state.
 const PAUSE_OPTIONS = [
   { only: 'pc', key: 'rightClickMove', label: 'Move with right-click', on: 'Hold the right button to walk towards the cursor. WASD is off.', off: 'Turns off WASD and walks towards the cursor instead.' },
+  { key: 'minimap', label: 'Minimap (N)', on: 'The corner map is on. Press N to see the whole floor.', off: 'The corner map is off. N still shows the whole floor.' },
   { key: 'sfx', label: 'Sound effects', on: 'Sound effects are on.', off: 'Sound effects are off.' },
   { only: 'touch', key: 'aimAssist', label: 'Aim assist', on: 'On touch screens the aim stick nudges your shots towards nearby enemies.', off: 'Aim assist is off: you aim exactly where the stick points.' },
   { only: 'touch', key: 'autoFire', label: 'Auto-fire', on: 'On touch screens you shoot at the nearest enemy by yourself. Use the aim stick to aim yourself.', off: 'Auto-fire is off: you only shoot while the aim stick is held.' },
@@ -375,14 +383,14 @@ const pauseOptions = () => PAUSE_OPTIONS.filter(o => !o.only || o.only === (touc
 
 // the clickable area of an option in the pause menu
 function pauseOptionRect(i) {
-  const w = Math.max(...pauseOptions().map(o => textWidth(o.label))) + 28, h = 14;
-  return { x: Math.round(BASE_W / 2 - w / 2), y: 84 + i * 15, w, h };
+  const w = Math.max(...pauseOptions().map(o => textWidth(o.label))) + 28, h = 12;
+  return { x: Math.round(BASE_W / 2 - w / 2), y: 80 + i * 13, w, h };
 }
 
 // the button under the options that leaves for the main menu
 function mainMenuButton() {
   const last = pauseOptionRect(pauseOptions().length - 1), w = 90;
-  return { x: Math.round(BASE_W / 2 - w / 2), y: last.y + last.h + 6, w, h: 14 };
+  return { x: Math.round(BASE_W / 2 - w / 2), y: last.y + last.h + 5, w, h: 14 };
 }
 const overMainMenu = () => state === 'pause' && mouse.inside && inBox(mainMenuButton());
 

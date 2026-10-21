@@ -7,17 +7,33 @@
 
 // ---------- Saved between runs ----------
 
-const saved = { gold: 0, upgrades: {}, bestFloor: 0, runs: 0, ach: {}, stats: emptyStats(), startWeapon: 'rubberBandGun', tutorialDone: false, story: { seen: {}, tapes: {} } };
+// There are three saves (SLOT_COUNT). The first keeps the keys the game always used, the others get a number after them. Which one is in use
+// is remembered in 'pixelCrawler.slot'. Everything permanent (gold, upgrades, achievements, stats, story) is per save, and so is the run
+// that can be continued (resume.js). A save has a name, which is chosen by the player (see slots.js).
+const SLOT_COUNT = 3, NAME_MAX = 12, DEFAULT_NAME = 'Crawler';
+const slotKey = (base, i) => 'pixelCrawler.' + base + (i > 0 ? '.' + (i + 1) : '');
+let activeSlot = (() => { try { const n = Math.floor(Number(localStorage.getItem('pixelCrawler.slot'))); return n >= 0 && n < SLOT_COUNT ? n : 0; } catch (e) { return 0; } })();
+
+// A name the font can draw: letters (also æ, ø and å), digits and a few marks, no more than NAME_MAX of them. Other accents are dropped.
+function cleanName(text) {
+  if (typeof text !== 'string') return '';
+  const letters = [...text].map(c => /[A-Za-zÆØÅæøå]/.test(c) ? c : c.normalize('NFD').replace(/[̀-ͯ]/g, ''));
+  return letters.join('').split('').filter(c => /[A-Za-zÆØÅæøå0-9 .,'!-]/.test(c)).join('').replace(/\s+/g, ' ').trim().slice(0, NAME_MAX).trim();
+}
+const playerName = () => saved.name || DEFAULT_NAME;
+
+const saved = { name: '', gold: 0, upgrades: {}, bestFloor: 0, runs: 0, ach: {}, stats: emptyStats(), startWeapon: 'rubberBandGun', tutorialDone: false, story: { seen: {}, tapes: {} } };
 let saveDirty = false;
 
 // Reads what was saved last time. Anything that looks wrong is thrown away, and if the browser will not give us storage
 // the game just starts from nothing.
 function loadSaved() {
-  saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0; saved.ach = {}; saved.stats = emptyStats(); saved.startWeapon = 'rubberBandGun'; saved.tutorialDone = false; saved.story = { seen: {}, tapes: {} };
+  saved.name = ''; saved.gold = 0; saved.upgrades = {}; saved.bestFloor = 0; saved.runs = 0; saved.ach = {}; saved.stats = emptyStats(); saved.startWeapon = 'rubberBandGun'; saved.tutorialDone = false; saved.story = { seen: {}, tapes: {} };
   try {
-    const raw = localStorage.getItem('pixelCrawler.save');
+    const raw = localStorage.getItem(slotKey('save', activeSlot));
     const data = raw && JSON.parse(raw);
     if (data && typeof data === 'object') {
+      saved.name = cleanName(data.name);
       for (const key of ['gold', 'bestFloor', 'runs']) saved[key] = Math.max(0, Math.floor(Number(data[key]) || 0));
       for (const id in UPGRADES) {
         const level = Math.floor(Number(data.upgrades && data.upgrades[id]) || 0);
@@ -33,6 +49,7 @@ function loadSaved() {
         if (count(st.deathsBy, type) > 0) saved.stats.deathsBy[type] = count(st.deathsBy, type);
       }
       for (const type in ENEMIES) if (count(st.seen, type) > 0) saved.stats.seen[type] = 1;
+      for (const id in CLASSES) if (count(st.classesUsed, id) > 0) saved.stats.classesUsed[id] = count(st.classesUsed, id);
       for (const id in ELITES) if (count(st.seenElites, id) > 0) saved.stats.seenElites[id] = 1;
       if (count(st.deathsBy, 'hazard') > 0) saved.stats.deathsBy.hazard = count(st.deathsBy, 'hazard');
       for (const id in WEAPONS) if (count(st.killsByWeapon, id) > 0) saved.stats.killsByWeapon[id] = count(st.killsByWeapon, id);
@@ -48,7 +65,7 @@ function loadSaved() {
 
 function saveGame() {
   saveDirty = false;
-  try { localStorage.setItem('pixelCrawler.save', JSON.stringify(saved)); } catch (e) { /* storage may be blocked */ }
+  try { localStorage.setItem(slotKey('save', activeSlot), JSON.stringify(saved)); } catch (e) { /* storage may be blocked */ }
 }
 
 // Called when a run ends, by dying or by winning.
@@ -119,8 +136,8 @@ function updateDrops(dt) {
     const d = world.drops[i];
     d.age += dt;
     const dx = pl.x - d.x, dy = pl.y - 4 - d.y, distance = Math.hypot(dx, dy) || 1;
-    if (d.age > 0.3 && distance < radius) {
-      const speed = 120 + (radius - distance) * 8;
+    if (d.age > 0.3 && (distance < radius || d.vacuum)) {
+      const speed = d.vacuum ? 420 : 120 + (radius - distance) * 8;
       d.vx = dx / distance * speed; d.vy = dy / distance * speed;
       d.x += d.vx * dt; d.y += d.vy * dt;
     } else {
@@ -180,6 +197,6 @@ function drawProgressHud() {
   ctx.fillRect(0, SCREEN_H - 2, SCREEN_W, 2);
   ctx.fillStyle = COLOR.c;
   ctx.fillRect(0, SCREEN_H - 2, Math.round(SCREEN_W * Math.min(1, pl.xp / need)), 2);
-  drawText('Lv ' + pl.level, SCREEN_W - 5, SCREEN_H - 18, COLOR.c, { align: 'right' });
+  drawText((playerClass(pl) ? playerClass(pl).name + '  ' : '') + 'Lv ' + pl.level, SCREEN_W - 5, SCREEN_H - 18, COLOR.c, { align: 'right' });
   drawText(saved.gold + ' gold', SCREEN_W - 5, SCREEN_H - 27, COLOR.O, { align: 'right' });
 }

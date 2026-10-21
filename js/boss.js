@@ -25,6 +25,7 @@ function openGate() {
 function bossDefeated(f) {
   const t = ENEMIES[f.type];
   world.bossDefeated = true;
+  world.classWait = 1.5;   // the Class Box, if this was the third floor
   track('boss', f);
   camera.shake = 7;
   spawnDrops('gem', f.x, f.y, EXP.boss * (world.levelIndex + 1));
@@ -70,7 +71,7 @@ function goToLevel(index) {
   world = newWorld(index);
   const pl = world.player;
   pl.slots = old.slots; pl.ammo = old.ammo; pl.gearLevel = old.gearLevel; pl.starter = old.starter; pl.fame = old.fame; pl.fameIdle = old.fameIdle; pl.boxes = old.boxes; pl.boxBag = old.boxBag; pl.active = old.active; pl.weapon = old.weapon;
-  pl.xp = old.xp; pl.level = old.level; pl.pending = old.pending; pl.perks = old.perks; pl.runGold = old.runGold;
+  pl.xp = old.xp; pl.level = old.level; pl.pending = old.pending; pl.perks = old.perks; pl.runGold = old.runGold; pl.class = old.class;
   pl.lastMax = old.lastMax;
   floorStarted();
   pl.life = Math.min(maxLife(), old.life + 2);

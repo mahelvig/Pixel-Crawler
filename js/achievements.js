@@ -254,6 +254,15 @@ const ACHIEVEMENTS = [
   { id: 'sprayAndPray', name: 'Spray and Pray', hint: 'Run completely out of ammo.', secret: true, reward: { ammo: true }, test: A => A.r.empty,
     popup: 'Click. Click. Click. The dungeon laughs. Here, have some ammo.',
     story: 'Empty. Not a single bullet. You stood there and pulled the trigger and nothing came out, which the audience found hilarious. The dungeon has refilled your pockets, out of pity, and wants it known that it did so reluctantly.' },
+  { id: 'classAct', name: 'Class Act', hint: 'Open the Class Box on floor 3 and pick a class.', reward: { box: 'bronze' }, test: A => Object.keys(A.s.classesUsed).length >= 1,
+    popup: 'You picked a class. HOME says it was always going to be that one.',
+    story: 'A class, chosen under the eyes of eleven million strangers. HOME has noted your choice in your file and will bring it up at your performance review, which is every floor.' },
+  { id: 'fullRoster', name: 'Full Roster', hint: 'Play a run as every one of the five classes.', reward: { box: 'gold' }, test: A => CLASS_ORDER.every(id => A.s.classesUsed[id] > 0),
+    popup: 'Five classes, five runs. HOME is starting to suspect you cannot make up your mind.',
+    story: 'Brawler, Engineer, Runner, Showman and Scavenger. You have been every kind of tenant Harrow Court could produce. Morris says you finally look like someone who lives here.' },
+  { id: 'encore', name: 'Encore', hint: 'Use class abilities 100 times.', reward: { box: 'silver' }, test: A => A.s.abilities >= 100,
+    popup: '100 abilities used. The audience asked for one more, and you had it ready.',
+    story: 'A hundred shockwaves, turrets, dashes, shows and sweeps. The viewers have started to chant the cooldown out loud. It is the most coordinated thing they have ever done.' },
 ];
 
 const ACHIEVEMENT_BY_ID = {};
@@ -298,9 +307,9 @@ const unlockedStarters = () => Object.keys(WEAPONS).filter(starterUnlocked).sort
 // ---------- Counting what happens ----------
 // Totals that last for ever live in saved.stats (see progress.js), what happens during one run in run.
 
-const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels', 'boxes', 'elites', 'npcs', 'boxesOpened'];
-const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0, boxes: 0, elites: 0, npcs: 0, boxesOpened: 0,
-  killsBy: {}, bossTypes: {}, killsByWeapon: {}, deathsBy: {}, seen: {}, seenElites: {} });
+const STAT_NAMES = ['kills', 'deaths', 'wins', 'bought', 'sold', 'crits', 'destroyed', 'shots', 'damageTaken', 'goldEarned', 'walked', 'playTime', 'levels', 'boxes', 'elites', 'npcs', 'boxesOpened', 'abilities'];
+const emptyStats = () => ({ kills: 0, deaths: 0, wins: 0, bought: 0, sold: 0, crits: 0, destroyed: 0, shots: 0, damageTaken: 0, goldEarned: 0, walked: 0, playTime: 0, levels: 0, boxes: 0, elites: 0, npcs: 0, boxesOpened: 0, abilities: 0,
+  classesUsed: {}, killsBy: {}, bossTypes: {}, killsByWeapon: {}, deathsBy: {}, seen: {}, seenElites: {} });
 
 let run = null;
 
@@ -357,6 +366,8 @@ function track(event, data) {
     case 'box': s.boxes++; break;
     case 'npc': s.npcs++; break;
     case 'tape': break;
+    case 'class': break;
+    case 'ability': s.abilities++; saveDirty = true; return;
     case 'boxOpened': s.boxesOpened++; break;
     case 'elite': s.elites++; s.seenElites[data.elite] = 1; break;
     case 'seen': {

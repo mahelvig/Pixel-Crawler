@@ -4,9 +4,9 @@
 // At the start of every floor (the landing at the top of the stairs) a trader has set up shop. Stand next to them and press E (or tap
 // Trade) and the game stops: nothing can touch you in the safe room. The trader can
 //   open boxes       sponsor boxes (from the viewers, achievements and rescues) are kept in the bag until a trader opens them, and
-//                    nobody else can: the box gives a weapon or piece of clothing of the box's rarity. Boxes can also be bought.
+//                    nobody else can: the box gives a weapon or piece of clothing of the box's rarity. Boxes cannot be bought.
 //   sell things      a few things for gold (the stock is new on every floor, and can be rolled again for a price)
-//   patch you up     hearts, and ammo for every gun you carry
+//   patch you up     one heart at a time (dear), and ammo for every gun you carry
 //   tailor clothes   every level makes a piece of clothing 25% stronger, same as finding a spare
 //   buy your junk    storage items for more than they are worth when the bag sells them by itself
 //   quest board      what you still have to do on this floor
@@ -138,7 +138,6 @@ function drawBoxIcon(tier, x, y) {
 const priceBuy = type => Math.max(5, Math.round(SAFE.buy[rarityOf(type)] * (1 + SAFE.buyFloor * world.levelIndex) / 5) * 5);
 const priceSell = (pl, type) => Math.round(SELL_VALUE[rarityOf(type)] * SAFE.sellBonus) + (isGear(type) ? (pl.gearLevel[type] || 0) * SAFE.sellLevel : 0);
 const priceHeart = () => Math.ceil(SAFE.heart * (1 + SAFE.heartFloor * world.levelIndex));
-const priceBox = tier => SAFE.boxes[tier];
 const priceReroll = () => Math.round(SAFE.reroll * Math.pow(SAFE.rerollGrowth, world.rerolls));
 const priceTailor = (type, level) => Math.round(SAFE.tailor * (level + 1) * (1 + 0.6 * RARITY_RANK[GEAR[type].rarity]) / 5) * 5;
 
@@ -188,12 +187,6 @@ function openBoxAt(tier) {
   track('boxOpened');
 }
 
-function buyBoxAt(tier) {
-  if (!pay(priceBox(tier))) return;
-  world.player.boxBag[tier]++;
-  safeNote('Bought a ' + BOX_TIERS[tier].name + '. It is still sealed.');
-}
-
 function buyStock(i) {
   const s = world.stock[i], pl = world.player;
   if (!s || s.sold) return;
@@ -211,13 +204,13 @@ function rerollStock() {
   safeNote('New stock. The old stock has been "returned to the sponsors".');
 }
 
-function healAt(hearts) {
-  const pl = world.player, n = Math.min(hearts, heartsMissing(pl));
-  if (n <= 0) { sfx('deny'); safeNote('You are already at full health.'); return; }
-  if (!pay(n * priceHeart())) return;
-  pl.life += n;
+function healOne() {
+  const pl = world.player;
+  if (heartsMissing(pl) <= 0) { sfx('deny'); safeNote('You are already at full health.'); return; }
+  if (!pay(priceHeart())) return;
+  pl.life += 1;
   sfx('heal');
-  safeNote('Patched up: +' + n + (n === 1 ? ' heart.' : ' hearts.'));
+  safeNote('Patched up: +1 heart. The plaster was not cheap.');
 }
 
 function refillAmmo() {
@@ -315,17 +308,15 @@ function safeButtons() {
   if (tab === 0) {
     BOX_ORDER.forEach((tier, i) => {
       const y = 48 + i * 21;
-      add({ x: 164, y, w: 50, h: 17 }, () => openBoxAt(tier), (r, hover) => drawButton(r, 'Open', hover && pl.boxBag[tier] > 0));
-      add({ x: 218, y, w: 92, h: 17 }, () => buyBoxAt(tier), (r, hover) => drawButton(r, 'Buy ' + priceBox(tier) + 'g', hover));
+      add({ x: 164, y, w: 146, h: 17 }, () => openBoxAt(tier), (r, hover) => drawButton(r, pl.boxBag[tier] > 0 ? 'Open' : 'None to open', hover && pl.boxBag[tier] > 0));
     });
   } else if (tab === 1) {
     world.stock.forEach((s, i) => add({ x: 10 + i * 76, y: 46, w: 72, h: 86 }, () => buyStock(i), null));
     add({ x: 10, y: 138, w: 130, h: 15 }, rerollStock, (r, hover) => drawButton(r, 'Roll new stock: ' + priceReroll() + 'g', hover));
   } else if (tab === 2) {
-    add({ x: 10, y: 48, w: 300, h: 21 }, () => healAt(1), null);
-    add({ x: 10, y: 72, w: 300, h: 21 }, () => healAt(99), null);
-    add({ x: 10, y: 96, w: 300, h: 21 }, refillAmmo, null);
-    add({ x: 10, y: 120, w: 300, h: 21 }, () => { closeSafeRoom(); leaveToMenu(); }, null);
+    add({ x: 10, y: 48, w: 300, h: 21 }, healOne, null);
+    add({ x: 10, y: 72, w: 300, h: 21 }, refillAmmo, null);
+    add({ x: 10, y: 96, w: 300, h: 21 }, () => { closeSafeRoom(); leaveToMenu(); }, null);
   } else if (tab === 3) {
     tailorList(pl).slice(0, 10).forEach((entry, i) => add({ x: 10, y: 56 + i * 11, w: 300, h: 10 }, () => tailorAt(entry), null));
   } else if (tab === 4) {
@@ -415,8 +406,7 @@ function drawStockTab(pl, buttons) {
 function drawCareTab(pl, buttons) {
   const bill = ammoBill(pl), missing = heartsMissing(pl);
   const rows = [
-    ['Patch you up: 1 heart', missing > 0 ? priceHeart() + 'g' : 'full', 'A plaster and a pat on the back.', missing > 0 && saved.gold >= priceHeart()],
-    ['Patch you up: everything', missing > 0 ? missing * priceHeart() + 'g' : 'full', missing > 0 ? 'Restores ' + missing + (missing === 1 ? ' heart.' : ' hearts.') : 'You are at full health.', missing > 0 && saved.gold >= missing * priceHeart()],
+    ['Patch you up: 1 heart', missing > 0 ? priceHeart() + 'g' : 'full', missing > 0 ? 'One plaster, one pat on the back, one very large invoice.' : 'You are at full health.', missing > 0 && saved.gold >= priceHeart()],
     ['Refill all your ammo', bill.shots ? bill.gold + 'g' : 'full', bill.shots ? 'Fills every gun you carry: ' + bill.shots + ' shots.' : 'Every gun you carry is full.', bill.shots > 0 && saved.gold >= bill.gold],
     ['Save and go to the main menu', '', 'Your run is saved. Continue it later from the main menu.', true],
   ];

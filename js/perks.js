@@ -12,6 +12,7 @@ function progressStat(name) {
       const p = PERKS[id];
       if (p && p.stats[name]) total += p.stats[name] * pl.perks[id];
     }
+    total += classStat(name);
   }
   for (const id in UPGRADES) if (UPGRADES[id].stat === name) total += UPGRADES[id].step * upgradeLevel(id);
   return total;

@@ -14,6 +14,7 @@ function createPlayer(x, y) {
     slots, ammo: {}, gearLevel: {}, active: 0, weapon: slots[0], cooldown: 0, recoil: 0, muzzleFlash: 0,
     life: PLAYER.life, lastMax: PLAYER.life, invulnerable: 0,
     xp: 0, level: 1, pending: 0, perks: {}, runGold: 0,
+    class: null, abilityCd: 0, buff: 0, dashTime: 0, dashX: 0, dashY: 0,
   };
 }
 
@@ -59,8 +60,13 @@ function updatePlayer(dt) {
 
   const t = 1 - Math.exp(-PLAYER.acceleration * dt);
   const topSpeed = PLAYER.speed * (dev.on && dev.fast ? 2.5 : 1) * (1 + stat('speed'));
-  pl.vx += (ix * topSpeed - pl.vx) * t;
-  pl.vy += (iy * topSpeed - pl.vy) * t;
+  if (pl.dashTime > 0) {   // the Runner's dash: a fixed speed, whatever the stick says
+    pl.dashTime -= dt;
+    pl.vx = pl.dashX; pl.vy = pl.dashY;
+  } else {
+    pl.vx += (ix * topSpeed - pl.vx) * t;
+    pl.vy += (iy * topSpeed - pl.vy) * t;
+  }
   if (Math.abs(pl.vx) < 0.5 && ix === 0) pl.vx = 0;
   if (Math.abs(pl.vy) < 0.5 && iy === 0) pl.vy = 0;
   const { b, h } = PLAYER.hitbox;

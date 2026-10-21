@@ -19,12 +19,12 @@ const STORY_SETTINGS = { popups: true };   // off in the tests
 const STORY_FLOORS = [
   {
     intro: [
-      'Good evening, Tenant 4B. This is HOME, the management system of Harrow Court. At 03:12 tonight the building moved twelve floors down. Please do not panic. Panic is not covered by your lease.',
+      'Good evening, {name}. Tenant 4B, as your lease has it. This is HOME, the management system of Harrow Court. At 03:12 tonight the building moved twelve floors down. Please do not panic. Panic is not covered by your lease.',
       'You have been chosen as the contestant of Pixel Crawler, Season {season}. Harrow Court had twelve floors. So does the dungeon below it, and each one is a little like home.',
       'This first floor is a copy of your own corridor. Your landlord, Mr. Pike, is waiting behind the gate. He would like a word about the rent. The viewers would like a fight.',
     ],
-    short: 'HOME: Good evening, Tenant 4B. Pixel Crawler, Season {season}, is live.',
-    morris: 'Evening, 4B. Morris, night porter. Still on duty, as you see: somebody has to mind the stairs, even when they only go down. I kept my master key. It opens every lock in Harrow Court, sponsor boxes included. Bring me your boxes.',
+    short: 'HOME: Good evening, {name}. Pixel Crawler, Season {season}, is live.',
+    morris: 'Evening, {name}. Morris, night porter. Still on duty, as you see: somebody has to mind the stairs, even when they only go down. I kept my master key. It opens every lock in Harrow Court, sponsor boxes included. Bring me your boxes.',
     tape: 'HOME log, entry 1. Tenant 4B ordered noodles at 23:40, watched the same film for the third time this week and laughed at the same joke. Predicted audience retention: excellent. Flagging 4B for casting.',
     gate: 'Mr. Pike: I signed ONE contract! How was I to know the pen was warm?',
     death: 'HOME: Mr. Pike\'s lease has been terminated. The contract he signed remains valid.',
@@ -135,7 +135,7 @@ const FINALE_CHAPTER = 'You finished Season {season}. HOME offered the finale: H
 const OFFSCRIPT_CHAPTER = 'You refused the finale, the first contestant ever to do so. Below the Core there is no script, so HOME builds the floors as you go, out of the ones you already know, and adds rules to stop you. Morris keeps a landing for you all the same.';
 
 const season = () => (run && run.season) || 37 + saved.stats.wins;
-const fillStory = text => text.replace(/\{season\}/g, season()).replace(/\{next\}/g, season() + 1);
+const fillStory = text => text.replace(/\{season\}/g, season()).replace(/\{next\}/g, season() + 1).replace(/\{name\}/g, playerName());
 const seenStory = id => !!saved.story.seen[id];
 function markStory(id) { saved.story.seen[id] = 1; saveDirty = true; }
 const tapesFound = () => Object.keys(saved.story.tapes).length;
