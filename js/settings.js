@@ -519,7 +519,7 @@ const STAT_INFO = {
   damage:      { label: 'Damage',       format: 'pct' },                // all weapons
   fireRate:    { label: 'Fire rate',    format: 'pct', cap: 0.8 },
   ammoSave:    { label: 'Ammo saved',   format: 'pct', cap: 0.7 },      // chance that a shot is free
-  armor:       { label: 'Armor',        format: 'int' },                // less damage from every hit (never below 1)
+  armor:       { label: 'Armor',        format: 'int' },                // 8% less damage from every hit per point, at most 40% (never below 1)
   dodge:       { label: 'Dodge',        format: 'pct', cap: 0.5 },      // chance to avoid a hit completely
   crit:        { label: 'Crit chance',  format: 'pct', cap: 0.8 },      // a critical shot does double damage
   luck:        { label: 'Luck',         format: 'pct' },                // more drops, and better ones
@@ -567,12 +567,12 @@ const GEAR = {
   moodRing: { name: 'Mood Ring', slot: 'ring', rarity: 'common', stats: { crit: 0.05 }, look: { shape: 'band', a: 'S', g: 'P' }, description: 'It is purple. That is bad.' },
   silverRing: { name: 'Silver Ring', slot: 'ring', rarity: 'rare', stats: { damage: 0.12, crit: 0.05 }, look: { shape: 'band', a: 'S', g: 'W' }, description: 'Hits harder.' },
   frugalityRing: { name: 'Ring of Frugality', slot: 'ring', rarity: 'rare', stats: { ammoSave: 0.12, fireRate: 0.06 }, look: { shape: 'band', a: 'g', g: 'l' }, description: 'Waste not, want not.' },
-  vampireRing: { name: 'Vampire Ring', slot: 'ring', rarity: 'rare', stats: { killHeal: 0.1, damage: 0.05 }, look: { shape: 'band', a: 's', g: 'r' }, description: 'Drink to your victories.' },
+  vampireRing: { name: 'Vampire Ring', slot: 'ring', rarity: 'rare', stats: { killHeal: 0.06, damage: 0.05 }, look: { shape: 'band', a: 's', g: 'r' }, description: 'Drink to your victories.' },
   ringOfPower: { name: 'Ring of Power', slot: 'ring', rarity: 'legendary', stats: { damage: 0.2, fireRate: 0.1, crit: 0.08 }, look: { shape: 'band', a: 'O', g: 'c' }, description: 'One ring to shoot them all.' },
   // ---- amulets ----
   luckyCharm: { name: 'Lucky Charm', slot: 'neck', rarity: 'common', stats: { luck: 0.15 }, look: { shape: 'clover', a: 'l', b: 'O', g: 'G' }, description: 'Four leaves are better than three.' },
   whistle: { name: 'Whistle', slot: 'neck', rarity: 'common', stats: { pickupRange: 12 }, look: { shape: 'whistle', a: 'S', b: 'g' }, description: 'Things come to you.' },
-  heartLocket: { name: 'Heart Locket', slot: 'neck', rarity: 'rare', stats: { maxLife: 1, killHeal: 0.08 }, look: { shape: 'heart', a: 'r', b: 'O' }, description: 'Someone loves you.' },
+  heartLocket: { name: 'Heart Locket', slot: 'neck', rarity: 'rare', stats: { maxLife: 1, killHeal: 0.05 }, look: { shape: 'heart', a: 'r', b: 'O' }, description: 'Someone loves you.' },
   magnetPendant: { name: 'Magnet Pendant', slot: 'neck', rarity: 'rare', stats: { pickupRange: 28, luck: 0.15 }, look: { shape: 'magnet', a: 'r', b: 'S' }, description: 'Attracts loot.' },
   emberAmulet: { name: 'Ember Amulet', slot: 'neck', rarity: 'rare', stats: { damage: 0.1, lightRadius: 20 }, look: { shape: 'pendant', a: 'O', b: 'o', g: 'r' }, description: 'Warm to the touch, and it glows.' },
   endlessPockets: { name: 'Endless Pockets', slot: 'neck', rarity: 'legendary', stats: { ammoSave: 0.25, pickupRange: 30, luck: 0.25 }, look: { shape: 'pendant', a: 'O', b: 'y', g: 'c' }, description: 'Bigger on the inside.' },
@@ -582,7 +582,7 @@ const GEAR = {
   chainmailVest: { name: 'Chainmail Vest', slot: 'body', rarity: 'epic', stats: { armor: 1, maxLife: 1, dodge: 0.05 }, look: { shape: 'vest', a: 'S', b: 'g', g: 'b' }, description: 'Heavy, but it jingles nicely.' },
   wingedSandals: { name: 'Winged Sandals', slot: 'feet', rarity: 'epic', stats: { speed: 0.18, dodge: 0.05, invuln: 0.15 }, look: { shape: 'shoe', a: 'W', b: 'O', g: 'c' }, description: 'Hermes called. He wants them back.' },
   ringOfHaste: { name: 'Ring of Haste', slot: 'ring', rarity: 'epic', stats: { fireRate: 0.12, speed: 0.08, crit: 0.05 }, look: { shape: 'band', a: 'c', g: 'b' }, description: 'Everything feels slower now.' },
-  bloodstoneRing: { name: 'Bloodstone Ring', slot: 'ring', rarity: 'epic', stats: { damage: 0.14, killHeal: 0.08, crit: 0.04 }, look: { shape: 'band', a: 'R', g: 'r' }, description: 'It is warm. It is always warm.' },
+  bloodstoneRing: { name: 'Bloodstone Ring', slot: 'ring', rarity: 'epic', stats: { damage: 0.14, killHeal: 0.05, crit: 0.04 }, look: { shape: 'band', a: 'R', g: 'r' }, description: 'It is warm. It is always warm.' },
   fortuneAmulet: { name: 'Amulet of Fortune', slot: 'neck', rarity: 'epic', stats: { luck: 0.2, goldGain: 0.15, xpGain: 0.15 }, look: { shape: 'pendant', a: 'O', b: 'y', g: 'l' }, description: 'The viewers adore a winner.' },
 };
 
@@ -610,19 +610,19 @@ const PERKS = {
   scholar: { name: 'Scholar', rarity: 'common', max: 5, stats: { xpGain: 0.1 }, description: '+10% exp from everything.' },
   greedy: { name: 'Greedy', rarity: 'common', max: 5, stats: { goldGain: 0.1 }, description: '+10% gold from everything.' },
   tough: { name: 'Tough', rarity: 'rare', max: 5, stats: { maxLife: 1 }, description: '+1 heart.' },
-  thick: { name: 'Thick Skin', rarity: 'rare', max: 3, stats: { armor: 1 }, description: 'Take 1 less damage from every hit.' },
+  thick: { name: 'Thick Skin', rarity: 'rare', max: 3, stats: { armor: 1 }, description: 'Take 8% less damage from every hit.' },
   evasive: { name: 'Evasive', rarity: 'rare', max: 5, stats: { dodge: 0.03 }, description: '+3% chance to dodge a hit.' },
   recovery: { name: 'Quick Recovery', rarity: 'rare', max: 4, stats: { invuln: 0.1 }, description: '0.1 s longer before you can be hit again.' },
-  bloodthirst: { name: 'Bloodthirst', rarity: 'rare', max: 4, stats: { killHeal: 0.03 }, description: '+3% chance to heal a heart on a kill.' },
+  bloodthirst: { name: 'Bloodthirst', rarity: 'rare', max: 4, stats: { killHeal: 0.02 }, description: '+2% chance to heal a heart on a kill.' },
   ricochet: { name: 'Ricochet', rarity: 'rare', max: 3, stats: { bounce: 1 }, description: 'Every bullet bounces off one more wall.' },
   piercing: { name: 'Piercing Rounds', rarity: 'rare', max: 1, stats: { pierce: 1 }, description: 'Your bullets go through enemies.' },
   volatile: { name: 'Volatile', rarity: 'rare', max: 4, stats: { volatile: 0.08 }, description: '8% of enemies explode when they die.' },
   marksman: { name: 'Marksman', rarity: 'epic', max: 3, stats: { crit: 0.08, damage: 0.08 }, description: '+8% crit chance and +8% damage.' },
   adrenaline: { name: 'Adrenaline', rarity: 'epic', max: 3, stats: { speed: 0.08, fireRate: 0.08 }, description: 'Run 8% faster and shoot 8% faster.' },
-  ironWill: { name: 'Iron Will', rarity: 'epic', max: 2, stats: { maxLife: 2, armor: 1 }, description: 'Two more hearts and one armor.' },
+  ironWill: { name: 'Iron Will', rarity: 'epic', max: 2, stats: { maxLife: 2, armor: 1 }, description: 'Two more hearts and 8% less damage.' },
   doubleBarrel: { name: 'Double Barrel', rarity: 'legendary', max: 2, stats: { multishot: 1 }, description: 'One more bullet with every shot.' },
   berserker: { name: 'Berserker', rarity: 'legendary', max: 2, stats: { damage: 0.2, fireRate: 0.1 }, description: '+20% damage and +10% fire rate.' },
-  feast: { name: 'Feast', rarity: 'common', effect: 'heal', stats: {}, description: 'Restore all your hearts.' },
+  feast: { name: 'Feast', rarity: 'rare', effect: 'heal', stats: {}, description: 'Restore all your hearts.' },
   cache: { name: 'Ammo Cache', rarity: 'common', effect: 'ammo', stats: {}, description: 'Refill some ammo for every weapon.' },
   treasure: { name: 'Treasure', rarity: 'common', effect: 'gold', value: 40, stats: {}, description: 'A bag of 40 gold.' },
 };
@@ -708,6 +708,11 @@ const PICKUPS = { fuse: { name: 'Fuse' }, chip: { name: 'Chip' }, tape: { name: 
 // and a better chance to drop a weapon. Bosses have their own numbers and are not scaled.
 // softCap is the tier above which life grows at half speed (the deep floors would otherwise be endless to shoot through), and
 // speedCap and damageCap the tiers above which enemies stop getting faster and stop hitting harder.
+// What the permanent upgrades do to the dungeon: every level bought (a star counts as one) makes enemies live longer (life), move faster
+// (speed) and come in greater numbers (share, of every kind), all the way from the first floor. The power of a run is counted when it starts.
+const POWER = { life: 0.007, speed: 0.002, share: 0.003 };
+// Armour cuts a share of the damage of every hit (never below 1), per point of armour, up to cap.
+const ARMOR = { per: 0.08, cap: 0.4 };
 const DIFFICULTY = { lifeStep: 0.22, speedStep: 0.05, sightStep: 0.08, cooldownStep: 0.06, damageEvery: 3, dropStep: 0.15, softCap: 7, speedCap: 13, damageCap: 14 };
 
 // Every time the whole dungeon has been beaten (a won run) it starts over, harder (see dungeonCycle in enemies.js). Each cycle

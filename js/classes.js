@@ -134,7 +134,7 @@ const ABILITIES = {
     pl.dashX = dx / l * ABILITY.dashSpeed; pl.dashY = dy / l * ABILITY.dashSpeed;
     pl.dashTime = ABILITY.dashTime;
     pl.invulnerable = Math.max(pl.invulnerable, ABILITY.dashSafe);
-    sfx('dash');
+    sfx('runnerDash');
   },
   showman(pl) {
     pl.buff = ABILITY.showTime;

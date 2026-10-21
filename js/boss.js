@@ -74,14 +74,14 @@ function goToLevel(index) {
   pl.xp = old.xp; pl.level = old.level; pl.pending = old.pending; pl.perks = old.perks; pl.runGold = old.runGold; pl.class = old.class; pl.revived = old.revived;
   pl.lastMax = old.lastMax;
   floorStarted();
-  pl.life = Math.min(maxLife(), old.life + 2);
+  pl.life = Math.min(maxLife(), old.life + 1);
   // the tutorial is only for the first floor
   world.hasWalked = world.hasShot = world.hasFound = world.hasFoundGear = world.goalShown = true;
   world.helpAlpha = 0;
   camera.x = clamp(pl.x - SCREEN_W / 2, 0, Math.max(0, world.level.b * TILE - SCREEN_W));
   camera.y = clamp(pl.y - SCREEN_H / 2, 0, Math.max(0, world.level.h * TILE - SCREEN_H));
   camera.shake = 0;
-  systemMessage('Floor ' + (index + 1) + ': ' + world.level.name + (isEndless(index) ? ', off script' : '') + '. You recover two hearts.');
+  systemMessage('Floor ' + (index + 1) + ': ' + world.level.name + (isEndless(index) ? ', off script' : '') + '. You recover a heart.');
   systemMessage(world.level.briefing || 'Complete the objectives to open the boss gate.', 6);
   storyFloor(index);
   saveRun();

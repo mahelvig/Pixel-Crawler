@@ -12,6 +12,10 @@ const starMax = id => UPGRADES[id] ? (wholeStat(UPGRADES[id]) ? STARS.wholeMax :
 const starStep = u => wholeStat(u) ? u.step : u.step * STARS.share;
 const starsOf = id => Math.max(0, upgradeLevel(id) - UPGRADES[id].max);
 
+// How many levels (and stars) of the stat upgrades have been bought: the dungeon grows tougher with it (see POWER in settings.js).
+const upgradeLevels = () => Object.keys(UPGRADES).reduce((n, id) => n + upgradeLevel(id), 0);
+const dungeonPower = () => (run ? run.power : upgradeLevels()) || 0;
+
 // What an upgrade adds to its stat: its levels, and its stars at half a level each.
 function upgradeEffect(id) {
   const u = UPGRADES[id], level = upgradeLevel(id);
@@ -152,5 +156,5 @@ function drawShop() {
     if (cost === null) drawText('MAX', r.x + r.w - 4, touch.on ? r.y + 11 : rowY, COLOR.O, { align: 'right' });
     else drawText(cost + ' gold', r.x + r.w - 4, touch.on ? r.y + 11 : rowY, saved.gold >= cost ? COLOR.y : COLOR.r, { align: 'right' });
   });
-  drawText(time < shopNote.until ? shopNote.text : T('Click to buy.   Left and right switch page.   Esc: back', 'Tap to buy.'), BASE_W / 2, 170, time < shopNote.until ? COLOR.y : COLOR.g, { align: 'center' });
+  drawText(time < shopNote.until ? shopNote.text : T('Click to buy.   Arrows: page.   Esc: back', 'Tap to buy.') + '   Dungeon +' + Math.round(upgradeLevels() * POWER.life * 100) + '% tougher', BASE_W / 2, 170, time < shopNote.until ? COLOR.y : COLOR.g, { align: 'center' });
 }

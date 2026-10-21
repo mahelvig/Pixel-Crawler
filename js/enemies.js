@@ -35,10 +35,11 @@ function createEnemy(type, x, y, tier = 0) {
   const t = ENEMIES[type], cycle = dungeonCycle();
   tier += cycle * CYCLE.cycleTiers;
   const k = t.boss ? 0 : tier, kLife = k > DIFFICULTY.softCap ? DIFFICULTY.softCap + (k - DIFFICULTY.softCap) * 0.5 : k;   // deep floors grow slower
-  const life = Math.max(1, Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * kLife) * (t.boss ? 1 + CYCLE.bossLifeStep * cycle : ruleMult('enemyLife'))));
+  const power = dungeonPower();
+  const life = Math.max(1, Math.ceil(t.life * (1 + DIFFICULTY.lifeStep * kLife) * (1 + POWER.life * power) * (t.boss ? 1 + CYCLE.bossLifeStep * cycle : ruleMult('enemyLife'))));
   return {
     type, x, y, vx: 0, vy: 0, pushX: 0, pushY: 0, life, maxLife: life, tier,
-    speedMult: (1 + DIFFICULTY.speedStep * Math.min(k, DIFFICULTY.speedCap)) * ruleMult('enemySpeed'), sightMult: 1 + DIFFICULTY.sightStep * Math.min(k, DIFFICULTY.speedCap),
+    speedMult: (1 + DIFFICULTY.speedStep * Math.min(k, DIFFICULTY.speedCap)) * (1 + POWER.speed * power) * ruleMult('enemySpeed'), sightMult: 1 + DIFFICULTY.sightStep * Math.min(k, DIFFICULTY.speedCap),
     cooldownMult: Math.max(0.5, 1 - DIFFICULTY.cooldownStep * k), bonusDamage: Math.floor(Math.min(k, DIFFICULTY.damageCap) / DIFFICULTY.damageEvery) + (t.boss ? Math.floor(cycle / CYCLE.bossDamageEvery) : 0),
     moveTime: 1.5, moveIndex: 0, dashWindup: 0, dashTime: 0, dashX: 0, dashY: 0, teleportTime: 0, minion: false, summoner: null,
     chasing: false, exclaim: 0, windup: 0, cooldown: 0, hitFlash: 0, slowTime: 0, fuse: 0, ghost: !!t.ghost,
@@ -369,7 +370,7 @@ function damagePlayer(damage, from) {
     pl.invulnerable = 0.3;
     return;
   }
-  if (damage > 0) damage = Math.max(1, Math.ceil(damage * ruleMult('enemyDamage')) - stat('armor'));
+  if (damage > 0) damage = Math.max(1, Math.ceil(damage * ruleMult('enemyDamage') * (1 - Math.min(ARMOR.cap, ARMOR.per * stat('armor')))));
   pl.life = Math.max(0, pl.life - damage);
   track('hurt', damage);
   world.lastHitBy = from && (ENEMIES[from.type] ? from.type : from.by) || 'hazard';

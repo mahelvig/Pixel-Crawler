@@ -24,7 +24,7 @@ function readRun() {
       life: Math.max(1, Number(d.life) || 1),
       slots: d.slots.map((t, i) => (typeof t === 'string' && (isWeapon(t) || isGear(t)) && canPlace(t, i)) ? t : null),
       ammo: {}, gearLevel: {}, perks: {}, boxBag: emptyBoxBag(),
-      revived: d.revived === true,
+      revived: d.revived === true, power: d.power === undefined ? upgradeLevels() : clampInt(d.power, 0, 999),
       class: typeof d.class === 'string' && CLASSES[d.class] ? d.class : null,
       starter: typeof d.starter === 'string' && WEAPONS[d.starter] ? d.starter : 'rubberBandGun',
       fame: Math.max(0, Number(d.fame) || 0), boxes: clampInt(d.boxes, 0, 999),
@@ -46,7 +46,7 @@ function saveRun() {
   const pl = world.player;
   const data = { floor: world.levelIndex, life: pl.life, slots: pl.slots, ammo: pl.ammo, gearLevel: pl.gearLevel, perks: pl.perks, starter: pl.starter, fame: pl.fame, boxes: pl.boxes,
     active: pl.active, xp: pl.xp, level: pl.level, pending: pl.pending, runGold: pl.runGold, boxBag: pl.boxBag,
-    class: pl.class, revived: pl.revived,
+    class: pl.class, revived: pl.revived, power: run.power,
     seed: run.seed, season: run.season, cycle: run.cycle, offScript: run.offScript, seasonWon: run.seasonWon, finale: run.finale };
   lastRunSave = time;
   try { localStorage.setItem(runKey(), JSON.stringify(data)); } catch (e) { return; /* storage may be blocked */ }
@@ -77,7 +77,7 @@ function resumeRun() {
   const d = savedRun;
   if (!d) return;
   resetRun();
-  Object.assign(run, { seed: d.seed, season: d.season, cycle: d.cycle, offScript: d.offScript, seasonWon: d.seasonWon });
+  Object.assign(run, { power: d.power, seed: d.seed, season: d.season, cycle: d.cycle, offScript: d.offScript, seasonWon: d.seasonWon });
   world = newWorld(d.floor);
   floorStarted();
   const pl = world.player;

@@ -65,7 +65,7 @@ function buildFloor(map, tier, floor, rules) {
     }
   }
   // a dungeon that has been beaten before has more enemies
-  const share = dungeonCycle() * CYCLE.enemyShare + ruleSum('enemyShare');
+  const share = dungeonCycle() * CYCLE.enemyShare + dungeonPower() * POWER.share + ruleSum('enemyShare');
   const dark = rules.map(id => FLOOR_RULES[id].dark).find(Boolean);
   if (dark && !lv.dark) lv.dark = { level: dark };
   for (const f of lv.enemies.slice()) {

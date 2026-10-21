@@ -319,6 +319,7 @@ function resetRun() {
   const wins = typeof saved === 'undefined' ? 0 : saved.stats.wins;   // (this file is loaded before the saved progress)
   run = { time: 0, floorTime: 0, floorHits: 0, kills: [], bestCombo: 0, bestCombo10: 0, still: 0, walked: 0, lastWalked: 0, lastWorld: null, check: 0,
     flawlessBoss: false, clutchBoss: false, fastBoss: false, empty: false, quickDeath: false, boxes: 0, viewersHint: false, boxHint: false,
+    power: typeof upgradeLevels === 'function' && typeof saved !== 'undefined' ? upgradeLevels() : 0,
     seed: Math.floor(Math.random() * 1e6), season: 37 + wins, cycle: Math.min(CYCLE.maxCycle, wins), offScript: false, seasonWon: false, finale: false };
 }
 resetRun();
