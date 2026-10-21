@@ -135,11 +135,13 @@ function drawBoxIcon(tier, x, y) {
 
 // ---------- The services ----------
 
-const priceBuy = type => Math.max(5, Math.round(SAFE.buy[rarityOf(type)] * (1 + SAFE.buyFloor * world.levelIndex) / 5) * 5);
+// the Haggler upgrade: 5% off everything Morris sells, for every level
+const haggle = gold => Math.max(1, Math.round(gold * (1 - 0.05 * upgradeLevel('haggler'))));
+const priceBuy = type => haggle(Math.max(5, Math.round(SAFE.buy[rarityOf(type)] * (1 + SAFE.buyFloor * world.levelIndex) / 5) * 5));
 const priceSell = (pl, type) => Math.round(SELL_VALUE[rarityOf(type)] * SAFE.sellBonus) + (isGear(type) ? (pl.gearLevel[type] || 0) * SAFE.sellLevel : 0);
-const priceHeart = () => Math.ceil(SAFE.heart * (1 + SAFE.heartFloor * world.levelIndex));
-const priceReroll = () => Math.round(SAFE.reroll * Math.pow(SAFE.rerollGrowth, world.rerolls));
-const priceTailor = (type, level) => Math.round(SAFE.tailor * (level + 1) * (1 + 0.6 * RARITY_RANK[GEAR[type].rarity]) / 5) * 5;
+const priceHeart = () => haggle(Math.ceil(SAFE.heart * (1 + SAFE.heartFloor * world.levelIndex)));
+const priceReroll = () => haggle(Math.round(SAFE.reroll * Math.pow(SAFE.rerollGrowth, world.rerolls)));
+const priceTailor = (type, level) => haggle(Math.round(SAFE.tailor * (level + 1) * (1 + 0.6 * RARITY_RANK[GEAR[type].rarity]) / 5) * 5);
 
 // What every gun you carry would need to be full: gold, and the number of shots.
 function ammoBill(pl) {
@@ -149,7 +151,7 @@ function ammoBill(pl) {
     const missing = WEAPONS[type].ammoMax - (pl.ammo[type] || 0);
     if (missing > 0) { shots += missing; gold += Math.ceil(missing * SAFE.ammo[WEAPONS[type].rarity]); }
   }
-  return { gold, shots };
+  return { gold: gold > 0 ? haggle(gold) : 0, shots };
 }
 
 const heartsMissing = pl => Math.max(0, maxLife() - pl.life);

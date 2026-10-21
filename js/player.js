@@ -14,7 +14,7 @@ function createPlayer(x, y) {
     slots, ammo: {}, gearLevel: {}, active: 0, weapon: slots[0], cooldown: 0, recoil: 0, muzzleFlash: 0,
     life: PLAYER.life, lastMax: PLAYER.life, invulnerable: 0,
     xp: 0, level: 1, pending: 0, perks: {}, runGold: 0,
-    class: null, abilityCd: 0, buff: 0, dashTime: 0, dashX: 0, dashY: 0,
+    revived: false, class: null, abilityCd: 0, buff: 0, dashTime: 0, dashX: 0, dashY: 0,
   };
 }
 

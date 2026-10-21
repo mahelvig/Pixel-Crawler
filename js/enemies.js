@@ -382,6 +382,19 @@ function damagePlayer(damage, from) {
   world.hurtFlash = 0.35;
   world.floatingTexts.push({ x: pl.x, y: pl.y - 18, text: '-' + damage, life: 0.8, color: COLOR.r });
   for (let p = 0; p < 6; p++) particle(pl.x, pl.y - 4, randRange(-50, 50), randRange(-50, 50), COLOR.r, 0.35);
+  if (pl.life <= 0 && !pl.revived && upgradeLevel('secondWind') > 0) {
+    // the Second Wind upgrade: once a run you get back up
+    pl.revived = true;
+    pl.life = Math.min(maxLife(), SECOND_WIND_HEARTS[upgradeLevel('secondWind')]);
+    pl.invulnerable = 2.5;
+    sfx('levelup');
+    camera.shake = 6;
+    explodeAt({ x: pl.x, y: pl.y - 4, vx: 0, vy: 0, explode: { radius: 54, damage: 3 }, knockbackMult: 3 });
+    for (const b of world.enemyBullets) if (Math.hypot(b.x - pl.x, b.y - pl.y) < 70) b.life = 0;
+    world.floatingTexts.push({ x: pl.x, y: pl.y - 26, text: 'SECOND WIND!', life: 1.6, color: COLOR.O });
+    systemMessage('HOME: That was a death. It has been disallowed. Once.', 5);
+    return;
+  }
   if (pl.life <= 0) die();
 }
 

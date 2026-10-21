@@ -37,7 +37,11 @@ function loadSaved() {
       for (const key of ['gold', 'bestFloor', 'runs']) saved[key] = Math.max(0, Math.floor(Number(data[key]) || 0));
       for (const id in UPGRADES) {
         const level = Math.floor(Number(data.upgrades && data.upgrades[id]) || 0);
-        if (level > 0) saved.upgrades[id] = Math.min(level, UPGRADES[id].max);
+        if (level > 0) saved.upgrades[id] = Math.min(level, UPGRADES[id].max + (STAT_INFO[UPGRADES[id].stat].format === 'int' ? STARS.wholeMax : STARS.max));
+      }
+      for (const id in SPECIALS) {
+        const level = Math.floor(Number(data.upgrades && data.upgrades[id]) || 0);
+        if (level > 0) saved.upgrades[id] = Math.min(level, SPECIALS[id].max);
       }
       for (const a of ACHIEVEMENTS) if (data.ach && data.ach[a.id]) saved.ach[a.id] = 1;
       const st = data.stats || {};

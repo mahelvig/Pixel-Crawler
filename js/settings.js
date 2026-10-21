@@ -644,6 +644,20 @@ const UPGRADES = {
   treasureHunter: { name: 'Treasure Hunter', stat: 'goldGain', step: 0.05, max: 10, base: 40, growth: 1.4 },
 };
 
+// An upgrade at its top level can be bought again as a star (up to starMax of them). A star costs starCost times the price of the last level,
+// and then starGrowth more for every star before it, and adds half a level's worth (a stat that comes in whole numbers, like hearts and
+// armour, adds a whole step, but has fewer stars). So there is always something to spend gold on, and the stat caps still hold.
+const STARS = { cost: 4, wholeCost: 6, growth: 1.5, max: 5, wholeMax: 2, share: 0.5 };
+
+// Things that change how a run begins. costs and texts have one entry for every level: what the next level costs and does.
+const SPECIALS = {
+  sponsorPack: { name: 'Sponsor Pack', max: 3, costs: [300, 900, 2500], texts: ['Start every run with a bronze box.', 'Start every run with a silver box.', 'Start every run with a gold box.'] },
+  headStart: { name: 'Head Start', max: 3, costs: [400, 1200, 3500], texts: ['Start every run with one level-up to spend.', 'Start every run with two level-ups to spend.', 'Start every run with three level-ups to spend.'] },
+  haggler: { name: 'Haggler', max: 5, costs: [250, 500, 1000, 2000, 4000], texts: ['Morris charges 5% less.', 'Morris charges 10% less.', 'Morris charges 15% less.', 'Morris charges 20% less.', 'Morris charges 25% less.'] },
+  secondWind: { name: 'Second Wind', max: 2, costs: [1500, 5000], texts: ['Once a run you get back up with 1 heart instead of dying.', 'Once a run you get back up with 3 hearts instead of dying.'] },
+};
+const SECOND_WIND_HEARTS = [0, 1, 3];
+
 // Light on a dark floor: the radius in pixels of the light each thing gives off. The player's is the "flashlight".
 const LIGHT = { player: 54, pickup: 22, item: 14, shot: 14, boss: 30 };
 

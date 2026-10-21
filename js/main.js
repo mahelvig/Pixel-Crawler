@@ -42,6 +42,9 @@ function startGame() {
   sfx('start');
   // the tutorial is only for the first run (floor 1 has been played once already)
   if (saved.tutorialDone) { world.hasWalked = world.hasShot = world.hasFound = world.hasFoundGear = true; world.helpAlpha = 0; }
+  const pack = ['bronze', 'silver', 'gold'][upgradeLevel('sponsorPack') - 1];
+  if (pack) giveBox(pack);
+  world.player.pending += upgradeLevel('headStart');
   storyFloor(0);
   if (dungeonCycle() > 0) systemMessage('HOME: Welcome back to Harrow Court. Everything is a little harder this season. The viewers insist.', 5);
 }
@@ -105,6 +108,7 @@ window.addEventListener('keydown', e => {
     return;
   }
   if (e.code === 'KeyJ' && state === 'title') { openJournal(); return; }
+  if (state === 'shop' && (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'Tab')) { setShopTab(shopTab + (e.code === 'ArrowLeft' ? -1 : 1)); return; }
   if (e.code === 'KeyE' && state === 'bag') { equipAtMouse(); return; }
   if (e.code === 'KeyE' && state === 'playing') { tryTrade(); return; }
   if ((e.code === 'Space' || e.code === 'KeyQ') && state === 'playing') { useAbility(); return; }

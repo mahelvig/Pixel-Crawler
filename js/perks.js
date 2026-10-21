@@ -14,7 +14,7 @@ function progressStat(name) {
     }
     total += classStat(name);
   }
-  for (const id in UPGRADES) if (UPGRADES[id].stat === name) total += UPGRADES[id].step * upgradeLevel(id);
+  for (const id in UPGRADES) if (UPGRADES[id].stat === name) total += upgradeEffect(id);
   return total;
 }
 
